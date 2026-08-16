@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  openbalancer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: incontrolplus/openbalancer:latest
+    container_name: openbalancer-gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.json:/app/config.json:ro
+    environment:
+      - PORT=8080
+      - ALGORITHM=round_robin
+      - HEALTHCHECK_INTERVAL=5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/openbalancer/status')"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Example Mock Upstream Service 1
+  mock-ai-backend-1:
+    image: hashicorp/http-echo:latest
+    container_name: mock-ai-node-1
+    command: ["-text=Hello from AI Inference Cluster #1 (Region: US-East)", "-listen=:9001"]
+    ports:
+      - "9001:9001"
+    restart: unless-stopped
+
+  # Example Mock Upstream Service 2
+  mock-ai-backend-2:
+    image: hashicorp/http-echo:latest
+    container_name: mock-ai-node-2
+    command: ["-text=Hello from API Gateway Node #2 (Region: EU-West)", "-listen=:9002"]
+    ports:
+      - "9002:9002"
+    restart: unless-stopped

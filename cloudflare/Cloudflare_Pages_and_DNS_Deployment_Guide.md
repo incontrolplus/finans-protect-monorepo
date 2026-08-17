@@ -18,8 +18,17 @@
 * **Защитни заглавия:** CSP, HSTS (`max-age=31536000`), X-Frame-Options (`SAMEORIGIN`), X-Content-Type-Options (`nosniff`).
 * **Потребителски Домейни (Custom Domains):** `openbalancer.com`, `www.openbalancer.com`
 * **Hostinger DNS Настройка:** `CNAME www -> openbalancer.pages.dev.`
+* **Вътрешен Ops Gateway:** `A ops -> 72.61.154.188` (обслужващ 4-те n8n-MCP автономни агента на `ops.openbalancer.com`)
 
 ---
+
+## 🏛️ Архитектура за Изолация на Домейните (Stripe KYB Compliance)
+
+| Домейн / Хост | Предназначение | Видимост | Бекенд Инфраструктура |
+| :--- | :--- | :---: | :--- |
+| **`openbalancer.com`** / **`www`** | Официален B2B уебсайт, Stripe KYB верификация, SLA договори, цени | Публичен | Cloudflare Pages CDN (`openbalancer.pages.dev`) |
+| **`ops.openbalancer.com`** | Вътрешен контролен панел за 4 n8n-MCP Агента (ReID, Vault, IDP OCR) | Вътрешен / Auth | VPS (`72.61.154.188` / Traefik Gateway) |
+| **`n8n.openbalancer.com`** | n8n Webhook ендпоинти и автоматизации | Системен | n8n-ob Gateway |
 
 ## 🔐 Infisical Secrets Mapping (Проект: "Hosting & Domains")
 

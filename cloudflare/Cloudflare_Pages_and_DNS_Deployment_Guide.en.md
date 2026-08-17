@@ -18,8 +18,17 @@
 * **Security Headers:** CSP, HSTS (`max-age=31536000`), X-Frame-Options (`SAMEORIGIN`), X-Content-Type-Options (`nosniff`).
 * **Custom Domains Bound:** `openbalancer.com`, `www.openbalancer.com`
 * **Hostinger DNS Configuration:** `CNAME www -> openbalancer.pages.dev.`
+* **Internal Ops Gateway:** `A ops -> 72.61.154.188` (Serving 4 n8n-MCP autonomous agents on `ops.openbalancer.com`)
 
 ---
+
+## 🏛️ Domain Isolation Architecture (Stripe KYB Compliance)
+
+| Domain / Host | Purpose | Visibility | Backend Infrastructure |
+| :--- | :--- | :---: | :--- |
+| **`openbalancer.com`** / **`www`** | Official B2B Website, Stripe KYB verification, SLA contracts, retainers | Public | Cloudflare Pages CDN (`openbalancer.pages.dev`) |
+| **`ops.openbalancer.com`** | Internal Control Gateway for 4 n8n-MCP Agents (ReID, Vault, IDP OCR) | Internal / Auth | VPS (`72.61.154.188` / Traefik Gateway) |
+| **`n8n.openbalancer.com`** | n8n Webhook endpoints & Automation flows | System | n8n-ob Gateway |
 
 ## 🔐 Infisical Secrets Mapping (Project: "Hosting & Domains")
 

@@ -1,0 +1,114 @@
+# ⚡ OpenBalancer & INCONTROL PLUS Ecosystem
+
+<p align="center">
+  <a href="README.bg.md"><b>🇧🇬 Българска версия (Bulgarian Version)</b></a> | 
+  <a href="README.md"><b>🇬🇧 English Version</b></a>
+</p>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](core/Dockerfile)
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](core/openbalancer.py)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages%20Ready-F38020?logo=cloudflare&logoColor=white)](cloudflare/Cloudflare_Pages_and_DNS_Deployment_Guide.md)
+[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Available-10b981)](https://openbalancer.com/#enterprise)
+[![Operated by](https://img.shields.io/badge/Operated%20by-INCONTROL%20PLUS-3b82f6)](https://openbalancer.com)
+
+**OpenBalancer** is a modern, high-performance, asynchronous load balancer, reverse proxy, and open-source infrastructure suite engineered by **INCONTROL PLUS ЕООД**. Built for AI inference clusters, high-throughput microservices, and mission-critical API routing.
+
+---
+
+## 🏗️ Repository Architecture
+
+```
+openbalancer/
+├── README.md                                # Root Documentation (English)
+├── README.bg.md                             # Root Documentation (Bulgarian)
+├── LICENSE                                  # MIT Open Source License
+├── core/                                    # OpenBalancer Core Engine & Testing
+│   ├── openbalancer.py                      # Asynchronous Python Load Balancer & Proxy
+│   ├── config.json                          # Sample Node & Strategy Configuration
+│   ├── Dockerfile                           # Production Alpine Docker Image
+│   ├── docker-compose.yml                   # Cluster Sandbox with Upstream Mocks
+│   ├── test_balancer.py                     # Automated Verification Test Suite
+│   ├── awesome-selfhosted-pr.md             # Awesome-Selfhosted PR Submission
+│   └── README.md                            # Engine-specific Documentation
+├── website/                                 # Official Website (Cloudflare Pages)
+│   ├── index.html                           # Landing Page with Interactive Traffic Simulator
+│   ├── css/style.css                        # Modern Vanilla CSS Theme & Animations
+│   ├── js/main.js                           # Real-time Balancer Visualizer Logic
+│   ├── terms.html                           # Terms of Service
+│   ├── privacy.html                         # GDPR-Compliant Privacy Policy
+│   ├── refunds.html                         # SLA Credit & Refund Policy
+│   ├── contact.html                         # Impressum & Corporate Verification
+│   └── _headers                             # Security Headers (CSP, HSTS, X-Frame)
+├── compliance/                              # Legal Framework & Commercial Contracts
+│   ├── Brand_Isolation_Legal_Matrix.md      # 3-Tier Corporate & Anti-Fronting Hierarchy
+│   ├── B2B_Master_Services_Agreement_Template.md # Enterprise B2B Contract Template
+│   ├── B2B_Statement_Of_Work_SLA_Template.md     # 99.9% Uptime SLA Specification
+│   ├── Stripe_Onboarding_Step_by_Step_Guide.md  # Stripe KYB & Approval Guide
+│   └── FinansProtect_B2B_Billing_Workflow.md    # Third-party Client Invoicing Flow
+├── cloudflare/                              # Zero-Cost Edge Hosting & DNS
+│   └── Cloudflare_Pages_and_DNS_Deployment_Guide.md # CI/CD & Custom Domain Setup
+└── social/                                  # Brand Visibility & Digital Footprint
+    ├── LinkedIn_Company_Page_Copy.md        # INCONTROL PLUS Company Profile
+    ├── LinkedIn_Product_Page_Copy.md        # OpenBalancer Showcase Profile
+    ├── Twitter_Launch_Strategy.md           # Announcement & Feature Threads
+    └── Discord_Community_Setup.md           # Developer & Support Server Structure
+```
+
+---
+
+## 🌟 Core Engine Features
+
+* **⚡ Non-Blocking Async I/O**: Pure Python async proxy with sub-millisecond overhead.
+* **🧠 AI & LLM Inference Aware**: Optimized for streaming HTTP chunked transfers and SSE (Server-Sent Events).
+* **🛡️ Active Health Checks**: Automated background health monitoring with automatic traffic draining and failover.
+* **🎯 Routing Strategies**:
+  * `round_robin` — Uniform distribution across all active nodes.
+  * `weighted` — Distribution proportional to server capacity.
+  * `least_latency` — Dynamic routing to the fastest answering node.
+* **📊 Telemetry API**: Real-time status and metrics at `/openbalancer/status`.
+* **🐳 Docker Ready**: Ultralight multi-stage container footprint (<45MB).
+
+---
+
+## 🚀 Quickstart
+
+### 1. Run with Python (Zero Extra Dependencies)
+```bash
+python3 core/openbalancer.py core/config.json
+```
+
+### 2. Run Automated Verification Tests
+```bash
+python3 core/test_balancer.py
+```
+
+### 3. Run Cluster Sandbox with Docker Compose
+```bash
+docker-compose -f core/docker-compose.yml up -d
+```
+
+Check the health and telemetry metrics:
+```bash
+curl http://localhost:8080/openbalancer/status
+```
+
+---
+
+## 🏢 Enterprise Support & SLAs
+
+OpenBalancer is maintained and commercially operated by **INCONTROL PLUS ЕООД** (Sofia, Bulgaria). We offer dedicated enterprise services:
+* **99.9% Guaranteed Monthly Uptime SLA**
+* **Sub-15 Minute Incident Response**
+* **Custom AI Routing & Load Balancer Module Engineering**
+* **Managed Turnkey Infrastructure Deployments**
+
+For inquiries, contact: **support@openbalancer.com** or visit **[https://openbalancer.com](https://openbalancer.com)**.
+
+---
+
+## 📜 License & Compliance
+
+* **Software License**: Distributed under the [MIT License](LICENSE).
+* **Corporate Operator**: INCONTROL PLUS ЕООД, Sofia, Bulgaria.
+* **Compliance**: Full GDPR, Stripe KYB, and EU consumer protection alignment.

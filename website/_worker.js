@@ -42,6 +42,7 @@ export default {
         const phone_number = (body.phone_number || '').trim();
         const selected_plan = (body.selected_plan || 'B2B Pro SLA Retainer').trim();
         const inquiry_message = (body.inquiry_message || '').trim();
+        const payment_preference = (body.payment_preference || 'invoice').trim();
         const language = (body.language || 'en').trim();
         const source = (body.source || 'website_modal').trim();
 

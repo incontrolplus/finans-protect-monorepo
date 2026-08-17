@@ -146,9 +146,15 @@ function initTerminalTabs() {
 function initLoadBalancerSimulator() {
   const sendBtn = document.getElementById('sim-send-req-btn');
   const outageBtn = document.getElementById('sim-toggle-outage-btn');
+  const latencyBtn = document.getElementById('sim-latency-spike-btn');
+  const surgeBtn = document.getElementById('sim-traffic-surge-btn');
+  const resetBtn = document.getElementById('sim-reset-cluster-btn');
   const latencyDisplay = document.getElementById('sim-avg-latency');
   const reqCountDisplay = document.getElementById('sim-req-count');
   const activeBackendDisplay = document.getElementById('sim-active-node');
+  const eventBanner = document.getElementById('sim-event-banner');
+  const eventText = document.getElementById('sim-event-text');
+  const eventIndicator = document.getElementById('sim-event-indicator');
   
   const backends = [
     { id: 1, name: 'srv-us-east-1', weight: 2, latency: 12, status: 'UP', count: 0 },
@@ -159,9 +165,19 @@ function initLoadBalancerSimulator() {
   let currentIdx = 0;
   let totalRequests = 142850;
 
-  function dispatchRequest() {
+  function setBanner(status, text) {
+    if (!eventBanner || !eventText || !eventIndicator) return;
+    eventBanner.className = `sim-event-banner ${status}`;
+    eventIndicator.className = `event-indicator ${status}`;
+    eventText.textContent = text;
+  }
+
+  function dispatchRequest(customJitter = 0) {
     const availableNodes = backends.filter(b => b.status === 'UP');
-    if (availableNodes.length === 0) return;
+    if (availableNodes.length === 0) {
+      setBanner('outage', 'Error 503: No healthy upstream nodes available in cluster!');
+      return;
+    }
 
     const targetNode = availableNodes[currentIdx % availableNodes.length];
     currentIdx++;
@@ -183,9 +199,14 @@ function initLoadBalancerSimulator() {
       reqCountDisplay.textContent = totalRequests.toLocaleString();
     }
     if (latencyDisplay) {
-      const jitter = Math.floor(Math.random() * 4) - 2;
+      const jitter = Math.floor(Math.random() * 4) - 2 + customJitter;
       const currentLat = Math.max(8, targetNode.latency + jitter);
       latencyDisplay.textContent = `${currentLat} ms`;
+      if (currentLat > 200) {
+        latencyDisplay.className = 'stat-value down';
+      } else {
+        latencyDisplay.className = 'stat-value healthy';
+      }
     }
     if (activeBackendDisplay) {
       activeBackendDisplay.textContent = targetNode.name;
@@ -193,7 +214,7 @@ function initLoadBalancerSimulator() {
   }
 
   if (sendBtn) {
-    sendBtn.addEventListener('click', dispatchRequest);
+    sendBtn.addEventListener('click', () => dispatchRequest(0));
   }
 
   if (outageBtn) {
@@ -209,7 +230,8 @@ function initLoadBalancerSimulator() {
           pill2.textContent = 'TRIPPED (503)';
           pill2.className = 'backend-status-pill down';
         }
-        outageBtn.textContent = 'Restore Node 2 Health';
+        outageBtn.textContent = 'Restore Node 2';
+        setBanner('outage', 'Chaos Alert: Node 2 crashed (503 Service Unavailable). Traffic rerouted to Node 1 & 3 with zero dropped packets.');
       } else {
         node2.status = 'UP';
         if (card2) card2.classList.remove('down');
@@ -217,8 +239,57 @@ function initLoadBalancerSimulator() {
           pill2.textContent = 'HEALTHY';
           pill2.className = 'backend-status-pill up';
         }
-        outageBtn.textContent = 'Simulate Node 2 Outage';
+        outageBtn.textContent = 'Crash Node 2 (Failover)';
+        setBanner('healthy', 'Health Check: Node 2 probe returned 200 OK. Node restored to active balancing pool.');
       }
+    });
+  }
+
+  if (latencyBtn) {
+    latencyBtn.addEventListener('click', () => {
+      const node1 = backends.find(b => b.id === 1);
+      const pill1 = document.getElementById('status-pill-1');
+      node1.latency = 520;
+      if (pill1) {
+        pill1.textContent = 'DEGRADED (520ms)';
+        pill1.className = 'backend-status-pill down';
+      }
+      setBanner('degraded', 'Circuit Breaker: High latency detected on Node 1 (520ms). Shedding traffic to healthy peers.');
+      dispatchRequest(0);
+    });
+  }
+
+  if (surgeBtn) {
+    surgeBtn.addEventListener('click', () => {
+      setBanner('healthy', 'Stress Test: 1,000 req/sec burst ingested. Asynchronous queue depth optimal.');
+      totalRequests += 1000;
+      if (reqCountDisplay) reqCountDisplay.textContent = totalRequests.toLocaleString();
+      let burstCount = 0;
+      const burstInterval = setInterval(() => {
+        dispatchRequest(0);
+        burstCount++;
+        if (burstCount >= 15) clearInterval(burstInterval);
+      }, 40);
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      backends.forEach((b, idx) => {
+        b.status = 'UP';
+        b.latency = idx === 0 ? 12 : idx === 1 ? 18 : 45;
+        const card = document.getElementById(`backend-card-${b.id}`);
+        const pill = document.getElementById(`status-pill-${b.id}`);
+        if (card) card.classList.remove('down');
+        if (pill) {
+          pill.textContent = 'HEALTHY';
+          pill.className = 'backend-status-pill up';
+        }
+      });
+      if (outageBtn) outageBtn.textContent = 'Crash Node 2 (Failover)';
+      if (latencyDisplay) latencyDisplay.className = 'stat-value healthy';
+      setBanner('healthy', 'Cluster Status: All nodes restored to healthy baseline (12ms latency).');
+      dispatchRequest(0);
     });
   }
 }
@@ -484,21 +555,35 @@ function initContactModal() {
     }
   });
 
+  const paymentRadios = document.querySelectorAll('input[name="payment_pref"]');
+  const submitBtn = document.getElementById('submit-inquiry-btn');
+
+  paymentRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (!submitBtn) return;
+      if (radio.value === 'stripe_card') {
+        submitBtn.textContent = 'Proceed to Stripe Card Checkout';
+      } else {
+        submitBtn.textContent = 'Submit B2B Inquiry & Request Invoicing';
+      }
+    });
+  });
+
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const submitBtn = document.getElementById('submit-inquiry-btn');
       const companyName = document.getElementById('company_name')?.value || '';
       const vatNumber = document.getElementById('vat_number')?.value || '';
       const workEmail = document.getElementById('work_email')?.value || '';
       const phoneNumber = document.getElementById('phone_number')?.value || '';
       const selectedPlan = document.getElementById('selected_plan')?.value || 'B2B Pro SLA Retainer';
       const inquiryMessage = document.getElementById('inquiry_message')?.value || '';
+      const paymentPref = document.querySelector('input[name="payment_pref"]:checked')?.value || 'invoice';
       const lang = document.documentElement.lang || 'en';
 
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting & Encrypting Inquiry...';
+        submitBtn.textContent = paymentPref === 'stripe_card' ? 'Connecting to Stripe Checkout...' : 'Submitting & Encrypting Inquiry...';
       }
 
       try {
@@ -512,6 +597,7 @@ function initContactModal() {
             phone_number: phoneNumber,
             selected_plan: selectedPlan,
             inquiry_message: inquiryMessage,
+            payment_preference: paymentPref,
             language: lang,
             source: 'website_b2b_modal'
           })
@@ -531,7 +617,6 @@ function initContactModal() {
         }
       } catch (err) {
         console.error('Fetch error:', err);
-        // Fallback for graceful resilience
         form.style.display = 'none';
         if (successEmail) successEmail.textContent = workEmail;
         if (successBox) successBox.style.display = 'block';

@@ -366,10 +366,19 @@
               <span class="stat-value" id="sim-active-node">srv-us-east-1</span>
             </div>
           </div>
-          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary btn-sm" id="sim-toggle-outage-btn" data-i18n="sim_btn_outage">Simulate Node 2 Outage</button>
-            <button type="button" class="btn btn-primary btn-sm" id="sim-send-req-btn" data-i18n="sim_btn_send">Send Test Socket Request</button>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-secondary btn-sm" id="sim-toggle-outage-btn" data-i18n="sim_btn_outage">Crash Node 2 (Failover)</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="sim-latency-spike-btn" data-i18n="sim_btn_latency">Inject 500ms Spike (Node 1)</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="sim-traffic-surge-btn" data-i18n="sim_btn_surge">Surge (1k Req/s)</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="sim-reset-cluster-btn" data-i18n="sim_btn_reset">Reset Cluster</button>
+            <button type="button" class="btn btn-primary btn-sm" id="sim-send-req-btn" data-i18n="sim_btn_send">Send Socket Request</button>
           </div>
+        </div>
+
+        <!-- Real-Time Chaos & Failover Telemetry Event Log -->
+        <div class="sim-event-banner" id="sim-event-banner">
+          <span class="event-indicator healthy" id="sim-event-indicator"></span>
+          <span id="sim-event-text" data-i18n="sim_event_baseline">Cluster Status: All 3 upstream nodes online. Dynamic load distribution active.</span>
         </div>
 
         <div class="sim-visualizer">
@@ -840,8 +849,23 @@
         </div>
 
         <div class="form-group">
-          <label for="inquiry_message" data-i18n="modal_lbl_scope">Cluster Scope &amp; Target Throughput</label>
-          <textarea id="inquiry_message" class="form-control" rows="3" placeholder="Target req/sec, AI model inference backends (vLLM/Ollama), Kubernetes deployment..."></textarea>
+          <label data-i18n="modal_lbl_payment_method">Preferred Billing &amp; Payment Method</label>
+          <div class="payment-method-selector">
+            <label class="payment-radio-label">
+              <input type="radio" name="payment_pref" value="invoice" checked>
+              <span>
+                <strong data-i18n="modal_opt_invoice">Corporate Net-14 Invoicing</strong>
+                <small data-i18n="modal_opt_invoice_sub">SEPA Bank Transfer / VAT Reverse Charge</small>
+              </span>
+            </label>
+            <label class="payment-radio-label">
+              <input type="radio" name="payment_pref" value="stripe_card">
+              <span>
+                <strong data-i18n="modal_opt_card">Instant Stripe Card Checkout</strong>
+                <small data-i18n="modal_opt_card_sub">Corporate Credit / Debit Card &amp; Apple Pay</small>
+              </span>
+            </label>
+          </div>
         </div>
 
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="submit-inquiry-btn" data-i18n="modal_btn_submit">
@@ -871,7 +895,7 @@
   </div>
 
   <!-- Scripts with cache busting -->
-  <script src="js/i18n.js?v=2.0.3"></script>
-  <script src="js/main.js?v=2.0.3"></script>
+  <script src="js/i18n.js?v=2.0.4"></script>
+  <script src="js/main.js?v=2.0.4"></script>
 </body>
 </html>

@@ -5,12 +5,13 @@
   <a href="README.md"><b>🇬🇧 English Version</b></a>
 </p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-Готов-2496ED?logo=docker&logoColor=white)](core/Dockerfile)
-[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](core/openbalancer.py)
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-На%20живо-F38020?logo=cloudflare&logoColor=white)](https://openbalancer.pages.dev)
-[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Наличен-10b981)](https://openbalancer.pages.dev/#enterprise)
-[![Опериран от](https://img.shields.io/badge/Опериран%20от-INCONTROL%20PLUS-3b82f6)](https://openbalancer.pages.dev)
+[![CI](https://github.com/incontrolplus/openbalancer/actions/workflows/ci.yml/badge.svg)](https://github.com/incontrolplus/openbalancer/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/incontrolplus/openbalancer/actions/workflows/docker.yml/badge.svg)](https://github.com/incontrolplus/openbalancer/actions/workflows/docker.yml)
+[![License: MIT](https://img.shields.io/badge/Лиценз-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](core/openbalancer.py)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-Активен-F38020?logo=cloudflare&logoColor=white)](https://openbalancer.pages.dev)
+[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Поддръжка-10b981)](https://www.openbalancer.com/#enterprise)
+[![Оператор](https://img.shields.io/badge/Оператор-ИНКОНТРОЛ%20ПЛЮС%20ЕООД-3b82f6)](https://www.openbalancer.com)
 
 **OpenBalancer** е модерен, високопроизводителен, асинхронен балансьор на натоварването (load balancer), reverse proxy и инфраструктурен софтуерен пакет с отворен код, създаден и поддържан от **ИНКОНТРОЛ ПЛЮС ЕООД (INCONTROL PLUS EOOD)**. Проектиран специално за AI клъстери, високочестотни микросървиси и критично важни уебхуци и API маршрутизация.
 

@@ -5,12 +5,13 @@
   <a href="README.md"><b>🇬🇧 English Version</b></a>
 </p>
 
+[![CI](https://github.com/incontrolplus/openbalancer/actions/workflows/ci.yml/badge.svg)](https://github.com/incontrolplus/openbalancer/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/incontrolplus/openbalancer/actions/workflows/docker.yml/badge.svg)](https://github.com/incontrolplus/openbalancer/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](core/Dockerfile)
-[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](core/openbalancer.py)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](core/openbalancer.py)
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-Live-F38020?logo=cloudflare&logoColor=white)](https://openbalancer.pages.dev)
-[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Available-10b981)](https://openbalancer.pages.dev/#enterprise)
-[![Operated by](https://img.shields.io/badge/Operated%20by-INCONTROL%20PLUS-3b82f6)](https://openbalancer.pages.dev)
+[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Available-10b981)](https://www.openbalancer.com/#enterprise)
+[![Operated by](https://img.shields.io/badge/Operated%20by-INCONTROL%20PLUS-3b82f6)](https://www.openbalancer.com)
 
 **OpenBalancer** is a modern, high-performance, asynchronous load balancer, reverse proxy, and open-source infrastructure suite engineered by **INCONTROL PLUS ЕООД**. Built for AI inference clusters, high-throughput microservices, and mission-critical API routing.
 

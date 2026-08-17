@@ -1,0 +1,61 @@
+name: OpenBalancer Docker — Build & Container Verification
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'core/**'
+      - '.github/workflows/docker.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'core/**'
+      - '.github/workflows/docker.yml'
+  workflow_dispatch:
+
+jobs:
+  docker-build-verify:
+    name: Build & Verify Container Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./core
+          file: ./core/Dockerfile
+          load: true
+          tags: openbalancer:local-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify Container Execution & Status Endpoint
+        run: |
+          echo "Starting OpenBalancer container in detached mode..."
+          docker run -d --name openbalancer-test-container -p 8080:8080 openbalancer:local-test
+          sleep 2
+          
+          echo "Checking container logs..."
+          docker logs openbalancer-test-container
+          
+          echo "Querying status endpoint..."
+          curl -f -s http://127.0.0.1:8080/openbalancer/status | jq .
+          
+          echo "Verifying HTTP response code..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/openbalancer/status)
+          if [ "$STATUS" -ne 200 ]; then
+            echo "❌ Expected HTTP 200, got $STATUS"
+            exit 1
+          fi
+          echo "✅ Container is healthy and responding with HTTP 200 OK!"
+
+      - name: Clean up Container
+        if: always()
+        run: |
+          docker rm -f openbalancer-test-container || true

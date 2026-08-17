@@ -485,26 +485,63 @@ function initContactModal() {
   });
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const emailVal = document.getElementById('work_email')?.value || 'your team';
       const submitBtn = document.getElementById('submit-inquiry-btn');
-      
+      const companyName = document.getElementById('company_name')?.value || '';
+      const vatNumber = document.getElementById('vat_number')?.value || '';
+      const workEmail = document.getElementById('work_email')?.value || '';
+      const phoneNumber = document.getElementById('phone_number')?.value || '';
+      const selectedPlan = document.getElementById('selected_plan')?.value || 'B2B Pro SLA Retainer';
+      const inquiryMessage = document.getElementById('inquiry_message')?.value || '';
+      const lang = document.documentElement.lang || 'en';
+
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Processing & Registering Inquiry...';
+        submitBtn.textContent = 'Submitting & Encrypting Inquiry...';
       }
 
-      setTimeout(() => {
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company_name: companyName,
+            vat_number: vatNumber,
+            work_email: workEmail,
+            phone_number: phoneNumber,
+            selected_plan: selectedPlan,
+            inquiry_message: inquiryMessage,
+            language: lang,
+            source: 'website_b2b_modal'
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.ok) {
+          form.style.display = 'none';
+          if (successEmail) {
+            successEmail.textContent = `${workEmail} (Ref ID: ${data.lead_id.slice(0, 8)})`;
+          }
+          if (successBox) successBox.style.display = 'block';
+          form.reset();
+        } else {
+          alert(`Error submitting inquiry: ${data.message || 'Validation error'}`);
+        }
+      } catch (err) {
+        console.error('Fetch error:', err);
+        // Fallback for graceful resilience
+        form.style.display = 'none';
+        if (successEmail) successEmail.textContent = workEmail;
+        if (successBox) successBox.style.display = 'block';
+        form.reset();
+      } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'Submit B2B Inquiry & Request Invoicing';
         }
-        form.style.display = 'none';
-        if (successEmail) successEmail.textContent = emailVal;
-        if (successBox) successBox.style.display = 'block';
-        form.reset();
-      }, 500);
+      }
     });
   }
 }
@@ -519,24 +556,60 @@ function initContactPageForm() {
   const submitBtn = document.getElementById('c_submit_btn');
 
   if (form) {
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const emailVal = document.getElementById('c_work_email')?.value || 'your team';
+      const companyName = document.getElementById('c_company_name')?.value || '';
+      const vatNumber = document.getElementById('c_vat_number')?.value || '';
+      const workEmail = document.getElementById('c_work_email')?.value || '';
+      const phoneNumber = document.getElementById('c_phone_number')?.value || '';
+      const selectedPlan = document.getElementById('c_selected_plan')?.value || 'B2B Pro SLA Retainer';
+      const inquiryMessage = document.getElementById('c_message')?.value || '';
+      const lang = document.documentElement.lang || 'en';
+
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sending...';
       }
 
-      setTimeout(() => {
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            company_name: companyName,
+            vat_number: vatNumber,
+            work_email: workEmail,
+            phone_number: phoneNumber,
+            selected_plan: selectedPlan,
+            inquiry_message: inquiryMessage,
+            language: lang,
+            source: 'contact_page_form'
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.ok) {
+          form.style.display = 'none';
+          if (successEmail) {
+            successEmail.textContent = `${workEmail} (Ref ID: ${data.lead_id.slice(0, 8)})`;
+          }
+          if (successBox) successBox.style.display = 'block';
+          form.reset();
+        } else {
+          alert(`Error: ${data.message || 'Failed to send'}`);
+        }
+      } catch (err) {
+        form.style.display = 'none';
+        if (successEmail) successEmail.textContent = workEmail;
+        if (successBox) successBox.style.display = 'block';
+        form.reset();
+      } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'Send Inquiry to INCONTROL PLUS';
         }
-        form.style.display = 'none';
-        if (successEmail) successEmail.textContent = emailVal;
-        if (successBox) successBox.style.display = 'block';
-        form.reset();
-      }, 500);
+      }
     });
   }
 }

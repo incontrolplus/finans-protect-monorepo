@@ -1,0 +1,119 @@
+name: OpenBalancer Release — GitHub Release & GHCR Package Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.4.2)'
+        required: true
+        default: 'v1.4.2'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-publish:
+    name: Build Multi-Arch Container & Publish GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Release Tag
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+          echo "Building OpenBalancer release for tag: ${TAG}"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Multi-Arch Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./core
+          file: ./core/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.tag }}
+            ghcr.io/${{ github.repository }}:latest
+
+      - name: Create Standalone Release Archive
+        run: |
+          mkdir -p release-bundle
+          tar -czvf "release-bundle/openbalancer-${{ steps.vars.outputs.tag }}.tar.gz" \
+            -C core openbalancer.py config.json Dockerfile docker-compose.yml README.md LICENSE \
+            -C .. install.sh
+          ls -la release-bundle/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: "OpenBalancer ${{ steps.vars.outputs.tag }} — Enterprise AI & API Load Balancer"
+          draft: false
+          prerelease: false
+          files: release-bundle/*
+          body: |
+            ## ⚡ OpenBalancer ${{ steps.vars.outputs.tag }}
+
+            Engineered & Maintained by **INCONTROL PLUS ЕООД** (https://www.openbalancer.com)  
+            *High-Throughput Asynchronous Reverse Proxy & Intelligent Load Balancer for AI Clusters and Critical APIs.*
+
+            ---
+
+            ### 🚀 Quickstart
+
+            #### 1. One-Line Installer (Linux / macOS):
+            ```bash
+            curl -fsSL https://www.openbalancer.com/install.sh | bash
+            ```
+
+            #### 2. Run with Docker (GHCR Multi-Arch):
+            ```bash
+            docker run -d --name openbalancer -p 8088:8088 ghcr.io/${{ github.repository }}:latest
+            ```
+
+            #### 3. Run Standalone Python:
+            ```bash
+            python3 core/openbalancer.py core/config.json
+            ```
+
+            ---
+
+            ### 🌟 Key Highlights & Capabilities
+            - **Asynchronous Non-Blocking Engine:** Sub-millisecond latency routing on Python `asyncio` sockets.
+            - **Adaptive Routing Algorithms:** Weighted Round-Robin, Least-Connections, Consistent IP-Hash, Power-of-Two Random Choices.
+            - **Prometheus & Dashboard Telemetry:** Native `/openbalancer/status` endpoint with real-time metrics and latency tracking.
+            - **Zero-Buffer SSE Streaming:** Optimized for LLM inference tokens with O(1) memory overhead.
+            - **99.9% Uptime B2B SLA Support:** Enterprise support and turnkey deployment by INCONTROL PLUS.
+
+            ---
+
+            ### 📦 Release Assets
+            - Standalone Tarball Archive: `openbalancer-${{ steps.vars.outputs.tag }}.tar.gz`
+            - Container Registry: `ghcr.io/${{ github.repository }}:${{ steps.vars.outputs.tag }}`

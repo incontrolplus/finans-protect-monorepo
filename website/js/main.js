@@ -1,11 +1,11 @@
 /* ==========================================================================
-   OpenBalancer — Interactive Simulation & UI Logic
+   OpenBalancer — High-Performance Infrastructure JS Logic
    Operated by INCONTROL PLUS ЕООД
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTerminalTabs();
   initLoadBalancerSimulator();
-  initCopyCodeButtons();
   initContactModal();
   initContactPageForm();
   initSmoothScroll();
@@ -13,24 +13,67 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Interactive Load Balancer Simulator
+ * Terminal Tabs & Snippet Switcher
+ */
+function initTerminalTabs() {
+  const tabs = document.querySelectorAll('.terminal-tab');
+  const copyBtn = document.getElementById('terminal-copy-btn');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const target = tab.getAttribute('data-tab');
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.style.display = 'none';
+      });
+
+      const activeContent = document.getElementById(`tab-${target}`);
+      if (activeContent) {
+        activeContent.style.display = 'block';
+      }
+    });
+  });
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const activeTabContent = document.querySelector('.tab-content:not([style*="display: none"])');
+      if (activeTabContent) {
+        const textToCopy = activeTabContent.textContent.trim();
+        try {
+          await navigator.clipboard.writeText(textToCopy);
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+          }, 2000);
+        } catch (err) {
+          console.error('Copy failed', err);
+        }
+      }
+    });
+  }
+}
+
+/**
+ * Interactive Load Balancer Simulator with Outage Simulation
  */
 function initLoadBalancerSimulator() {
   const sendBtn = document.getElementById('sim-send-req-btn');
-  const autoToggle = document.getElementById('sim-auto-toggle');
+  const outageBtn = document.getElementById('sim-toggle-outage-btn');
   const latencyDisplay = document.getElementById('sim-avg-latency');
   const reqCountDisplay = document.getElementById('sim-req-count');
   const activeBackendDisplay = document.getElementById('sim-active-node');
   
   const backends = [
-    { id: 1, name: 'srv-us-east-1 (AI Cluster 1)', weight: 1, latency: 12, status: 'UP', count: 0 },
-    { id: 2, name: 'srv-eu-west-1 (AI Cluster 2)', weight: 1, latency: 18, status: 'UP', count: 0 },
-    { id: 3, name: 'srv-ap-southeast-1 (Failover Node)', weight: 1, latency: 45, status: 'UP', count: 0 }
+    { id: 1, name: 'srv-us-east-1', weight: 2, latency: 12, status: 'UP', count: 0 },
+    { id: 2, name: 'srv-eu-west-1', weight: 1, latency: 18, status: 'UP', count: 0 },
+    { id: 3, name: 'srv-ap-southeast-1', weight: 1, latency: 45, status: 'UP', count: 0 }
   ];
 
   let currentIdx = 0;
   let totalRequests = 142850;
-  let autoInterval = null;
 
   function dispatchRequest() {
     const availableNodes = backends.filter(b => b.status === 'UP');
@@ -41,71 +84,59 @@ function initLoadBalancerSimulator() {
     totalRequests++;
     targetNode.count++;
 
-    // Update UI highlights
+    // Highlight active card
     backends.forEach(b => {
       const el = document.getElementById(`backend-card-${b.id}`);
       if (el) {
-        if (b.id === targetNode.id) {
+        if (b.id === targetNode.id && b.status === 'UP') {
           el.classList.add('active');
-          setTimeout(() => el.classList.remove('active'), 400);
+          setTimeout(() => el.classList.remove('active'), 350);
         }
       }
     });
 
-    // Update Counter & Latency
     if (reqCountDisplay) {
       reqCountDisplay.textContent = totalRequests.toLocaleString();
     }
     if (latencyDisplay) {
-      const jitter = Math.floor(Math.random() * 5) - 2;
+      const jitter = Math.floor(Math.random() * 4) - 2;
       const currentLat = Math.max(8, targetNode.latency + jitter);
       latencyDisplay.textContent = `${currentLat} ms`;
     }
     if (activeBackendDisplay) {
-      activeBackendDisplay.textContent = targetNode.name.split(' ')[0];
+      activeBackendDisplay.textContent = targetNode.name;
     }
   }
 
   if (sendBtn) {
-    sendBtn.addEventListener('click', () => {
-      dispatchRequest();
-    });
+    sendBtn.addEventListener('click', dispatchRequest);
   }
 
-  if (autoToggle) {
-    autoToggle.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        autoInterval = setInterval(dispatchRequest, 600);
-      } else {
-        clearInterval(autoInterval);
-        autoInterval = null;
-      }
-    });
-  }
-}
+  if (outageBtn) {
+    outageBtn.addEventListener('click', () => {
+      const node2 = backends.find(b => b.id === 2);
+      const card2 = document.getElementById('backend-card-2');
+      const pill2 = document.getElementById('status-pill-2');
 
-/**
- * Copy to Clipboard for Terminal Snippets
- */
-function initCopyCodeButtons() {
-  const copyButtons = document.querySelectorAll('.copy-btn');
-  copyButtons.forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const codeTarget = btn.getAttribute('data-code');
-      if (codeTarget) {
-        try {
-          await navigator.clipboard.writeText(codeTarget);
-          const originalText = btn.textContent;
-          btn.textContent = 'Copied!';
-          setTimeout(() => {
-            btn.textContent = originalText;
-          }, 2000);
-        } catch (err) {
-          console.error('Failed to copy', err);
+      if (node2.status === 'UP') {
+        node2.status = 'DOWN';
+        if (card2) card2.classList.add('down');
+        if (pill2) {
+          pill2.textContent = 'TRIPPED (503)';
+          pill2.className = 'backend-status-pill down';
         }
+        outageBtn.textContent = 'Restore Node 2 Health';
+      } else {
+        node2.status = 'UP';
+        if (card2) card2.classList.remove('down');
+        if (pill2) {
+          pill2.textContent = 'HEALTHY';
+          pill2.className = 'backend-status-pill up';
+        }
+        outageBtn.textContent = 'Simulate Node 2 Outage';
       }
     });
-  });
+  }
 }
 
 /**
@@ -188,7 +219,7 @@ function initContactModal() {
         if (successEmail) successEmail.textContent = emailVal;
         if (successBox) successBox.style.display = 'block';
         form.reset();
-      }, 600);
+      }, 500);
     });
   }
 }
@@ -270,4 +301,3 @@ function initCookieBanner() {
   if (acceptBtn) acceptBtn.addEventListener('click', () => setConsent('all'));
   if (dismissBtn) dismissBtn.addEventListener('click', () => setConsent('essential'));
 }
-

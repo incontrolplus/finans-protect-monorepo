@@ -423,6 +423,68 @@
     </div>
   </footer>
 
+  <!-- Interactive B2B Consultation & SLA Modal -->
+  <div class="modal-backdrop" id="b2b-modal">
+    <div class="modal-dialog">
+      <button class="modal-close" id="modal-close-btn">&times;</button>
+      <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;" id="modal-title">Request Enterprise SLA & Invoicing</h3>
+      <p style="font-size: 0.95rem; margin-bottom: 1.5rem;">
+        Direct engagement with <strong>INCONTROL PLUS ЕООД</strong>. Receive a formal B2B proposal and SLA terms within 2 hours.
+      </p>
+
+      <form id="b2b-inquiry-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="company_name">Company Name *</label>
+            <input type="text" id="company_name" class="form-control" placeholder="Acme Corp Ltd" required>
+          </div>
+          <div class="form-group">
+            <label for="vat_number">VAT / Reg Number</label>
+            <input type="text" id="vat_number" class="form-control" placeholder="BG123456789">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="work_email">Work Email *</label>
+            <input type="email" id="work_email" class="form-control" placeholder="alex@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="phone_number">Phone Number</label>
+            <input type="tel" id="phone_number" class="form-control" placeholder="+359 88 123 4567">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="selected_plan">Selected Retainer / Plan *</label>
+          <select id="selected_plan" class="form-control" required>
+            <option value="B2B Pro SLA Retainer (€1,500/mo)">B2B Pro SLA Retainer (€1,500/month)</option>
+            <option value="Custom Enterprise Architecture">Custom Enterprise Architecture (Custom Quote)</option>
+            <option value="Turnkey AI Infrastructure Deployment">Turnkey AI Infrastructure Deployment</option>
+            <option value="Emergency Incident Retainer">Emergency Incident Retainer</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="inquiry_message">Project Scale & Requirements</label>
+          <textarea id="inquiry_message" class="form-control" rows="3" placeholder="Expected number of nodes, throughput, AI inference backend details..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;" id="submit-inquiry-btn">
+          Submit B2B Inquiry & Request Invoicing
+        </button>
+      </form>
+
+      <div class="form-success-box" id="form-success-box">
+        <h4>🎉 Inquiry Received Successfully!</h4>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem; color: #e5e7eb;">
+          Our senior infrastructure lead at INCONTROL PLUS will review your specifications and contact your team at <strong id="success-email" style="color: #60a5fa;"></strong> with an official B2B proposal and Net-14 invoicing schedule.
+        </p>
+        <button class="btn btn-secondary btn-sm" id="close-success-btn" style="margin-top: 1rem;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/main.js"></script>
 </body>

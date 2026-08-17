@@ -49,11 +49,46 @@
       </div>
 
       <div class="feature-card">
-        <h3 style="margin-bottom: 1rem; color: var(--accent);">B2B Inquiries & SLAs</h3>
-        <p style="margin-bottom: 1rem; font-size: 0.95rem;">
-          To request an enterprise deployment audit, discuss a Master Services Agreement (MSA), or activate 24/7 SLA coverage:
-        </p>
-        <a href="mailto:support@openbalancer.com?subject=Enterprise%20SLA%20Inquiry" class="btn btn-primary" style="width: 100%;">Email B2B Sales & SLA Desk</a>
+        <h3 style="margin-bottom: 1rem; color: var(--accent);">B2B Inquiry & SLA Consultation Form</h3>
+        <form id="contact-inquiry-form">
+          <div class="form-group">
+            <label for="c_company_name">Company Name *</label>
+            <input type="text" id="c_company_name" class="form-control" placeholder="Company Name Ltd" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="c_work_email">Work Email *</label>
+              <input type="email" id="c_work_email" class="form-control" placeholder="contact@company.com" required>
+            </div>
+            <div class="form-group">
+              <label for="c_phone">Phone</label>
+              <input type="tel" id="c_phone" class="form-control" placeholder="+359 ...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="c_service">Service Type *</label>
+            <select id="c_service" class="form-control" required>
+              <option value="B2B Pro SLA Retainer (€1,500/mo)">B2B Pro SLA Retainer (€1,500/month)</option>
+              <option value="Custom Enterprise SLA Retainer">Custom Enterprise SLA Retainer</option>
+              <option value="Turnkey AI Infrastructure Setup">Turnkey AI Infrastructure Setup</option>
+              <option value="Billing & Invoicing Query">Billing & Invoicing Query</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="c_message">Inquiry Details</label>
+            <textarea id="c_message" class="form-control" rows="3" placeholder="Briefly describe your requirements or question..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;" id="c_submit_btn">
+            Send Inquiry to INCONTROL PLUS
+          </button>
+        </form>
+
+        <div class="form-success-box" id="c_success_box" style="margin-top: 1rem;">
+          <h4>✅ Inquiry Sent Successfully!</h4>
+          <p style="font-size: 0.9rem; margin-top: 0.5rem; color: #e5e7eb;">
+            Thank you. Our B2B operations desk will respond to <strong id="c_success_email" style="color: #60a5fa;"></strong> within 2 business hours.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -77,5 +112,6 @@
     </div>
   </footer>
 
+  <script src="js/main.js"></script>
 </body>
 </html>

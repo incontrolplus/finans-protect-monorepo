@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initLoadBalancerSimulator();
   initCopyCodeButtons();
   initContactModal();
+  initContactPageForm();
+  initSmoothScroll();
 });
 
 /**
@@ -30,7 +32,6 @@ function initLoadBalancerSimulator() {
   let autoInterval = null;
 
   function dispatchRequest() {
-    // Round-Robin with active node check
     const availableNodes = backends.filter(b => b.status === 'UP');
     if (availableNodes.length === 0) return;
 
@@ -107,18 +108,135 @@ function initCopyCodeButtons() {
 }
 
 /**
- * Contact Modal & B2B Inquiry Trigger
+ * Interactive B2B Modal & Inquiry Handler
  */
 function initContactModal() {
+  const modal = document.getElementById('b2b-modal');
+  const closeBtn = document.getElementById('modal-close-btn');
+  const closeSuccessBtn = document.getElementById('close-success-btn');
+  const form = document.getElementById('b2b-inquiry-form');
+  const successBox = document.getElementById('form-success-box');
+  const successEmail = document.getElementById('success-email');
+  const selectedPlanInput = document.getElementById('selected_plan');
+  const modalTitle = document.getElementById('modal-title');
   const enterpriseButtons = document.querySelectorAll('[data-action="enterprise-inquiry"]');
+
+  if (!modal) return;
+
+  function openModal(planName) {
+    if (selectedPlanInput && planName) {
+      for (let option of selectedPlanInput.options) {
+        if (option.value.includes(planName) || option.text.includes(planName)) {
+          option.selected = true;
+          break;
+        }
+      }
+    }
+    if (modalTitle && planName) {
+      modalTitle.textContent = `Inquire: ${planName}`;
+    }
+    if (form) form.style.display = 'block';
+    if (successBox) successBox.style.display = 'none';
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
   enterpriseButtons.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const plan = btn.getAttribute('data-plan') || 'Custom Enterprise SLA';
-      const email = 'support@openbalancer.com';
-      const subject = encodeURIComponent(`B2B Inquiry / SLA Request: ${plan}`);
-      const body = encodeURIComponent(`Hello INCONTROL PLUS team,\n\nWe are interested in discussing an Enterprise SLA & Infrastructure setup for OpenBalancer (${plan}).\n\nCompany Name:\nContact Person:\nInfrastructure Scale:\n\nThank you!`);
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+      const plan = btn.getAttribute('data-plan') || 'B2B Pro SLA Retainer';
+      openModal(plan);
+    });
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (closeSuccessBtn) closeSuccessBtn.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
+
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailVal = document.getElementById('work_email')?.value || 'your team';
+      const submitBtn = document.getElementById('submit-inquiry-btn');
+      
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing & Registering Inquiry...';
+      }
+
+      setTimeout(() => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Submit B2B Inquiry & Request Invoicing';
+        }
+        form.style.display = 'none';
+        if (successEmail) successEmail.textContent = emailVal;
+        if (successBox) successBox.style.display = 'block';
+        form.reset();
+      }, 600);
+    });
+  }
+}
+
+/**
+ * Contact Page Dedicated Form
+ */
+function initContactPageForm() {
+  const form = document.getElementById('contact-inquiry-form');
+  const successBox = document.getElementById('c_success_box');
+  const successEmail = document.getElementById('c_success_email');
+  const submitBtn = document.getElementById('c_submit_btn');
+
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailVal = document.getElementById('c_work_email')?.value || 'your team';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+      }
+
+      setTimeout(() => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Inquiry to INCONTROL PLUS';
+        }
+        form.style.display = 'none';
+        if (successEmail) successEmail.textContent = emailVal;
+        if (successBox) successBox.style.display = 'block';
+        form.reset();
+      }, 500);
+    });
+  }
+}
+
+/**
+ * Smooth Scrolling for Anchor Links
+ */
+function initSmoothScroll() {
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const targetId = this.getAttribute('href');
+      if (targetId === '#' || targetId === '') return;
+      const targetEl = document.querySelector(targetId);
+      if (targetEl) {
+        e.preventDefault();
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
     });
   });
 }

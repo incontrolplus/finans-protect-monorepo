@@ -8,9 +8,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-Готов-2496ED?logo=docker&logoColor=white)](core/Dockerfile)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](core/openbalancer.py)
-[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages%20Ready-F38020?logo=cloudflare&logoColor=white)](cloudflare/Cloudflare_Pages_and_DNS_Deployment_Guide.md)
-[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Наличен-10b981)](https://openbalancer.com/#enterprise)
-[![Опериран от](https://img.shields.io/badge/Опериран%20от-INCONTROL%20PLUS-3b82f6)](https://openbalancer.com)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare%20Pages-На%20живо-F38020?logo=cloudflare&logoColor=white)](https://openbalancer.pages.dev)
+[![Enterprise Support](https://img.shields.io/badge/Enterprise-SLA%20Наличен-10b981)](https://openbalancer.pages.dev/#enterprise)
+[![Опериран от](https://img.shields.io/badge/Опериран%20от-INCONTROL%20PLUS-3b82f6)](https://openbalancer.pages.dev)
 
 **OpenBalancer** е модерен, високопроизводителен, асинхронен балансьор на натоварването (load balancer), reverse proxy и инфраструктурен софтуерен пакет с отворен код, създаден и поддържан от **ИНКОНТРОЛ ПЛЮС ЕООД (INCONTROL PLUS EOOD)**. Проектиран специално за AI клъстери, високочестотни микросървиси и критично важни уебхуци и API маршрутизация.
 

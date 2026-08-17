@@ -1,61 +1,80 @@
 # Ръководство за Разгръщане в Cloudflare Pages & Конфигурация на DNS
 
-**Цел:** 100% безплатен, бърз глобален CDN хостинг с автоматичен SSL сертификат, DDoS защита и непрекъсната интеграция (CI/CD) през GitHub за `openbalancer.com`.
+<p align="center">
+  <a href="Cloudflare_Pages_and_DNS_Deployment_Guide.md"><b>🇧🇬 Българска версия</b></a> | 
+  <a href="Cloudflare_Pages_and_DNS_Deployment_Guide.en.md"><b>🇬🇧 English Version</b></a>
+</p>
+
+**Цел:** 100% безплатен, бърз глобален CDN хостинг с автоматичен SSL сертификат, DDoS защита, HTTP сигурност и непрекъсната интеграция (CI/CD) през Cloudflare Pages и Hostinger DNS за `openbalancer.com`.
 
 ---
 
-## 1. Регистрация и Добавяне на Домейна в Cloudflare
+## 🚀 Текущо Състояние на Разгръщането (Live Status)
 
-1. Влезте в [Cloudflare.com](https://www.cloudflare.com) и се регистрирайте с фирмения имейл на Incontrol Plus.
-2. В контролния панел (Dashboard) изберете **Add a Site**.
-3. Въведете домейна: `openbalancer.com`.
-4. Изберете **Free Plan** (Напълно безплатен план, осигуряващ неограничен трафик, SSL и WAF).
-5. Cloudflare ще сканира съществуващите DNS записи и ще ви предостави два Nameserver адреса (напр. `ada.ns.cloudflare.com` и `bob.ns.cloudflare.com`).
-
----
-
-## 2. Промяна на Nameservers при вашия Домейн Регистрар
-
-1. Влезте в контролния панел на регистрара, откъдето е закупен домейнът `openbalancer.com` (напр. SuperHosting, Namecheap, GoDaddy, Porkbun).
-2. Отворете секцията за управление на DNS / Nameservers.
-3. Превключете от Custom/Default DNS към **Custom Nameservers** и въведете точно двата Nameservers, дадени от Cloudflare.
-4. Запазете промените. Делегирането на DNS обикновено отнема от 5 минути до няколко часа.
+* **Cloudflare Pages Проект:** `openbalancer`
+* **Project ID:** `62ae9ae7-d21c-4d9c-bd78-0948544bc4cb`
+* **Публичен Pages URL:** **[https://openbalancer.pages.dev](https://openbalancer.pages.dev)**
+* **SSL Сертификат:** Google Trust Services Universal SSL (Auto-provisioned)
+* **Защитни заглавия:** CSP, HSTS (`max-age=31536000`), X-Frame-Options (`SAMEORIGIN`), X-Content-Type-Options (`nosniff`).
+* **Потребителски Домейни (Custom Domains):** `openbalancer.com`, `www.openbalancer.com`
+* **Hostinger DNS Настройка:** `CNAME www -> openbalancer.pages.dev.`
 
 ---
 
-## 3. Свързване на GitHub Хранилището с Cloudflare Pages
+## 🔐 Infisical Secrets Mapping (Проект: "Hosting & Domains")
 
-1. В Cloudflare Dashboard отворете менюто **Workers & Pages** -> **Create application** -> **Pages**.
-2. Изберете **Connect to Git**.
-3. Оторизирайте вашия GitHub акаунт / организация `Incontrol-Plus` или `OpenBalancer`.
-4. Изберете хранилището `openbalancer-website`.
-5. Попълнете настройките за Build & Deployment:
-   - **Project name:** `openbalancer` (или `openbalancer-website`)
-   - **Production branch:** `main`
-   - **Framework preset:** `None` (Static HTML/CSS/JS)
-   - **Build command:** *Оставете празно*
-   - **Build output directory:** `.` (или `website/` ако целият проект е в едно моно-хранилище)
-6. Натиснете **Save and Deploy**.
-7. Cloudflare Pages ще компилира и публикува сайта на безплатен поддомейн (напр. `openbalancer.pages.dev`).
+Всички ключове и конфигурации за автоматизация се управляват централизирано в self-hosted Infisical:
+
+| Тайна (Secret Key) | Предназначение |
+| :--- | :--- |
+| `CLOUDFLARE_INCONTROLPLUS_ACCOUNT_ID` | Account ID за Cloudflare акаунта на Incontrol Plus (`1128cf4fabd6...`) |
+| `CLOUDFLARE_INCONTROLPLUS_API_TOKEN` | API Token с права за Pages Projects, Deployments и Domains |
+| `HOSTINGER_API_TOKEN_OPENBALANCER` | Hostinger Developer API Token за управление на DNS зоната на `openbalancer.com` |
+| `CLOUDFLARE_INCONTROLPLUS_ACCESS_KEY_ID` | S3/R2 съвместим Access Key |
+| `CLOUDFLARE_INCONTROLPLUS_SECRET_ACCESS_KEY` | S3/R2 съвместим Secret Key |
+| `CLOUDFLARE_INCONTROLPLUS_S3_API_ENDPOINT` | R2 Cloudflare S3 API Endpoint |
 
 ---
 
-## 4. Свързване на Вашия Собствен Домейн (Custom Domain)
+## 🛠️ Автоматизирано Разгръщане чрез Wrangler CLI
 
-1. В страницата на вашия Cloudflare Pages проект отидете на таб **Custom domains**.
-2. Натиснете **Set up a custom domain**.
-3. Въведете `openbalancer.com` и потвърдете.
-4. Повторете за `www.openbalancer.com`.
-5. Cloudflare автоматично ще конфигурира CNAME записите и ще издаде безплатен Universal SSL сертификат.
+Сайтът се качва от локалната директория `website/` към Cloudflare Pages чрез следната команда:
+
+```bash
+CLOUDFLARE_API_TOKEN="<FETCHED_FROM_INFISICAL>" \
+CLOUDFLARE_ACCOUNT_ID="<FETCHED_FROM_INFISICAL>" \
+npx wrangler pages deploy website --project-name=openbalancer --branch=main
+```
 
 ---
 
-## 5. Препоръчителни Настройки за Сигурност & SSL в Cloudflare
+## 🌐 Hostinger DNS Автоматизация
+
+Конфигурирането на DNS записите в Hostinger се извършва директно през Hostinger DNS v1 REST API:
+
+* **Ендпоинт:** `PUT https://developers.hostinger.com/api/dns/v1/zones/openbalancer.com`
+* **Автентикация:** `Authorization: Bearer <HOSTINGER_API_TOKEN_OPENBALANCER>`
+* **Ключов CNAME запис:**
+  ```json
+  {
+    "name": "www",
+    "type": "CNAME",
+    "ttl": 300,
+    "records": [
+      {
+        "content": "openbalancer.pages.dev.",
+        "is_disabled": false
+      }
+    ]
+  }
+  ```
+
+---
+
+## 🔒 Препоръчителни Настройки за Сигурност в Cloudflare
 
 1. **SSL/TLS Encryption Mode:** Задайте на **Full** или **Full (strict)**.
 2. **Always Use HTTPS:** Включено (**ON**).
 3. **Automatic HTTPS Rewrites:** Включено (**ON**).
 4. **Minimum TLS Version:** TLS 1.2 или TLS 1.3.
-5. **Early Hints & HTTP/3 (with QUIC):** Включено (**ON**).
-
-След тази настройка сайтът `openbalancer.com` ще бъде 100% онлайн с нулев месечен разход, максимална скорост в цял свят и перфектно съответствие за верификацията на Stripe!
+5. **HTTP/3 (QUIC) & Early Hints:** Включено (**ON**).

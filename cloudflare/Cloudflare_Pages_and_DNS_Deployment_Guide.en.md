@@ -5,59 +5,76 @@
   <a href="Cloudflare_Pages_and_DNS_Deployment_Guide.en.md"><b>🇬🇧 English Version</b></a>
 </p>
 
-**Objective:** Zero-cost, edge-accelerated static website hosting with automated SSL, DDoS mitigation, and continuous GitHub CI/CD integration for `openbalancer.com`.
+**Objective:** Zero-cost, edge-accelerated static website hosting with automated SSL, DDoS mitigation, HTTP security headers, and continuous deployment via Cloudflare Pages and Hostinger DNS API for `openbalancer.com`.
 
 ---
 
-## 1. Account Setup & Adding Domain to Cloudflare
+## 🚀 Live Deployment Status
 
-1. Log into [Cloudflare.com](https://www.cloudflare.com) using your corporate email.
-2. In the dashboard, click **Add a Site**.
-3. Enter the root domain: `openbalancer.com`.
-4. Select the **Free Plan** (Includes unlimited bandwidth, global CDN, WAF, and DDoS mitigation).
-5. Cloudflare will scan existing DNS records and provide two authoritative Nameservers (e.g. `ada.ns.cloudflare.com` and `bob.ns.cloudflare.com`).
-
----
-
-## 2. Update Nameservers at Domain Registrar
-
-1. Open your domain registrar portal where `openbalancer.com` was purchased.
-2. Navigate to DNS / Nameserver settings.
-3. Switch to **Custom Nameservers** and insert the two Cloudflare nameservers.
-4. Save changes. DNS delegation typically propagates within 5 to 60 minutes.
+* **Cloudflare Pages Project:** `openbalancer`
+* **Project ID:** `62ae9ae7-d21c-4d9c-bd78-0948544bc4cb`
+* **Live Pages URL:** **[https://openbalancer.pages.dev](https://openbalancer.pages.dev)**
+* **SSL Certificate:** Google Trust Services Universal SSL (Auto-provisioned)
+* **Security Headers:** CSP, HSTS (`max-age=31536000`), X-Frame-Options (`SAMEORIGIN`), X-Content-Type-Options (`nosniff`).
+* **Custom Domains Bound:** `openbalancer.com`, `www.openbalancer.com`
+* **Hostinger DNS Configuration:** `CNAME www -> openbalancer.pages.dev.`
 
 ---
 
-## 3. Connect GitHub Repository to Cloudflare Pages
+## 🔐 Infisical Secrets Mapping (Project: "Hosting & Domains")
 
-1. In Cloudflare Dashboard, go to **Workers & Pages** -> **Create application** -> **Pages**.
-2. Select **Connect to Git**.
-3. Authorize your GitHub account / organization `incontrolplus`.
-4. Select repository `openbalancer`.
-5. Configure Build & Deployment parameters:
-   * **Project name:** `openbalancer`
-   * **Production branch:** `main`
-   * **Framework preset:** `None`
-   * **Build command:** *(Leave empty)*
-   * **Build output directory:** `website`
-6. Click **Save and Deploy**.
-7. Cloudflare Pages will build and deploy the site to a free subdomain (e.g. `openbalancer.pages.dev`).
+All deployment credentials and automation tokens are centrally managed in self-hosted Infisical:
+
+| Secret Key | Description |
+| :--- | :--- |
+| `CLOUDFLARE_INCONTROLPLUS_ACCOUNT_ID` | Cloudflare Account ID for Incontrol Plus (`1128cf4fabd6...`) |
+| `CLOUDFLARE_INCONTROLPLUS_API_TOKEN` | API Token with Pages Projects, Deployments, and Custom Domain scopes |
+| `HOSTINGER_API_TOKEN_OPENBALANCER` | Hostinger Developer API Token for automated DNS zone management |
+| `CLOUDFLARE_INCONTROLPLUS_ACCESS_KEY_ID` | S3/R2-compatible Access Key |
+| `CLOUDFLARE_INCONTROLPLUS_SECRET_ACCESS_KEY` | S3/R2-compatible Secret Key |
+| `CLOUDFLARE_INCONTROLPLUS_S3_API_ENDPOINT` | R2 Cloudflare S3 API Endpoint |
 
 ---
 
-## 4. Bind Custom Domain
+## 🛠️ Automated Deployment via Wrangler CLI
 
-1. In the Cloudflare Pages project view, click **Custom domains**.
-2. Click **Set up a custom domain**.
-3. Add `openbalancer.com` and `www.openbalancer.com`.
-4. Cloudflare automatically establishes DNS routing and provisions a Universal SSL certificate.
+Deploy directly from the local `website/` directory to Cloudflare Pages:
+
+```bash
+CLOUDFLARE_API_TOKEN="<FETCHED_FROM_INFISICAL>" \
+CLOUDFLARE_ACCOUNT_ID="<FETCHED_FROM_INFISICAL>" \
+npx wrangler pages deploy website --project-name=openbalancer --branch=main
+```
 
 ---
 
-## 5. Security & Edge Optimization Recommendations
+## 🌐 Hostinger DNS API Automation
 
-* **SSL/TLS Mode:** Full (strict)
-* **Always Use HTTPS:** Enabled
-* **Automatic HTTPS Rewrites:** Enabled
-* **Minimum TLS Version:** TLS 1.2
-* **HTTP/3 (QUIC) & Early Hints:** Enabled
+DNS records are configured directly via Hostinger DNS v1 REST API:
+
+* **Endpoint:** `PUT https://developers.hostinger.com/api/dns/v1/zones/openbalancer.com`
+* **Authentication:** `Authorization: Bearer <HOSTINGER_API_TOKEN_OPENBALANCER>`
+* **Primary CNAME Record:**
+  ```json
+  {
+    "name": "www",
+    "type": "CNAME",
+    "ttl": 300,
+    "records": [
+      {
+        "content": "openbalancer.pages.dev.",
+        "is_disabled": false
+      }
+    ]
+  }
+  ```
+
+---
+
+## 🔒 Recommended Security Configurations
+
+1. **SSL/TLS Mode:** Full (strict)
+2. **Always Use HTTPS:** Enabled
+3. **Automatic HTTPS Rewrites:** Enabled
+4. **Minimum TLS Version:** TLS 1.2 or TLS 1.3
+5. **HTTP/3 (QUIC) & Early Hints:** Enabled

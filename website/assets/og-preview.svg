@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#080c14" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+    <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)" />
+
+  <!-- Grid Decoration -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="100" x2="1200" y2="100" />
+    <line x1="0" y1="200" x2="1200" y2="200" />
+    <line x1="0" y1="300" x2="1200" y2="300" />
+    <line x1="0" y1="400" x2="1200" y2="400" />
+    <line x1="0" y1="500" x2="1200" y2="500" />
+    <line x1="200" y1="0" x2="200" y2="630" />
+    <line x1="400" y1="0" x2="400" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="800" y1="0" x2="800" y2="630" />
+    <line x1="1000" y1="0" x2="1000" y2="630" />
+  </g>
+
+  <!-- Brand Logo & Hex -->
+  <g transform="translate(100, 100)">
+    <polygon points="60,10 110,38 110,92 60,120 10,92 10,38" 
+             stroke="url(#accentGrad)" stroke-width="5" fill="#1f2937" filter="url(#glowEffect)" />
+    <circle cx="60" cy="65" r="14" fill="url(#accentGrad)" />
+    <path d="M62 55L54 67H62L58 75L68 63H60L62 55Z" fill="#ffffff" />
+  </g>
+
+  <!-- Brand Name -->
+  <text x="250" y="180" font-family="'Inter', sans-serif" font-weight="800" font-size="56" fill="#f9fafb" letter-spacing="-1">OpenBalancer</text>
+  <text x="250" y="225" font-family="'Inter', sans-serif" font-weight="600" font-size="20" fill="#60a5fa" letter-spacing="1">ENTERPRISE AI &amp; API INFRASTRUCTURE</text>
+
+  <!-- Headline -->
+  <text x="100" y="340" font-family="'Inter', sans-serif" font-weight="800" font-size="44" fill="#ffffff" letter-spacing="-1">
+    Intelligent Load Balancing &amp; High-Availability SLAs
+  </text>
+  <text x="100" y="400" font-family="'Inter', sans-serif" font-weight="400" font-size="24" fill="#9ca3af">
+    Engineered for AI inference clusters, high-throughput microservices, and 99.9% uptime.
+  </text>
+
+  <!-- Badges Footer -->
+  <g transform="translate(100, 480)">
+    <!-- Badge 1 -->
+    <rect x="0" y="0" width="280" height="50" rx="10" fill="#1f2937" stroke="rgba(255,255,255,0.1)" />
+    <text x="20" y="32" font-family="'Inter', sans-serif" font-weight="600" font-size="16" fill="#34d399">⚡ Sub-Millisecond Proxy</text>
+
+    <!-- Badge 2 -->
+    <rect x="300" y="0" width="280" height="50" rx="10" fill="#1f2937" stroke="rgba(255,255,255,0.1)" />
+    <text x="320" y="32" font-family="'Inter', sans-serif" font-weight="600" font-size="16" fill="#60a5fa">🛡️ Automated Health Checks</text>
+
+    <!-- Badge 3 -->
+    <rect x="600" y="0" width="340" height="50" rx="10" fill="#1f2937" stroke="rgba(255,255,255,0.1)" />
+    <text x="620" y="32" font-family="'Inter', sans-serif" font-weight="600" font-size="16" fill="#fbbf24">💼 Operated by INCONTROL PLUS</text>
+  </g>
+</svg>

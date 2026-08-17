@@ -21,6 +21,10 @@
   <meta name="twitter:title" content="OpenBalancer — Next-Gen AI & API Gateway">
   <meta name="twitter:description" content="Enterprise-grade traffic distribution, active health checks, and 24/7 SLA infrastructure.">
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/favicon.svg">
+
   <!-- Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +37,7 @@
   <header class="navbar">
     <div class="container">
       <a href="index.html" class="nav-brand">
-        <div class="brand-icon">⚡</div>
+        <img src="assets/logo.svg" alt="OpenBalancer Logo" class="brand-logo-img">
         <span>OpenBalancer</span>
       </a>
       <nav>
@@ -354,6 +358,24 @@
           <button class="btn btn-secondary" data-action="enterprise-inquiry" data-plan="Custom Enterprise Architecture">Contact Sales</button>
         </div>
       </div>
+
+      <!-- Payment & Billing Trust Guarantee Bar -->
+      <div class="payment-trust-bar">
+        <div class="payment-trust-item">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <div>
+            <strong style="display: block; font-size: 0.95rem;">Secured B2B Invoicing & Retainers</strong>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Encrypted 256-bit TLS payments processed via Stripe with Net-14 invoicing terms.</span>
+          </div>
+        </div>
+        <div class="payment-card-icons">
+          <span class="card-badge">VISA</span>
+          <span class="card-badge">MASTERCARD</span>
+          <span class="card-badge">AMEX</span>
+          <span class="card-badge">SEPA</span>
+          <span class="card-badge" style="background: rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.4); color: #818cf8;">STRIPE VERIFIED</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -364,7 +386,7 @@
         <!-- Col 1: Brand & Operator -->
         <div class="footer-brand">
           <div class="nav-brand">
-            <div class="brand-icon">⚡</div>
+            <img src="assets/logo.svg" alt="OpenBalancer Logo" class="brand-logo-img">
             <span>OpenBalancer</span>
           </div>
           <p>
@@ -482,6 +504,17 @@
         </p>
         <button class="btn btn-secondary btn-sm" id="close-success-btn" style="margin-top: 1rem;">Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- GDPR Cookie Consent Banner -->
+  <div class="cookie-banner" id="cookie-banner">
+    <div style="font-size: 0.9rem; color: #e5e7eb; line-height: 1.5;">
+      🛡️ <strong>GDPR &amp; Privacy Notice:</strong> OpenBalancer uses strictly necessary cookies to ensure telemetry accuracy and secure B2B session routing. Read our <a href="privacy.html" style="text-decoration: underline; color: #60a5fa;">Privacy Policy</a>.
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <button class="btn btn-primary btn-sm" id="accept-cookies-btn">Accept All</button>
+      <button class="btn btn-secondary btn-sm" id="dismiss-cookies-btn">Essential Only</button>
     </div>
   </div>
 

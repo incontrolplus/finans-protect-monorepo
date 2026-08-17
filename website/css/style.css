@@ -117,22 +117,28 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--text-main);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+}
+
+.brand-logo-img {
+  width: 32px;
+  height: 32px;
+  display: block;
 }
 
 .brand-icon {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 900;
+  color: #ffffff;
+  font-weight: 800;
   font-size: 1.1rem;
   box-shadow: var(--shadow-glow);
 }
@@ -866,6 +872,75 @@ a:hover {
   margin-top: 1rem;
 }
 
+/* Payment Trust Bar & Stripe Compliance */
+.payment-trust-bar {
+  margin-top: 3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.payment-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.payment-trust-item svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.payment-card-icons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.card-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #e5e7eb;
+  letter-spacing: 0.5px;
+}
+
+/* Cookie Consent Banner */
+.cookie-banner {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 3rem);
+  max-width: 860px;
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(12px);
+  padding: 1.25rem 1.75rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  z-index: 999;
+  transition: opacity var(--transition-normal), transform var(--transition-normal);
+}
+
+.cookie-banner.hidden {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
   .footer-grid {
@@ -877,6 +952,10 @@ a:hover {
   .sim-visualizer {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+  .payment-trust-bar {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -895,5 +974,12 @@ a:hover {
     flex-direction: column;
     text-align: center;
   }
+  .cookie-banner {
+    bottom: 1rem;
+    width: calc(100% - 2rem);
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
+
 

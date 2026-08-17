@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initContactModal();
   initContactPageForm();
   initSmoothScroll();
+  initCookieBanner();
 });
 
 /**
@@ -240,3 +241,33 @@ function initSmoothScroll() {
     });
   });
 }
+
+/**
+ * GDPR Cookie Consent Banner Logic
+ */
+function initCookieBanner() {
+  const banner = document.getElementById('cookie-banner');
+  const acceptBtn = document.getElementById('accept-cookies-btn');
+  const dismissBtn = document.getElementById('dismiss-cookies-btn');
+
+  if (!banner) return;
+
+  const cookieChoice = localStorage.getItem('openbalancer_cookie_consent');
+  if (cookieChoice) {
+    banner.classList.add('hidden');
+    return;
+  }
+
+  function setConsent(type) {
+    localStorage.setItem('openbalancer_cookie_consent', type);
+    banner.style.opacity = '0';
+    banner.style.transform = 'translate(-50%, 20px)';
+    setTimeout(() => {
+      banner.classList.add('hidden');
+    }, 300);
+  }
+
+  if (acceptBtn) acceptBtn.addEventListener('click', () => setConsent('all'));
+  if (dismissBtn) dismissBtn.addEventListener('click', () => setConsent('essential'));
+}
+

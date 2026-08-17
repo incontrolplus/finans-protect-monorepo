@@ -10,6 +10,7 @@
       "nav_benchmarks": "Benchmarks",
       "nav_architecture": "Architecture",
       "nav_simulator": "Live Visualizer",
+      "nav_matrix": "Comparison Matrix",
       "nav_enterprise": "Enterprise SLA",
       "nav_pricing": "Pricing",
       "nav_retainers": "Retainers",
@@ -44,10 +45,12 @@
       "feat3_title": "Multi-Algorithm Balancing",
       "feat3_desc": "Select between Weighted Round-Robin, Smooth Least Connections, and Consistent IP Hash Rings for session sticky routing.",
 
-      // Simulator
+      // Simulator & Prometheus Telemetry
       "sim_tag": "Interactive Testbench",
       "sim_title": "Live Traffic & Failover Visualizer",
       "sim_subtitle": "Observe how OpenBalancer dynamically distributes socket requests and reroutes traffic when an upstream node fails.",
+      "sim_chart_title": "Live Real-Time Ingress Telemetry (Prometheus Metric Stream)",
+      "sim_chart_live": "LIVE STREAM",
       "sim_processed_reqs": "Processed Requests",
       "sim_observed_latency": "Observed Latency",
       "sim_dispatched_node": "Dispatched Node",
@@ -58,6 +61,22 @@
       "sim_client_sub": "TCP Sockets & Webhooks",
       "sim_core_title": "OpenBalancer Core",
       "sim_core_sub": "Weighted Round-Robin",
+
+      // Comparison Matrix
+      "matrix_tag": "Open Source Benchmark Matrix",
+      "matrix_title": "OpenBalancer vs Traditional Edge Proxies",
+      "matrix_subtitle": "Architected specifically for low-overhead async AI inference routing and mission-critical microservice clusters.",
+      "col_feature": "Feature / Capability",
+      "col_openbalancer": "OpenBalancer v1.4",
+      "col_nginx": "NGINX Community",
+      "col_haproxy": "HAProxy Community",
+      "col_traefik": "Traefik Proxy",
+      "m_f1": "Async Non-Blocking Core",
+      "m_f2": "LLM Token Stream & SSE Passthrough",
+      "m_f3": "Active Health Probing & Circuit Breaking",
+      "m_f4": "Memory Footprint (RSS)",
+      "m_f5": "Sub-millisecond p99 Routing Overhead",
+      "m_f6": "Guaranteed B2B 99.9% Uptime SLA Backing",
 
       // Enterprise
       "ent_tag": "Enterprise SLA Backing",
@@ -139,6 +158,7 @@
       "nav_benchmarks": "Бенчмаркове",
       "nav_architecture": "Архитектура",
       "nav_simulator": "Симулатор на живо",
+      "nav_matrix": "Сравнителна матрица",
       "nav_enterprise": "Enterprise SLA",
       "nav_pricing": "Цени & Планове",
       "nav_retainers": "Абонаменти",
@@ -173,10 +193,12 @@
       "feat3_title": "Многоалгоритмично балансиране",
       "feat3_desc": "Избор между Weighted Round-Robin, Smooth Least Connections и Consistent IP Hash Ring за сесионна консистентност.",
 
-      // Simulator
+      // Simulator & Prometheus Telemetry
       "sim_tag": "Интерактивен тестов стенд",
       "sim_title": "Симулатор на трафик & отпадане на възел в реално време",
       "sim_subtitle": "Наблюдавайте как OpenBalancer динамично разпределя сокет заявките и премаршрутира трафика при отпадане на възел.",
+      "sim_chart_title": "Телеметрия на трафика в реално време (Prometheus Metric Stream)",
+      "sim_chart_live": "НА ЖИВО",
       "sim_processed_reqs": "Обработени заявки",
       "sim_observed_latency": "Измерена латентност",
       "sim_dispatched_node": "Маршрутизиран възел",
@@ -187,6 +209,22 @@
       "sim_client_sub": "TCP Сокети & Webhooks",
       "sim_core_title": "OpenBalancer Ядро",
       "sim_core_sub": "Претеглен Round-Robin",
+
+      // Comparison Matrix
+      "matrix_tag": "Сравнителна матрица с отворен код",
+      "matrix_title": "OpenBalancer спрямо традиционните Edge проксита",
+      "matrix_subtitle": "Проектиран специфично за ниско-латентно асинхронно маршрутизиране на AI инференс и микросървисни клъстери.",
+      "col_feature": "Функционалност / Възможност",
+      "col_openbalancer": "OpenBalancer v1.4",
+      "col_nginx": "NGINX Community",
+      "col_haproxy": "HAProxy Community",
+      "col_traefik": "Traefik Proxy",
+      "m_f1": "Асинхронно неблокиращо ядро",
+      "m_f2": "LLM Token Stream & SSE Passthrough",
+      "m_f3": "Активен Health Probing & Circuit Breaking",
+      "m_f4": "Памет в покой (RSS)",
+      "m_f5": "Подмилисекундно p99 забавяне",
+      "m_f6": "Гарантиран B2B 99.9% Ъптайм SLA договор",
 
       // Enterprise
       "ent_tag": "Гарантирана Enterprise SLA поддръжка",
@@ -322,14 +360,12 @@
     setLanguage(currentLang);
   }
 
-  // Self initialize on load and immediate
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', bindEvents);
   } else {
     bindEvents();
   }
 
-  // Global expose
   window.setLanguage = setLanguage;
   window.initLanguageSwitcher = bindEvents;
   window.openbalancer_i18n = {

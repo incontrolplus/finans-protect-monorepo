@@ -7,13 +7,93 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof initLanguageSwitcher === 'function') {
     initLanguageSwitcher();
   }
+  initMobileDrawer();
   initTerminalTabs();
+  initTelemetrySparkline();
   initLoadBalancerSimulator();
   initContactModal();
   initContactPageForm();
   initSmoothScroll();
   initCookieBanner();
 });
+
+/**
+ * Mobile Navigation Drawer
+ */
+function initMobileDrawer() {
+  const toggleBtn = document.getElementById('mobile-menu-toggle');
+  const closeBtn = document.getElementById('mobile-drawer-close');
+  const overlay = document.getElementById('mobile-drawer-overlay');
+  const drawer = document.getElementById('mobile-drawer');
+  const navLinks = document.querySelectorAll('.mobile-nav-link');
+
+  if (!drawer) return;
+
+  function openDrawer() {
+    drawer.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    drawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', openDrawer);
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (overlay) overlay.addEventListener('click', closeDrawer);
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', closeDrawer);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('active')) {
+      closeDrawer();
+    }
+  });
+}
+
+/**
+ * Live Prometheus Telemetry Sparkline Generator
+ */
+function initTelemetrySparkline() {
+  const linePath = document.getElementById('sparkline-line');
+  const areaPath = document.getElementById('sparkline-area');
+  if (!linePath || !areaPath) return;
+
+  const pointsCount = 17;
+  const values = [50, 45, 48, 35, 40, 25, 30, 20, 28, 18, 22, 15, 25, 18, 22, 12, 16];
+
+  function updateChart() {
+    // Shift values and add new data point with realistic jitter
+    values.shift();
+    const lastVal = values[values.length - 1];
+    const delta = (Math.random() * 12) - 6;
+    const newVal = Math.min(52, Math.max(10, Math.round(lastVal + delta)));
+    values.push(newVal);
+
+    const step = 800 / (pointsCount - 1);
+    let dLine = `M0,${values[0]}`;
+    let dArea = `M0,${values[0]}`;
+
+    for (let i = 1; i < pointsCount; i++) {
+      const x = Math.round(i * step);
+      const y = values[i];
+      dLine += ` L${x},${y}`;
+      dArea += ` L${x},${y}`;
+    }
+
+    dArea += ` L800,60 L0,60 Z`;
+
+    linePath.setAttribute('d', dLine);
+    areaPath.setAttribute('d', dArea);
+  }
+
+  setInterval(updateChart, 1600);
+}
 
 /**
  * Terminal Tabs & Snippet Switcher
@@ -286,14 +366,18 @@ function initCookieBanner() {
 
   if (!banner) return;
 
-  const cookieChoice = localStorage.getItem('openbalancer_cookie_consent');
-  if (cookieChoice) {
-    banner.classList.add('hidden');
-    return;
-  }
+  try {
+    const cookieChoice = localStorage.getItem('openbalancer_cookie_consent');
+    if (cookieChoice) {
+      banner.classList.add('hidden');
+      return;
+    }
+  } catch (e) {}
 
   function setConsent(type) {
-    localStorage.setItem('openbalancer_cookie_consent', type);
+    try {
+      localStorage.setItem('openbalancer_cookie_consent', type);
+    } catch (e) {}
     banner.style.opacity = '0';
     banner.style.transform = 'translate(-50%, 20px)';
     setTimeout(() => {

@@ -20,7 +20,7 @@
   <link rel="apple-touch-icon" href="assets/favicon.svg">
 
   <!-- Stylesheet & Typography -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2.0.1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -47,8 +47,8 @@
       <div class="nav-actions">
         <!-- Language Switcher (EN / BG) -->
         <div class="lang-switcher" aria-label="Language Selector">
-          <button class="lang-btn active" data-lang="en">EN</button>
-          <button class="lang-btn" data-lang="bg">BG</button>
+          <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
+          <button type="button" class="lang-btn" data-lang="bg" onclick="setLanguage('bg')">BG</button>
         </div>
 
         <a href="#pricing" class="btn btn-outline btn-sm" data-i18n="nav_retainers">Retainers</a>
@@ -153,7 +153,7 @@
   <span style="color: #7ee787;">"algorithm"</span>: <span style="color: #a5d6ff;">"weighted_least_connections"</span>,
   <span style="color: #7ee787;">"upstreams"</span>: [
     { <span style="color: #79c0ff;">"id"</span>: <span style="color: #a5d6ff;">"srv-ai-1"</span>, <span style="color: #79c0ff;">"url"</span>: <span style="color: #a5d6ff;">"http://10.0.1.10:8000"</span>, <span style="color: #79c0ff;">"weight"</span>: 3 },
-    { <span style="color: #79c0ff;">"id"</span>: <span style="color: #a5d6ff;">"srv-ai-2"</span>, <span style="color: #79c0ff;">"url"</span>: <span style="color: #a5d6ff;">"http://10.0.1.11:8000"</span>, <span style="color: #79c0ff;">"weight"</span>: 2 }
+    { <span style="color: #79c0ff;">"id"</span>: <span style="color: #a5d6ff;">"srv-ai-2"</span>, <span style="color: #79c0ff;">"url"</span>: <span style="color: #10.0.1.11:8000"</span>, <span style="color: #79c0ff;">"weight"</span>: 2 }
   ]
 }</code></pre>
           </div>
@@ -327,10 +327,10 @@
           <p style="font-size: 0.85rem;" data-i18n="plan1_desc">For developers and self-hosted environments.</p>
           <div class="pricing-price">€0 <span style="font-size: 0.9rem; font-weight: 400; color: var(--text-dim);">/ forever</span></div>
           <ul class="pricing-features">
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Full Core Routing Engine (MIT)</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Round-robin &amp; Weighted Algorithms</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Active Health Probing &amp; Metrics</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Docker Swarm &amp; K8s Support</li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan1_f1">Full Core Routing Engine (MIT)</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan1_f2">Round-robin &amp; Weighted Algorithms</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan1_f3">Active Health Probing &amp; Metrics</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan1_f4">Docker Swarm &amp; K8s Support</span></li>
           </ul>
           <a href="https://github.com/incontrolplus/openbalancer" target="_blank" rel="noopener" class="btn btn-secondary" data-i18n="plan1_btn">Download Community Core</a>
         </div>
@@ -342,10 +342,10 @@
           <p style="font-size: 0.85rem;" data-i18n="plan2_desc">For high-availability production clusters.</p>
           <div class="pricing-price">€1,500 <span style="font-size: 0.9rem; font-weight: 400; color: var(--text-dim);">/ month</span></div>
           <ul class="pricing-features">
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <strong>99.9% Contractual Uptime SLA</strong></li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Sub-15 Min Critical Incident SLA</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Hardened Multi-Node Configuration</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Official B2B Invoice via Stripe</li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <strong data-i18n="plan2_f1">99.9% Contractual Uptime SLA</strong></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan2_f2">Sub-15 Min Critical Incident SLA</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan2_f3">Hardened Multi-Node Configuration</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan2_f4">Official B2B Invoice via Stripe</span></li>
           </ul>
           <button class="btn btn-primary" data-action="enterprise-inquiry" data-plan="B2B Pro SLA Retainer (€1,500/mo)" data-i18n="plan2_btn">Request SLA Contract</button>
         </div>
@@ -356,10 +356,10 @@
           <p style="font-size: 0.85rem;" data-i18n="plan3_desc">For multi-region and high-throughput systems.</p>
           <div class="pricing-price">Custom <span style="font-size: 0.9rem; font-weight: 400; color: var(--text-dim);">/ retainer</span></div>
           <ul class="pricing-features">
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Custom Master Services Agreement (MSA)</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Custom AI LLM Dispatcher Plugins</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Dedicated Senior DevOps Lead</li>
-            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Net-30 Corporate Terms</li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan3_f1">Custom Master Services Agreement (MSA)</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan3_f2">Custom AI LLM Dispatcher Plugins</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan3_f3">Dedicated Senior DevOps Lead</span></li>
+            <li><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> <span data-i18n="plan3_f4">Net-30 Corporate Terms</span></li>
           </ul>
           <button class="btn btn-secondary" data-action="enterprise-inquiry" data-plan="Custom Enterprise Architecture" data-i18n="plan3_btn">Contact Sales</button>
         </div>
@@ -517,8 +517,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="js/i18n.js"></script>
-  <script src="js/main.js"></script>
+  <!-- Scripts with cache busting -->
+  <script src="js/i18n.js?v=2.0.1"></script>
+  <script src="js/main.js?v=2.0.1"></script>
 </body>
 </html>

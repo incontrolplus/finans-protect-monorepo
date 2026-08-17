@@ -11,8 +11,10 @@
       "nav_architecture": "Architecture",
       "nav_simulator": "Live Visualizer",
       "nav_matrix": "Comparison Matrix",
+      "nav_config": "Config Builder",
       "nav_enterprise": "Enterprise SLA",
       "nav_pricing": "Pricing",
+      "nav_faq": "FAQ",
       "nav_retainers": "Retainers",
       "nav_request_sla": "Request Enterprise SLA",
 
@@ -78,6 +80,21 @@
       "m_f5": "Sub-millisecond p99 Routing Overhead",
       "m_f6": "Guaranteed B2B 99.9% Uptime SLA Backing",
 
+      // Config Generator
+      "cfg_tag": "Interactive Config Playground",
+      "cfg_title": "Cluster Configuration Generator",
+      "cfg_subtitle": "Customize your cluster parameters, upstream weights, and health probes with instant JSON validation and 1-click download.",
+      "cfg_lbl_algo": "Routing Algorithm",
+      "cfg_lbl_port": "Listen Port",
+      "cfg_lbl_probe": "Health Check Interval",
+      "cfg_lbl_cb": "Circuit Breaker Threshold",
+      "cfg_lbl_timeout": "Socket Connection Timeout",
+      "cfg_lbl_upstreams": "Configured Upstream Backends",
+      "cfg_btn_add": "+ Add Backend Node",
+      "cfg_btn_download": "Download openbalancer.json",
+      "cfg_btn_copy": "Copy Config",
+      "cfg_copied": "Copied!",
+
       // Enterprise
       "ent_tag": "Enterprise SLA Backing",
       "ent_title": "Production Infrastructure & SLA Management",
@@ -119,6 +136,21 @@
       "plan3_f4": "Net-30 Corporate Terms",
       "plan3_btn": "Contact Sales",
 
+      // FAQ
+      "faq_tag": "Operational & B2B FAQ",
+      "faq_title": "Frequently Asked Questions",
+      "faq_subtitle": "Everything you need to know regarding licensing, SLA guarantees, invoicing, and technical deployment.",
+      "faq_q1": "How does the contractual 99.9% uptime SLA compensation work?",
+      "faq_a1": "Under our Master Services Agreement (MSA), if your cluster uptime falls below 99.9% in a calendar month, INCONTROL PLUS automatically applies contractual service credits calculated per minute of downtime, credited directly against your next Stripe invoice.",
+      "faq_q2": "How are corporate EU VAT invoices and payments handled via Stripe?",
+      "faq_a2": "All corporate retainers are invoiced securely through Stripe Invoicing with automated EU VAT reverse-charge calculation. We support SEPA B2B direct bank transfers, corporate cards (Visa, Mastercard, AMEX), and Net-14 payment terms.",
+      "faq_q3": "How does OpenBalancer handle LLM token streams (SSE) without buffer bloat?",
+      "faq_a3": "OpenBalancer streams chunks directly via zero-copy kernel socket piping and disables internal proxy response buffering for `text/event-stream` and `application/grpc` headers. Memory consumption remains strictly constant (O(1)) regardless of stream length.",
+      "faq_q4": "Can we deploy OpenBalancer on-premises in isolated/air-gapped networks?",
+      "faq_a4": "Yes. OpenBalancer is 100% self-contained and has zero external telemetry requirements. You can run it as a standalone Linux binary, a Docker container, or inside a Kubernetes cluster completely isolated from the public internet.",
+      "faq_q5": "What is your refund and SLA cancellation policy?",
+      "faq_a5": "We offer a 30-day initial trial window on SLA retainers. If our response times or failover performance do not meet your technical expectations, you can cancel with full refund of the current retainer period.",
+
       // Payment Trust Bar
       "trust_title": "Secured B2B Invoicing & Retainers",
       "trust_desc": "Encrypted 256-bit TLS payments processed via Stripe with Net-14 corporate invoicing terms.",
@@ -159,8 +191,10 @@
       "nav_architecture": "Архитектура",
       "nav_simulator": "Симулатор на живо",
       "nav_matrix": "Сравнителна матрица",
+      "nav_config": "Конфигуратор",
       "nav_enterprise": "Enterprise SLA",
       "nav_pricing": "Цени & Планове",
+      "nav_faq": "ЧЗВ",
       "nav_retainers": "Абонаменти",
       "nav_request_sla": "Заяви Enterprise SLA",
 
@@ -226,6 +260,21 @@
       "m_f5": "Подмилисекундно p99 забавяне",
       "m_f6": "Гарантиран B2B 99.9% Ъптайм SLA договор",
 
+      // Config Generator
+      "cfg_tag": "Интерактивен генератор на конфигурации",
+      "cfg_title": "Генератор на клъстерна конфигурация",
+      "cfg_subtitle": "Настройте параметрите на вашия клъстер, теглата на възлите и проверките за здраве с валидация в реално време и сваляне с 1 клик.",
+      "cfg_lbl_algo": "Алгоритъм за маршрутизиране",
+      "cfg_lbl_port": "Слушащ порт",
+      "cfg_lbl_probe": "Интервал на здравна проверка",
+      "cfg_lbl_cb": "Праг на Circuit Breaker (грешки)",
+      "cfg_lbl_timeout": "Таймаут на сокет връзка",
+      "cfg_lbl_upstreams": "Конфигурирани Upstream сървъри",
+      "cfg_btn_add": "+ Добави сървърен възел",
+      "cfg_btn_download": "Свали openbalancer.json",
+      "cfg_btn_copy": "Копирай конфигурацията",
+      "cfg_copied": "Копирано!",
+
       // Enterprise
       "ent_tag": "Гарантирана Enterprise SLA поддръжка",
       "ent_title": "Производствена инфраструктура & SLA управление",
@@ -266,6 +315,21 @@
       "plan3_f3": "Специализиран старши DevOps архитект",
       "plan3_f4": "Net-30 Корпоративно плащане",
       "plan3_btn": "Свържи се с нас",
+
+      // FAQ
+      "faq_tag": "Оперативни & B2B ЧЗВ",
+      "faq_title": "Често задавани въпроси",
+      "faq_subtitle": "Всичко, което трябва да знаете относно лицензиране, SLA гаранции, фактуриране и разгръщане.",
+      "faq_q1": "Как работи компенсацията при нарушение на 99.9% SLA?",
+      "faq_a1": "Според нашия Master Services Agreement (MSA), ако месечният ъптайм на вашия клъстер падне под 99.9%, ИНКОНТРОЛ ПЛЮС автоматично начислява компенсаторни кредити за услуги за всяка минута престой, които се приспадат от следващата фактура в Stripe.",
+      "faq_q2": "Как се издават фактурите по ДДС и корпоративните плащания през Stripe?",
+      "faq_a2": "Всички корпоративни абонаменти се фактурират официално през Stripe Invoicing с автоматично изчисляване на ДДС и обратно начисляване за фирми от ЕС. Поддържат се директни банкови преводи по SEPA, фирмени карти (Visa, Mastercard, AMEX) и Net-14 условия.",
+      "faq_q3": "Как OpenBalancer се справя с дълги LLM токен стриймове (SSE) без изтичане на памет?",
+      "faq_a3": "OpenBalancer препраща пакетите директно през нулев сокет буфер (zero-copy socket piping) и деактивира прокси буферирането за `text/event-stream` и `application/grpc`. Консумацията на памет остава стриктно константна (O(1)) независимо от дължината на стрийма.",
+      "faq_q4": "Може ли OpenBalancer да бъде разгърнат on-premise в изолирана корпоративна мрежа?",
+      "faq_a4": "Да. OpenBalancer е 100% самостоятелен и не изисква изходящ интернет достъп за телеметрия. Може да се изпълнява като самостоятелен Linux бинарен файл, Docker контейнер или в Kubernetes клъстер в напълно изолирана (air-gapped) банкова или държавна среда.",
+      "faq_q5": "Каква е политиката за анулиране и възстановяване на средства?",
+      "faq_a5": "Предоставяме 30-дневен пробен период за корпоративни SLA абонаменти. Ако времето за реакция или техническото представяне не отговарят на договорните параметри, можете да анулирате абонамента с пълно възстановяване на сумата за текущия период.",
 
       // Payment Trust Bar
       "trust_title": "Сигурно B2B Фактуриране & Абонаменти",

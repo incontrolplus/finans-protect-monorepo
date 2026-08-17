@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initTerminalTabs();
   initTelemetrySparkline();
   initLoadBalancerSimulator();
+  initConfigBuilder();
+  initFaqAccordion();
   initContactModal();
   initContactPageForm();
   initSmoothScroll();
@@ -68,7 +70,6 @@ function initTelemetrySparkline() {
   const values = [50, 45, 48, 35, 40, 25, 30, 20, 28, 18, 22, 15, 25, 18, 22, 12, 16];
 
   function updateChart() {
-    // Shift values and add new data point with realistic jitter
     values.shift();
     const lastVal = values[values.length - 1];
     const delta = (Math.random() * 12) - 6;
@@ -220,6 +221,207 @@ function initLoadBalancerSimulator() {
       }
     });
   }
+}
+
+/**
+ * Interactive Cluster Configuration Builder
+ */
+function initConfigBuilder() {
+  const algoSelect = document.getElementById('cfg-algo');
+  const portInput = document.getElementById('cfg-port');
+  const probeSlider = document.getElementById('cfg-probe-interval');
+  const probeVal = document.getElementById('cfg-probe-val');
+  const cbSlider = document.getElementById('cfg-cb-threshold');
+  const cbVal = document.getElementById('cfg-cb-val');
+  const timeoutSlider = document.getElementById('cfg-timeout');
+  const timeoutVal = document.getElementById('cfg-timeout-val');
+  const upstreamsList = document.getElementById('cfg-upstreams-list');
+  const addUpstreamBtn = document.getElementById('cfg-add-upstream-btn');
+  const codePreview = document.getElementById('config-code-preview');
+  const copyBtn = document.getElementById('cfg-copy-btn');
+  const downloadBtn = document.getElementById('cfg-download-btn');
+
+  if (!codePreview) return;
+
+  let upstreams = [
+    { id: 'srv-ai-1', url: 'http://10.0.1.10:8000', weight: 3 },
+    { id: 'srv-ai-2', url: 'http://10.0.1.11:8000', weight: 2 },
+    { id: 'srv-ai-3', url: 'http://10.0.1.12:8000', weight: 1 }
+  ];
+
+  function renderUpstreamInputs() {
+    if (!upstreamsList) return;
+    upstreamsList.innerHTML = '';
+    upstreams.forEach((item, index) => {
+      const row = document.createElement('div');
+      row.className = 'upstream-item';
+      row.innerHTML = `
+        <input type="text" class="u-id" value="${item.id}" style="width: 80px;" placeholder="ID">
+        <input type="text" class="u-url" value="${item.url}" style="flex-grow: 1;" placeholder="URL">
+        <span style="color: var(--text-dim);">W:</span>
+        <input type="number" class="u-weight" value="${item.weight}" min="1" max="10" style="width: 45px;">
+        <button type="button" class="btn-remove-upstream" data-index="${index}" title="Remove Upstream">&times;</button>
+      `;
+      upstreamsList.appendChild(row);
+    });
+
+    // Attach listeners to newly created input rows
+    upstreamsList.querySelectorAll('.u-id').forEach((inp, idx) => {
+      inp.addEventListener('input', (e) => {
+        upstreams[idx].id = e.target.value;
+        updateConfigPreview();
+      });
+    });
+    upstreamsList.querySelectorAll('.u-url').forEach((inp, idx) => {
+      inp.addEventListener('input', (e) => {
+        upstreams[idx].url = e.target.value;
+        updateConfigPreview();
+      });
+    });
+    upstreamsList.querySelectorAll('.u-weight').forEach((inp, idx) => {
+      inp.addEventListener('input', (e) => {
+        upstreams[idx].weight = parseInt(e.target.value) || 1;
+        updateConfigPreview();
+      });
+    });
+    upstreamsList.querySelectorAll('.btn-remove-upstream').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-index'));
+        if (upstreams.length > 1) {
+          upstreams.splice(idx, 1);
+          renderUpstreamInputs();
+          updateConfigPreview();
+        }
+      });
+    });
+  }
+
+  function generateConfigObject() {
+    return {
+      version: "1.4.0",
+      server: {
+        host: "0.0.0.0",
+        port: parseInt(portInput?.value) || 8080,
+        keep_alive_timeout_ms: parseInt(timeoutSlider?.value) || 250
+      },
+      router: {
+        algorithm: algoSelect?.value || "weighted_round_robin",
+        health_check: {
+          interval_seconds: parseInt(probeSlider?.value) || 3,
+          timeout_ms: 500,
+          unhealthy_threshold: 2,
+          healthy_threshold: 2
+        },
+        circuit_breaker: {
+          consecutive_failures_threshold: parseInt(cbSlider?.value) || 5,
+          reset_timeout_seconds: 30
+        }
+      },
+      upstreams: upstreams.map(u => ({
+        id: u.id,
+        url: u.url,
+        weight: u.weight
+      }))
+    };
+  }
+
+  function updateConfigPreview() {
+    const configObj = generateConfigObject();
+    const jsonStr = JSON.stringify(configObj, null, 2);
+    if (codePreview) {
+      codePreview.textContent = jsonStr;
+    }
+  }
+
+  if (probeSlider && probeVal) {
+    probeSlider.addEventListener('input', (e) => {
+      probeVal.textContent = `${e.target.value}s`;
+      updateConfigPreview();
+    });
+  }
+
+  if (cbSlider && cbVal) {
+    cbSlider.addEventListener('input', (e) => {
+      cbVal.textContent = `${e.target.value} fails`;
+      updateConfigPreview();
+    });
+  }
+
+  if (timeoutSlider && timeoutVal) {
+    timeoutSlider.addEventListener('input', (e) => {
+      timeoutVal.textContent = `${e.target.value}ms`;
+      updateConfigPreview();
+    });
+  }
+
+  if (algoSelect) algoSelect.addEventListener('change', updateConfigPreview);
+  if (portInput) portInput.addEventListener('input', updateConfigPreview);
+
+  if (addUpstreamBtn) {
+    addUpstreamBtn.addEventListener('click', () => {
+      const nextNum = upstreams.length + 1;
+      upstreams.push({
+        id: `srv-ai-${nextNum}`,
+        url: `http://10.0.1.${10 + nextNum}:8000`,
+        weight: 1
+      });
+      renderUpstreamInputs();
+      updateConfigPreview();
+    });
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const textToCopy = codePreview.textContent;
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => copyBtn.textContent = orig, 2000);
+      } catch (e) {
+        console.error('Copy error', e);
+      }
+    });
+  }
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      const textToDownload = codePreview.textContent;
+      const blob = new Blob([textToDownload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'openbalancer.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  renderUpstreamInputs();
+  updateConfigPreview();
+}
+
+/**
+ * Technical & B2B FAQ Accordion
+ */
+function initFaqAccordion() {
+  const faqItems = document.querySelectorAll('.faq-item');
+
+  faqItems.forEach(item => {
+    const questionBtn = item.querySelector('.faq-question');
+    if (questionBtn) {
+      questionBtn.addEventListener('click', () => {
+        const isActive = item.classList.contains('active');
+        // Close all other items
+        faqItems.forEach(i => i.classList.remove('active'));
+        if (!isActive) {
+          item.classList.add('active');
+        }
+      });
+    }
+  });
 }
 
 /**

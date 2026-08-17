@@ -8,31 +8,80 @@
   <meta name="keywords" content="openbalancer, load balancer, reverse proxy, ai inference gateway, api router, incontrol plus, enterprise sla">
   <meta name="author" content="INCONTROL PLUS EOOD">
   
-  <!-- JSON-LD Structured Data -->
+  <!-- JSON-LD Structured Data: SoftwareApplication & Organization -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "OpenBalancer",
-    "applicationCategory": "InfrastructureApplication",
-    "operatingSystem": "Linux, macOS, Docker, Kubernetes",
-    "softwareVersion": "1.4.0-stable",
-    "offers": {
-      "@type": "Offer",
-      "price": "0.00",
-      "priceCurrency": "EUR"
-    },
-    "author": {
-      "@type": "Organization",
-      "name": "INCONTROL PLUS EOOD",
-      "url": "https://www.openbalancer.com",
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "+359-87-725-3017",
-        "contactType": "customer service",
-        "email": "support@openbalancer.com"
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "OpenBalancer",
+        "applicationCategory": "InfrastructureApplication",
+        "operatingSystem": "Linux, macOS, Docker, Kubernetes",
+        "softwareVersion": "1.4.0-stable",
+        "offers": {
+          "@type": "Offer",
+          "price": "0.00",
+          "priceCurrency": "EUR"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "INCONTROL PLUS EOOD",
+          "url": "https://www.openbalancer.com",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+359-87-725-3017",
+            "contactType": "customer service",
+            "email": "support@openbalancer.com"
+          }
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does the contractual 99.9% uptime SLA compensation work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Under our Master Services Agreement (MSA), if your cluster uptime falls below 99.9% in a calendar month, INCONTROL PLUS automatically applies contractual service credits calculated per minute of downtime, credited directly against your next Stripe invoice."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How are corporate EU VAT invoices and payments handled via Stripe?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "All corporate retainers are invoiced securely through Stripe Invoicing with automated EU VAT reverse-charge calculation. We support SEPA B2B direct bank transfers, corporate cards (Visa, Mastercard, AMEX), and Net-14 payment terms."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How does OpenBalancer handle LLM token streams (SSE) without buffer bloat?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "OpenBalancer streams chunks directly via zero-copy kernel socket piping and disables internal proxy response buffering for text/event-stream and application/grpc headers. Memory consumption remains strictly constant (O(1)) regardless of stream length."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can we deploy OpenBalancer on-premises in isolated/air-gapped networks?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. OpenBalancer is 100% self-contained and has zero external telemetry requirements. You can run it as a standalone Linux binary, a Docker container, or inside a Kubernetes cluster completely isolated from the public internet."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is your refund and SLA cancellation policy?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We offer a 30-day initial trial window on SLA retainers. If our response times or failover performance do not meet your technical expectations, you can cancel with full refund of the current retainer period."
+            }
+          }
+        ]
       }
-    }
+    ]
   }
   </script>
 
@@ -48,7 +97,7 @@
   <link rel="apple-touch-icon" href="assets/favicon.svg">
 
   <!-- Stylesheet & Typography -->
-  <link rel="stylesheet" href="css/style.css?v=2.0.2">
+  <link rel="stylesheet" href="css/style.css?v=2.0.3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -68,8 +117,10 @@
           <li><a href="#architecture" data-i18n="nav_architecture">Architecture</a></li>
           <li><a href="#simulator" data-i18n="nav_simulator">Live Visualizer</a></li>
           <li><a href="#matrix" data-i18n="nav_matrix">Comparison Matrix</a></li>
+          <li><a href="#config-generator" data-i18n="nav_config">Config Builder</a></li>
           <li><a href="#enterprise" data-i18n="nav_enterprise">Enterprise SLA</a></li>
           <li><a href="#pricing" data-i18n="nav_pricing">Pricing</a></li>
+          <li><a href="#faq" data-i18n="nav_faq">FAQ</a></li>
           <li><a href="https://github.com/incontrolplus/openbalancer" target="_blank" rel="noopener">GitHub</a></li>
         </ul>
       </nav>
@@ -106,8 +157,10 @@
       <li><a href="#architecture" class="mobile-nav-link" data-i18n="nav_architecture">Architecture</a></li>
       <li><a href="#simulator" class="mobile-nav-link" data-i18n="nav_simulator">Live Visualizer</a></li>
       <li><a href="#matrix" class="mobile-nav-link" data-i18n="nav_matrix">Comparison Matrix</a></li>
+      <li><a href="#config-generator" class="mobile-nav-link" data-i18n="nav_config">Config Builder</a></li>
       <li><a href="#enterprise" class="mobile-nav-link" data-i18n="nav_enterprise">Enterprise SLA</a></li>
       <li><a href="#pricing" class="mobile-nav-link" data-i18n="nav_pricing">Pricing</a></li>
+      <li><a href="#faq" class="mobile-nav-link" data-i18n="nav_faq">FAQ</a></li>
       <li><a href="https://github.com/incontrolplus/openbalancer" target="_blank" rel="noopener">GitHub Repository</a></li>
       <li><a href="contact.html">Company Impressum</a></li>
     </ul>
@@ -434,6 +487,84 @@
     </div>
   </section>
 
+  <!-- Interactive Cluster Configuration Generator -->
+  <section class="config-section" id="config-generator">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag" data-i18n="cfg_tag">Interactive Config Playground</span>
+        <h2 data-i18n="cfg_title">Cluster Configuration Generator</h2>
+        <p data-i18n="cfg_subtitle">Customize your cluster parameters, upstream weights, and health probes with instant JSON validation and 1-click download.</p>
+      </div>
+
+      <div class="config-builder-card">
+        <!-- Controls Panel -->
+        <div class="config-controls-panel">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cfg-algo" data-i18n="cfg_lbl_algo">Routing Algorithm</label>
+              <select id="cfg-algo" class="form-control">
+                <option value="weighted_round_robin">Weighted Round-Robin</option>
+                <option value="least_connections">Least Connections</option>
+                <option value="ip_hash">Consistent IP Hash</option>
+                <option value="power_of_two_choices">Power-of-Two Random Choices</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="cfg-port" data-i18n="cfg_lbl_port">Listen Port</label>
+              <input type="number" id="cfg-port" class="form-control" value="8080" min="80" max="65535">
+            </div>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span data-i18n="cfg_lbl_probe">Health Check Interval</span>
+              <span class="slider-val" id="cfg-probe-val">3s</span>
+            </div>
+            <input type="range" id="cfg-probe-interval" min="1" max="30" value="3">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span data-i18n="cfg_lbl_cb">Circuit Breaker Threshold</span>
+              <span class="slider-val" id="cfg-cb-val">5 fails</span>
+            </div>
+            <input type="range" id="cfg-cb-threshold" min="1" max="20" value="5">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span data-i18n="cfg_lbl_timeout">Socket Connection Timeout</span>
+              <span class="slider-val" id="cfg-timeout-val">250ms</span>
+            </div>
+            <input type="range" id="cfg-timeout" min="50" max="2000" step="50" value="250">
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <label style="font-size: 0.85rem; font-weight: 500; color: #e2e8f0;" data-i18n="cfg_lbl_upstreams">Configured Upstream Backends</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="cfg-add-upstream-btn" data-i18n="cfg_btn_add">+ Add Backend Node</button>
+            </div>
+            <div class="upstream-list" id="cfg-upstreams-list">
+              <!-- Dynamically rendered -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Code Preview Panel -->
+        <div class="config-preview-panel">
+          <div class="config-preview-header">
+            <span>openbalancer.json (Validated JSON)</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn btn-secondary btn-sm" id="cfg-copy-btn" data-i18n="cfg_btn_copy">Copy Config</button>
+              <button type="button" class="btn btn-primary btn-sm" id="cfg-download-btn" data-i18n="cfg_btn_download">Download openbalancer.json</button>
+            </div>
+          </div>
+          <pre class="config-preview-code"><code id="config-code-preview"></code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Enterprise B2B Services Section -->
   <section class="container" id="enterprise" style="padding: 5rem 1.5rem;">
     <div class="feature-card" style="background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, var(--bg-surface) 100%); border-color: #334155; padding: 2.5rem;">
@@ -513,23 +644,93 @@
           <button type="button" class="btn btn-secondary" data-action="enterprise-inquiry" data-plan="Custom Enterprise Architecture" data-i18n="plan3_btn">Contact Sales</button>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Payment & Security Trust Bar -->
-      <div class="payment-trust-bar">
-        <div class="payment-trust-item">
-          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-          <div>
-            <strong style="display: block; font-size: 0.9rem;" data-i18n="trust_title">Secured B2B Invoicing &amp; Retainers</strong>
-            <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="trust_desc">Encrypted 256-bit TLS payments processed via Stripe with Net-14 corporate invoicing terms.</span>
+  <!-- Technical & B2B FAQ Accordion Section -->
+  <section class="faq-section" id="faq">
+    <div class="container">
+      <div class="section-header" style="text-align: center;">
+        <span class="section-tag" data-i18n="faq_tag">Operational &amp; B2B FAQ</span>
+        <h2 data-i18n="faq_title">Frequently Asked Questions</h2>
+        <p data-i18n="faq_subtitle" style="margin: 0 auto; max-width: 680px;">Everything you need to know regarding licensing, SLA guarantees, invoicing, and technical deployment.</p>
+      </div>
+
+      <div class="faq-list">
+        <!-- FAQ 1 -->
+        <div class="faq-item active">
+          <button type="button" class="faq-question">
+            <span data-i18n="faq_q1">How does the contractual 99.9% uptime SLA compensation work?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p data-i18n="faq_a1">Under our Master Services Agreement (MSA), if your cluster uptime falls below 99.9% in a calendar month, INCONTROL PLUS automatically applies contractual service credits calculated per minute of downtime, credited directly against your next Stripe invoice.</p>
           </div>
         </div>
-        <div class="payment-card-icons">
-          <span class="card-badge">VISA</span>
-          <span class="card-badge">MASTERCARD</span>
-          <span class="card-badge">AMEX</span>
-          <span class="card-badge">SEPA</span>
-          <span class="card-badge" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa;">STRIPE VERIFIED</span>
+
+        <!-- FAQ 2 -->
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span data-i18n="faq_q2">How are corporate EU VAT invoices and payments handled via Stripe?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p data-i18n="faq_a2">All corporate retainers are invoiced securely through Stripe Invoicing with automated EU VAT reverse-charge calculation. We support SEPA B2B direct bank transfers, corporate cards (Visa, Mastercard, AMEX), and Net-14 payment terms.</p>
+          </div>
         </div>
+
+        <!-- FAQ 3 -->
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span data-i18n="faq_q3">How does OpenBalancer handle LLM token streams (SSE) without buffer bloat?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p data-i18n="faq_a3">OpenBalancer streams chunks directly via zero-copy kernel socket piping and disables internal proxy response buffering for `text/event-stream` and `application/grpc` headers. Memory consumption remains strictly constant (O(1)) regardless of stream length.</p>
+          </div>
+        </div>
+
+        <!-- FAQ 4 -->
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span data-i18n="faq_q4">Can we deploy OpenBalancer on-premises in isolated/air-gapped networks?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p data-i18n="faq_a4">Yes. OpenBalancer is 100% self-contained and has zero external telemetry requirements. You can run it as a standalone Linux binary, a Docker container, or inside a Kubernetes cluster completely isolated from the public internet.</p>
+          </div>
+        </div>
+
+        <!-- FAQ 5 -->
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span data-i18n="faq_q5">What is your refund and SLA cancellation policy?</span>
+            <span class="faq-icon">+</span>
+          </button>
+          <div class="faq-answer">
+            <p data-i18n="faq_a5">We offer a 30-day initial trial window on SLA retainers. If our response times or failover performance do not meet your technical expectations, you can cancel with full refund of the current retainer period.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Payment & Security Trust Bar -->
+  <section class="container" style="padding-bottom: 5rem;">
+    <div class="payment-trust-bar">
+      <div class="payment-trust-item">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <div>
+          <strong style="display: block; font-size: 0.9rem;" data-i18n="trust_title">Secured B2B Invoicing &amp; Retainers</strong>
+          <span style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="trust_desc">Encrypted 256-bit TLS payments processed via Stripe with Net-14 corporate invoicing terms.</span>
+        </div>
+      </div>
+      <div class="payment-card-icons">
+        <span class="card-badge">VISA</span>
+        <span class="card-badge">MASTERCARD</span>
+        <span class="card-badge">AMEX</span>
+        <span class="card-badge">SEPA</span>
+        <span class="card-badge" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); color: #60a5fa;">STRIPE VERIFIED</span>
       </div>
     </div>
   </section>
@@ -557,6 +758,8 @@
             <li><a href="#benchmarks">Latency Benchmarks</a></li>
             <li><a href="#simulator">Live Visualizer</a></li>
             <li><a href="#matrix">Comparison Matrix</a></li>
+            <li><a href="#config-generator">Config Generator</a></li>
+            <li><a href="#faq">FAQ</a></li>
             <li><a href="https://github.com/incontrolplus/openbalancer" target="_blank" rel="noopener">GitHub Repository</a></li>
           </ul>
         </div>
@@ -668,7 +871,7 @@
   </div>
 
   <!-- Scripts with cache busting -->
-  <script src="js/i18n.js?v=2.0.2"></script>
-  <script src="js/main.js?v=2.0.2"></script>
+  <script src="js/i18n.js?v=2.0.3"></script>
+  <script src="js/main.js?v=2.0.3"></script>
 </body>
 </html>

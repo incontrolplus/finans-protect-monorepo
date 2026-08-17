@@ -60,39 +60,68 @@ openbalancer/
 
 ## 🌟 Core Engine Features
 
-* **⚡ Non-Blocking Async I/O**: Pure Python async proxy with sub-millisecond overhead.
-* **🧠 AI & LLM Inference Aware**: Optimized for streaming HTTP chunked transfers and SSE (Server-Sent Events).
-* **🛡️ Active Health Checks**: Automated background health monitoring with automatic traffic draining and failover.
-* **🎯 Routing Strategies**:
-  * `round_robin` — Uniform distribution across all active nodes.
-  * `weighted` — Distribution proportional to server capacity.
-  * `least_latency` — Dynamic routing to the fastest answering node.
-* **📊 Telemetry API**: Real-time status and metrics at `/openbalancer/status`.
-* **🐳 Docker Ready**: Ultralight multi-stage container footprint (<45MB).
+* **⚡ Non-Blocking Async I/O**: Pure Python async proxy with sub-millisecond overhead (p50 < 4.7ms).
+* **🧠 AI & LLM Inference Aware**: Zero-buffer chunked transfers and SSE (Server-Sent Events) passthrough.
+* **🛡️ Active Health Checks & Circuit Breaker**: Automated background health monitoring with automatic traffic draining and failover.
+* **🎯 Routing Strategies**: `round_robin`, `weighted_round_robin`, `least_connections`, `least_latency`, `ip_hash`, `power_of_two`.
+* **📊 Dual Observability API**:
+  * JSON Status Endpoint: `/openbalancer/status`
+  * Prometheus Plaintext Metrics Exporter: `/metrics`
+* **📈 Official Grafana Dashboard**: Ready-to-import template in `telemetry/grafana-openbalancer-dashboard.json`.
+* **🐳 Docker & Kubernetes Ready**: Ultralight multi-arch container footprint (<45MB).
 
 ---
 
 ## 🚀 Quickstart
 
-### 1. Run with Python (Zero Extra Dependencies)
+### 1. Installation & CLI Usage
 ```bash
-python3 core/openbalancer.py core/config.json
+# Clone and run
+git clone https://github.com/incontrolplus/openbalancer.git
+cd openbalancer
+
+# Validate configuration
+python3 core/openbalancer.py validate -c core/config.json
+
+# Start OpenBalancer
+python3 core/openbalancer.py start -c core/config.json
 ```
 
-### 2. Run Automated Verification Tests
+Or 1-line curl installer:
 ```bash
+curl -fsSL https://www.openbalancer.com/install.sh | bash
+```
+
+### 2. Run High-Concurrency Benchmark (5,300+ RPS)
+```bash
+python3 benchmark/run_benchmark.py
+```
+View full benchmark results: [benchmark/BENCHMARK_RESULTS.md](benchmark/BENCHMARK_RESULTS.md).
+
+### 3. Run Automated Unit & Verification Tests
+```bash
+python3 -m unittest discover -s tests -p "test_*.py" -v
 python3 core/test_balancer.py
 ```
 
-### 3. Run Cluster Sandbox with Docker Compose
+### 4. Prometheus & Grafana Monitoring
+OpenBalancer exports standard Prometheus metrics on `/metrics`:
 ```bash
-docker-compose -f core/docker-compose.yml up -d
+curl http://localhost:8088/metrics
+curl http://localhost:8088/openbalancer/status
 ```
+Import [`telemetry/grafana-openbalancer-dashboard.json`](telemetry/grafana-openbalancer-dashboard.json) into Grafana for real-time throughput and health telemetry.
 
-Check the health and telemetry metrics:
-```bash
-curl http://localhost:8080/openbalancer/status
-```
+---
+
+## 📚 Technical Documentation
+
+Explore in-depth documentation in [`docs/`](docs/):
+* [Architecture & Event Loop](docs/architecture.md)
+* [Routing Algorithms](docs/algorithms.md)
+* [Configuration Schema](docs/configuration.md)
+* [Telemetry & Prometheus API](docs/telemetry-api.md)
+* [Production Deployment](docs/deployment.md)
 
 ---
 
@@ -101,15 +130,16 @@ curl http://localhost:8080/openbalancer/status
 OpenBalancer is maintained and commercially operated by **INCONTROL PLUS ЕООД** (Sofia, Bulgaria). We offer dedicated enterprise services:
 * **99.9% Guaranteed Monthly Uptime SLA**
 * **Sub-15 Minute Incident Response**
+* **Net-14 Corporate Invoicing & Stripe Card Payments**
 * **Custom AI Routing & Load Balancer Module Engineering**
 * **Managed Turnkey Infrastructure Deployments**
 
-For inquiries, contact: **support@openbalancer.com** or visit **[https://openbalancer.com](https://openbalancer.com)**.
+For inquiries, contact: **support@openbalancer.com** or visit **[https://www.openbalancer.com](https://www.openbalancer.com)**.
 
 ---
 
 ## 📜 License & Compliance
 
 * **Software License**: Distributed under the [MIT License](LICENSE).
-* **Corporate Operator**: INCONTROL PLUS ЕООД, Sofia, Bulgaria.
+* **Corporate Operator**: INCONTROL PLUS ЕООД, Sofia, Bulgaria (UIC 204882190).
 * **Compliance**: Full GDPR, Stripe KYB, and EU consumer protection alignment.

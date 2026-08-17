@@ -1,0 +1,91 @@
+# =============================================================================
+#  OpenBalancer — Prometheus Alertmanager Alerting Rules
+#  Maintained by INCONTROL PLUS EOOD (https://openbalancer.com)
+#  License: MIT
+# =============================================================================
+
+groups:
+  - name: openbalancer.alerts
+    rules:
+      # -----------------------------------------------------------------------
+      # 1. High Latency Alert (>200ms)
+      # -----------------------------------------------------------------------
+      - alert: OpenBalancerHighLatency
+        expr: openbalancer_backend_latency_ms > 200
+        for: 30s
+        labels:
+          severity: warning
+          service: openbalancer
+          component: upstream-proxy
+        annotations:
+          summary: "OpenBalancer High Latency Detected on {{ $labels.backend }}"
+          description: "Backend node {{ $labels.backend }} (host: {{ $labels.host }}, port: {{ $labels.port }}) has a response/health latency of {{ $value }}ms, exceeding the 200ms SLA threshold."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          runbook_url: "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md#troubleshooting-high-latency"
+          action: "Investigate upstream CPU/memory pressure, slow database queries, or network bottlenecks on target host {{ $labels.host }}."
+
+      # -----------------------------------------------------------------------
+      # 2. Backend Node Down Alert (Consecutive Probing Failures)
+      # -----------------------------------------------------------------------
+      - alert: OpenBalancerBackendDown
+        expr: openbalancer_backend_health_status == 0 or openbalancer_backend_consecutive_failures >= 2
+        for: 15s
+        labels:
+          severity: critical
+          service: openbalancer
+          component: circuit-breaker
+        annotations:
+          summary: "OpenBalancer Backend Node DOWN: {{ $labels.backend }}"
+          description: "Backend node {{ $labels.backend }} (host: {{ $labels.host }}, port: {{ $labels.port }}) failed consecutive health checks (failures: {{ $value }}) and was isolated from the load balancer pool."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          runbook_url: "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md#backend-recovery"
+          action: "Check if the application container/service on {{ $labels.host }}:{{ $labels.port }} is running and replying with HTTP 200 to health probes."
+
+      # -----------------------------------------------------------------------
+      # 3. Emergency: All Cluster Backends Down (Total Outage)
+      # -----------------------------------------------------------------------
+      - alert: OpenBalancerAllBackendsDown
+        expr: sum(openbalancer_backend_health_status) == 0
+        for: 5s
+        labels:
+          severity: page
+          service: openbalancer
+          component: cluster
+        annotations:
+          summary: "CRITICAL: All OpenBalancer Backends DOWN (Cluster Outage)"
+          description: "All upstream backend nodes in the OpenBalancer cluster are unreachable or unhealthy. OpenBalancer is currently responding with 503 Service Unavailable."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          runbook_url: "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md#disaster-recovery"
+          action: "IMMEDIATE ACTION: Restart upstream services or initiate emergency failover pool."
+
+      # -----------------------------------------------------------------------
+      # 4. Flapping & Circuit Breaker Rapid Tripping
+      # -----------------------------------------------------------------------
+      - alert: OpenBalancerCircuitBreakerTripping
+        expr: increase(openbalancer_circuit_breaker_trips_total[5m]) >= 3
+        for: 1m
+        labels:
+          severity: warning
+          service: openbalancer
+          component: circuit-breaker
+        annotations:
+          summary: "OpenBalancer Circuit Breaker Flapping on {{ $labels.backend }}"
+          description: "Backend node {{ $labels.backend }} tripped circuit breaking {{ $value }} times within the last 5 minutes, indicating severe instability."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          action: "Verify upstream health check endpoint stability or increase health check timeout interval."
+
+      # -----------------------------------------------------------------------
+      # 5. Upstream Request Error Rate (>5% 5xx Failures)
+      # -----------------------------------------------------------------------
+      - alert: OpenBalancerHighErrorRate
+        expr: (rate(openbalancer_backend_failed_requests_total[1m]) / (rate(openbalancer_backend_requests_total[1m]) > 0)) > 0.05
+        for: 1m
+        labels:
+          severity: warning
+          service: openbalancer
+          component: proxy-engine
+        annotations:
+          summary: "OpenBalancer Upstream Error Rate > 5% on {{ $labels.backend }}"
+          description: "Backend node {{ $labels.backend }} is failing {{ $value | humanizePercentage }} of proxied requests over the last 1 minute."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          action: "Inspect backend application error logs and gateway socket timeouts."

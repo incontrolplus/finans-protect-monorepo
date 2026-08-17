@@ -56,60 +56,88 @@ openbalancer/
     └── Discord_Community_Setup.md           # Структура на Discord общността за съпорт
 ```
 
----
+## 🌟 Основни Функционалности
 
-## 🌟 Основни Възможности на Ядрото
-
-* **⚡ Неблокиращ Асинхронен I/O**: Чист Python async proxy с под-милисекундно забавяне (overhead).
-* **🧠 Оптимизиран за AI и LLM Inference**: Поддържа стрийминг на HTTP chunked заявки и Server-Sent Events (SSE).
-* **🛡️ Активен Health Check Мониторинг**: Автоматична проверка на състоянието на бекенд възлите и мигновен failover при деградация.
-* **🎯 Стратегии за Балансиране**:
-  * `round_robin` — Равномерно циклично разпределение на трафика.
-  * `weighted` — Разпределение, пропорционално на зададения капацитет (тегло) на всяка нода.
-  * `least_latency` — Динамично пренасочване към възела с най-ниско измерено време за отговор.
-* **📊 Вградено Telemetry API**: Мониторинг и метрики в реално време на `/openbalancer/status`.
-* **🐳 Docker Контейнеризация**: Ултралек образ (<45MB) на базата на Alpine Linux.
+* **⚡ Неблокиращ асинхронен I/O**: Изчистено Python асинхронно прокси с минимално забавяне (p50 < 4.7ms).
+* **🧠 Оптимизирано за AI & LLM инференс**: Нулево буфериране на стрийминг токени и SSE (Server-Sent Events) препращане.
+* **🛡️ Активен Health Probing & Circuit Breaker**: Автоматичен фонов мониторинг, изолиране на деградирали възли и мигновен failover.
+* **🎯 6 Алгоритъма за балансиране**: `round_robin`, `weighted_round_robin`, `least_connections`, `least_latency`, `ip_hash`, `power_of_two`.
+* **📊 Двойно API за наблюдение (Observability)**:
+  * JSON Status Endpoint: `/openbalancer/status`
+  * Prometheus Plaintext Metrics Exporter: `/metrics`
+* **📈 Официален Grafana Дашборд**: Готов за импортиране шаблон в `telemetry/grafana-openbalancer-dashboard.json`.
+* **🐳 Docker & Kubernetes готовност**: Олекотен мултиплатформен контейнер (<45MB).
 
 ---
 
-## 🚀 Бърз Старт (Quickstart)
+## 🚀 Бърз Старт
 
-### 1. Стартиране с чист Python (Без допълнителни библиотеки)
+### 1. Инсталация и CLI Команди
 ```bash
-python3 core/openbalancer.py core/config.json
+# Клониране на хранилището
+git clone https://github.com/incontrolplus/openbalancer.git
+cd openbalancer
+
+# Валидиране на конфигурация
+python3 core/openbalancer.py validate -c core/config.json
+
+# Стартиране на OpenBalancer
+python3 core/openbalancer.py start -c core/config.json
 ```
 
-### 2. Стартиране на автоматичните тестове
+Или бърза инсталация с 1 команда:
 ```bash
+curl -fsSL https://www.openbalancer.com/install.sh | bash
+```
+
+### 2. Стартиране на Стрес-Тест Бенчмарк (5,300+ Заявки/сек)
+```bash
+python3 benchmark/run_benchmark.py
+```
+Вижте пълния доклад: [benchmark/BENCHMARK_RESULTS.md](benchmark/BENCHMARK_RESULTS.md).
+
+### 3. Стартиране на Тестовия Пакет
+```bash
+python3 -m unittest discover -s tests -p "test_*.py" -v
 python3 core/test_balancer.py
 ```
 
-### 3. Стартиране на клъстер чрез Docker Compose
+### 4. Мониторинг с Prometheus & Grafana
+OpenBalancer експортира стандартни Prometheus метрики на `/metrics`:
 ```bash
-docker-compose -f core/docker-compose.yml up -d
+curl http://localhost:8088/metrics
+curl http://localhost:8088/openbalancer/status
 ```
-
-Проверка на телеметрията и състоянието:
-```bash
-curl http://localhost:8080/openbalancer/status
-```
+Импортирайте [`telemetry/grafana-openbalancer-dashboard.json`](telemetry/grafana-openbalancer-dashboard.json) в Grafana за наблюдение на трафика и здравето на възлите в реално време.
 
 ---
 
-## 🏢 Корпоративна Поддръжка и SLAs (Enterprise)
+## 📚 Техническа Документация
 
-**OpenBalancer** се управлява и поддържа комерсиално от **ИНКОНТРОЛ ПЛЮС ЕООД (INCONTROL PLUS EOOD)**, София, България. Предлагаме:
-* **Гарантирано 99.9% месечно работно време (Uptime SLA)**
-* **Гарантирано време за реакция при критични инциденти под 15 минути**
-* **Персонализирана разработка на AI routing и балансиращи модули**
-* **Цялостен мениджмънт и поддръжка на инфраструктурата "до ключ"**
-
-За бизнес запитвания: **support@openbalancer.com** или посетете **[https://openbalancer.com](https://openbalancer.com)**.
+Разгледайте пълната документация в [`docs/`](docs/):
+* [Архитектура & Event Loop](docs/architecture.md)
+* [Алгоритми за балансиране](docs/algorithms.md)
+* [Конфигурационна схема](docs/configuration.md)
+* [Телеметрия & Prometheus API](docs/telemetry-api.md)
+* [Продукционно разгръщане](docs/deployment.md)
 
 ---
 
-## 📜 Лиценз и Съвместимост
+## 🏢 Корпоративна Поддръжка & SLA Гаранции
 
-* **Софтуерен Лиценз**: Разпространява се под [MIT License](LICENSE).
-* **Юридическо лице / Оператор**: ИНКОНТРОЛ ПЛЮС ЕООД, София, България.
-* **Съответствие**: 100% GDPR, Stripe KYB/KYC и европейски стандарти за защита на потребителите.
+OpenBalancer се поддържа и оперира от **ИНКОНТРОЛ ПЛЮС ЕООД** (гр. София, България). Предлагаме:
+* **99.9% Гарантиран месечен ъптайм SLA**
+* **Под 15 минути реакция при критични инциденти**
+* **Net-14 Корпоративно фактуриране & Stripe плащания с карта**
+* **Разработка на специализирани модули за AI маршрутизация**
+* **Управлявани инфраструктурни внедрявания до ключ**
+
+За запитвания: **support@openbalancer.com** или посетете **[https://www.openbalancer.com](https://www.openbalancer.com)**.
+
+---
+
+## 📜 Лиценз и Правна Съвместимост
+
+* **Лиценз на софтуера**: Разпространява се под [MIT License](LICENSE).
+* **Опериращо дружество**: ИНКОНТРОЛ ПЛЮС ЕООД, гр. София, ЕИК 204882190.
+* **Съвместимост**: Пълно съответствие с GDPR, Stripe KYB и европейското законодателство.

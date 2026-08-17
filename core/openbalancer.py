@@ -36,6 +36,7 @@ class BackendNode:
         self.failed_requests = 0
         self.last_latency_ms = 0.0
         self.consecutive_failures = 0
+        self.circuit_trips = 0
 
     @property
     def url(self) -> str:
@@ -85,34 +86,49 @@ class LoadBalancer:
             ]
         logger.info(f"Loaded {len(self.backends)} backends. Strategy: {self.algorithm}. Port: {self.port}")
 
-    def select_backend(self) -> Optional[BackendNode]:
-        healthy_nodes = [b for b in self.backends if b.is_healthy]
+    def select_backend(self, client_ip: Optional[str] = None) -> Optional[BackendNode]:
+        healthy_nodes = [node for node in self.backends if node.is_healthy]
         if not healthy_nodes:
             logger.error("All backend nodes are currently UNHEALTHY!")
             return None
 
-        if self.algorithm == "round_robin":
-            node = healthy_nodes[self.current_idx % len(healthy_nodes)]
-            self.current_idx = (self.current_idx + 1) % len(healthy_nodes)
-            return node
-        
-        elif self.algorithm == "least_latency":
-            # Select healthy node with the lowest recorded latency
+        algo = self.algorithm.lower()
+
+        if algo in ("least_connections", "least_conn"):
+            # Select healthy node with the lowest active connections (weighted)
+            return min(healthy_nodes, key=lambda n: n.active_connections / max(1, n.weight))
+
+        elif algo in ("ip_hash", "consistent_hash"):
+            if client_ip:
+                import hashlib
+                h = int(hashlib.md5(client_ip.encode('utf-8')).hexdigest(), 16)
+                return healthy_nodes[h % len(healthy_nodes)]
+            return healthy_nodes[self.current_idx % len(healthy_nodes)]
+
+        elif algo in ("power_of_two", "p2c"):
+            import random
+            if len(healthy_nodes) == 1:
+                return healthy_nodes[0]
+            candidates = random.sample(healthy_nodes, 2)
+            return min(candidates, key=lambda n: n.active_connections)
+
+        elif algo in ("least_latency", "latency"):
             healthy_nodes.sort(key=lambda n: n.last_latency_ms)
             return healthy_nodes[0]
-            
-        elif self.algorithm == "weighted":
-            total_weight = sum(n.weight for n in healthy_nodes)
-            if total_weight == 0:
-                return healthy_nodes[0]
+
+        elif algo in ("weighted_round_robin", "weighted"):
             weighted_pool = []
             for n in healthy_nodes:
-                weighted_pool.extend([n] * n.weight)
+                weighted_pool.extend([n] * max(1, n.weight))
             node = weighted_pool[self.current_idx % len(weighted_pool)]
             self.current_idx = (self.current_idx + 1) % len(weighted_pool)
             return node
 
-        return healthy_nodes[0]
+        else:
+            # Default standard round robin
+            node = healthy_nodes[self.current_idx % len(healthy_nodes)]
+            self.current_idx = (self.current_idx + 1) % len(healthy_nodes)
+            return node
 
     async def check_node_health(self, node: BackendNode):
         url = f"{node.url}{node.health_path}"
@@ -138,11 +154,13 @@ class LoadBalancer:
                 if node.consecutive_failures >= 2 and node.is_healthy:
                     logger.warning(f"Node {node.url} returned HTTP {code}. Marking as DOWN.")
                     node.is_healthy = False
+                    node.circuit_trips += 1
         except Exception as e:
             node.consecutive_failures += 1
             if node.consecutive_failures >= 2 and node.is_healthy:
                 logger.warning(f"Health check failed for {node.url}: {e}. Marking as DOWN.")
                 node.is_healthy = False
+                node.circuit_trips += 1
 
     async def health_check_loop(self):
         while True:
@@ -189,7 +207,7 @@ class LoadBalancer:
             if content_length > 0:
                 body = await reader.readexactly(content_length)
 
-            # Internal Status & Metrics Endpoint
+            # Internal Status & Metrics Endpoint (JSON)
             if path.startswith("/openbalancer/status"):
                 status_payload = {
                     "system": "OpenBalancer Core",
@@ -204,7 +222,8 @@ class LoadBalancer:
                             "healthy": b.is_healthy,
                             "weight": b.weight,
                             "total_requests": b.total_requests,
-                            "last_latency_ms": b.last_latency_ms
+                            "last_latency_ms": b.last_latency_ms,
+                            "circuit_trips": b.circuit_trips
                         }
                         for b in self.backends
                     ]
@@ -213,6 +232,88 @@ class LoadBalancer:
                 response_header = (
                     b"HTTP/1.1 200 OK\r\n"
                     b"Content-Type: application/json; charset=utf-8\r\n"
+                    b"Server: OpenBalancer/1.0 (INCONTROL PLUS)\r\n"
+                    b"Connection: close\r\n"
+                    b"Content-Length: " + str(len(body_bytes)).encode('utf-8') + b"\r\n\r\n"
+                )
+                writer.write(response_header + body_bytes)
+                await writer.drain()
+                writer.close()
+                await writer.wait_closed()
+                return
+
+            # Prometheus Metrics Endpoint (text/plain format)
+            if path == "/metrics" or path.startswith("/metrics?"):
+                uptime = int(time.time() - self.start_time)
+                lines = [
+                    "# HELP openbalancer_requests_total Total number of proxied HTTP requests",
+                    "# TYPE openbalancer_requests_total counter",
+                    f"openbalancer_requests_total {self.total_proxied_requests}",
+                    "",
+                    "# HELP openbalancer_uptime_seconds OpenBalancer uptime in seconds",
+                    "# TYPE openbalancer_uptime_seconds gauge",
+                    f"openbalancer_uptime_seconds {uptime}",
+                    "",
+                    "# HELP openbalancer_backend_health_status Health status of backend node (1=healthy, 0=down)",
+                    "# TYPE openbalancer_backend_health_status gauge",
+                ]
+                for b in self.backends:
+                    status_val = 1 if b.is_healthy else 0
+                    lines.append(f'openbalancer_backend_health_status{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {status_val}')
+
+                lines.extend([
+                    "",
+                    "# HELP openbalancer_backend_requests_total Total requests routed to backend node",
+                    "# TYPE openbalancer_backend_requests_total counter",
+                ])
+                for b in self.backends:
+                    lines.append(f'openbalancer_backend_requests_total{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {b.total_requests}')
+
+                lines.extend([
+                    "",
+                    "# HELP openbalancer_backend_latency_ms Last probed health check latency in milliseconds",
+                    "# TYPE openbalancer_backend_latency_ms gauge",
+                ])
+                for b in self.backends:
+                    lines.append(f'openbalancer_backend_latency_ms{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {b.last_latency_ms}')
+
+                lines.extend([
+                    "",
+                    "# HELP openbalancer_backend_failed_requests_total Total failed requests for backend node",
+                    "# TYPE openbalancer_backend_failed_requests_total counter",
+                ])
+                for b in self.backends:
+                    lines.append(f'openbalancer_backend_failed_requests_total{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {b.failed_requests}')
+
+                lines.extend([
+                    "",
+                    "# HELP openbalancer_circuit_breaker_trips_total Total circuit breaker trip events due to consecutive health probe failures",
+                    "# TYPE openbalancer_circuit_breaker_trips_total counter",
+                ])
+                for b in self.backends:
+                    lines.append(f'openbalancer_circuit_breaker_trips_total{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {b.circuit_trips}')
+
+                lines.extend([
+                    "",
+                    "# HELP openbalancer_backend_consecutive_failures Current consecutive health check failure count",
+                    "# TYPE openbalancer_backend_consecutive_failures gauge",
+                ])
+                for b in self.backends:
+                    lines.append(f'openbalancer_backend_consecutive_failures{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {b.consecutive_failures}')
+
+                lines.extend([
+                    "",
+                    "# HELP openbalancer_backend_active_connections Number of active connections on backend node",
+                    "# TYPE openbalancer_backend_active_connections gauge",
+                ])
+                for b in self.backends:
+                    lines.append(f'openbalancer_backend_active_connections{{backend="{b.url}",host="{b.host}",port="{b.port}"}} {b.active_connections}')
+
+                lines.append("")
+                body_bytes = "\n".join(lines).encode('utf-8')
+                response_header = (
+                    b"HTTP/1.1 200 OK\r\n"
+                    b"Content-Type: text/plain; version=0.0.4; charset=utf-8\r\n"
                     b"Server: OpenBalancer/1.0 (INCONTROL PLUS)\r\n"
                     b"Connection: close\r\n"
                     b"Content-Length: " + str(len(body_bytes)).encode('utf-8') + b"\r\n\r\n"
@@ -301,10 +402,89 @@ class LoadBalancer:
             await server.serve_forever()
 
 
+def main():
+    import argparse
+    # Check if first argument is a json file or flag
+    first_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    if first_arg and (first_arg.endswith('.json') or os.path.isfile(first_arg)):
+        lb = LoadBalancer(config_path=first_arg)
+        try:
+            asyncio.run(lb.start())
+        except KeyboardInterrupt:
+            logger.info("OpenBalancer stopped by user.")
+        return
+
+    parser = argparse.ArgumentParser(
+        prog="openbalancer",
+        description="OpenBalancer: Intelligent Asynchronous Reverse Proxy & Load Balancer"
+    )
+    subparsers = parser.add_subparsers(dest="subcommand", help="Available subcommands")
+
+    # Start Command
+    start_parser = subparsers.add_parser("start", help="Start OpenBalancer service")
+    start_parser.add_argument("-c", "--config", default="config.json", help="Path to config.json file (default: config.json)")
+    start_parser.add_argument("-p", "--port", type=int, default=None, help="Override listen port")
+    start_parser.add_argument("-a", "--algorithm", choices=["round_robin", "weighted_round_robin", "least_connections", "ip_hash", "power_of_two"], default=None, help="Override routing algorithm")
+
+    # Validate Command
+    val_parser = subparsers.add_parser("validate", help="Validate configuration file")
+    val_parser.add_argument("-c", "--config", default="config.json", help="Path to config.json file")
+
+    # Status Command
+    status_parser = subparsers.add_parser("status", help="Query live OpenBalancer status")
+    status_parser.add_argument("-u", "--url", default="http://127.0.0.1:8088/openbalancer/status", help="URL of status endpoint")
+
+    # Version Command
+    subparsers.add_parser("version", help="Show version and build information")
+
+    args = parser.parse_args()
+
+    if args.subcommand == "version":
+        print("OpenBalancer v1.4.2 (Enterprise AI & API Load Balancer)")
+        print("Engineered & Maintained by INCONTROL PLUS ЕООД (https://www.openbalancer.com)")
+        print("License: MIT")
+        sys.exit(0)
+
+    elif args.subcommand == "validate":
+        cfg_file = args.config
+        try:
+            with open(cfg_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            backends = data.get("backends", [])
+            print(f"✓ Configuration '{cfg_file}' is valid JSON.")
+            print(f"  Listen Port: {data.get('port', 8088)}")
+            print(f"  Strategy:    {data.get('algorithm', 'round_robin')}")
+            print(f"  Backends:    {len(backends)} nodes configured")
+            sys.exit(0)
+        except Exception as e:
+            print(f"✗ Configuration error in '{cfg_file}': {e}", file=sys.stderr)
+            sys.exit(1)
+
+    elif args.subcommand == "status":
+        try:
+            req = urllib.request.Request(args.url, headers={"User-Agent": "OpenBalancer-CLI"})
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                print(json.dumps(data, indent=2))
+                sys.exit(0)
+        except Exception as e:
+            print(f"✗ Could not fetch status from '{args.url}': {e}", file=sys.stderr)
+            sys.exit(1)
+
+    else:
+        # Default or 'start'
+        cfg_file = args.config if hasattr(args, "config") and args.config else "config.json"
+        lb = LoadBalancer(config_path=cfg_file)
+        if hasattr(args, "port") and args.port:
+            lb.port = args.port
+        if hasattr(args, "algorithm") and args.algorithm:
+            lb.algorithm = args.algorithm
+
+        try:
+            asyncio.run(lb.start())
+        except KeyboardInterrupt:
+            logger.info("OpenBalancer stopped by user.")
+
+
 if __name__ == "__main__":
-    cfg = sys.argv[1] if len(sys.argv) > 1 else "config.json"
-    lb = LoadBalancer(config_path=cfg)
-    try:
-        asyncio.run(lb.start())
-    except KeyboardInterrupt:
-        logger.info("OpenBalancer stopped by user.")
+    main()

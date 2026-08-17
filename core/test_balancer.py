@@ -44,10 +44,11 @@ def run_mock_server(port, srv_id):
 def main():
     print("=== [OpenBalancer] Running Automated Verification Test ===")
     
-    # 1. Start two mock backend servers on 9101 and 9102
-    print("[1/5] Starting mock backends on ports 9101 and 9102...")
+    # 1. Start three mock backend servers on 9101, 9102, and 9103
+    print("[1/5] Starting mock backends on ports 9101, 9102, and 9103...")
     srv1 = run_mock_server(9101, "ALPHA-9101")
     srv2 = run_mock_server(9102, "BETA-9102")
+    srv3 = run_mock_server(9103, "GAMMA-9103")
     time.sleep(0.5)
 
     # 2. Start OpenBalancer
@@ -56,7 +57,7 @@ def main():
     config_file = os.path.join(script_dir, "config.json")
 
     print("[2/5] Spawning OpenBalancer process on port 8088...")
-    lb_proc = subprocess.Popen([sys.executable, lb_script, config_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    lb_proc = subprocess.Popen([sys.executable, lb_script, "start", "-c", config_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     time.sleep(1.0)
 
     try:
@@ -69,7 +70,7 @@ def main():
             print("Status response:\n", json.dumps(data, indent=2))
             assert data["system"] == "OpenBalancer Core"
             assert data["operator"] == "INCONTROL PLUS EOOD"
-            assert len(data["backends"]) == 2
+            assert len(data["backends"]) == 3
 
         # 4. Dispatch 6 requests and verify round-robin
         print("\n[4/5] Sending 6 requests through the load balancer...")
@@ -80,11 +81,14 @@ def main():
                 responses.append(body)
                 print(f" Request #{i+1} -> {body}")
 
-        count_alpha = sum(1 for r in responses if "ALPHA-9101" in r)
-        count_beta = sum(1 for r in responses if "BETA-9102" in r)
-        print(f"\nDistribution: ALPHA-9101: {count_alpha}, BETA-9102: {count_beta}")
-        assert count_alpha == 3, f"Expected 3 to ALPHA, got {count_alpha}"
-        assert count_beta == 3, f"Expected 3 to BETA, got {count_beta}"
+        count_alpha = responses.count("Response from Mock Server ALPHA-9101")
+        count_beta = responses.count("Response from Mock Server BETA-9102")
+        count_gamma = responses.count("Response from Mock Server GAMMA-9103")
+        print(f"\nDistribution: ALPHA-9101: {count_alpha}, BETA-9102: {count_beta}, GAMMA-9103: {count_gamma}")
+        assert count_alpha == 2, f"Expected 2 to ALPHA, got {count_alpha}"
+        assert count_beta == 2, f"Expected 2 to BETA, got {count_beta}"
+        assert count_gamma == 2, f"Expected 2 to GAMMA, got {count_gamma}"
+        print("✓ Round-Robin distribution strictly verified across 3 nodes!")
 
         # 5. Check updated telemetry metrics
         print("\n[5/5] Checking telemetry counts after requests...")

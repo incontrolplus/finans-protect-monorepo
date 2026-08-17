@@ -4,6 +4,9 @@
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (typeof initLanguageSwitcher === 'function') {
+    initLanguageSwitcher();
+  }
   initTerminalTabs();
   initLoadBalancerSimulator();
   initContactModal();

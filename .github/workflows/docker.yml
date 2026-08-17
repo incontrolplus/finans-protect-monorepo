@@ -37,18 +37,18 @@ jobs:
 
       - name: Verify Container Execution & Status Endpoint
         run: |
-          echo "Starting OpenBalancer container in detached mode..."
-          docker run -d --name openbalancer-test-container -p 8080:8080 openbalancer:local-test
+          echo "Starting OpenBalancer container in detached mode on port 8088..."
+          docker run -d --name openbalancer-test-container -p 8088:8088 openbalancer:local-test
           sleep 2
           
           echo "Checking container logs..."
           docker logs openbalancer-test-container
           
-          echo "Querying status endpoint..."
-          curl -f -s http://127.0.0.1:8080/openbalancer/status | jq .
+          echo "Querying status endpoint on port 8088..."
+          curl -f -s http://127.0.0.1:8088/openbalancer/status | jq .
           
           echo "Verifying HTTP response code..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8080/openbalancer/status)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8088/openbalancer/status)
           if [ "$STATUS" -ne 200 ]; then
             echo "❌ Expected HTTP 200, got $STATUS"
             exit 1

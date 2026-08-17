@@ -11,9 +11,9 @@ WORKDIR /app
 COPY openbalancer.py /app/
 COPY config.json /app/
 
-EXPOSE 8080
+EXPOSE 8088
 
 HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
-  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/openbalancer/status', timeout=2)" || exit 1
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8088/openbalancer/status', timeout=2)" || exit 1
 
 ENTRYPOINT ["python3", "openbalancer.py", "/app/config.json"]

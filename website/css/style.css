@@ -257,9 +257,10 @@ a:hover {
 }
 
 [data-theme="matrix"] .theme-toggle-btn {
-  border-color: #11381c;
+  border-color: rgba(0, 255, 102, 0.3);
   color: #00ff66;
-  background: #051409;
+  background: transparent;
+  box-shadow: none;
 }
 
 [data-theme="matrix"] .theme-toggle-btn:hover {
@@ -305,9 +306,10 @@ a:hover {
 }
 
 [data-theme="matrix"] .lang-btn.active {
-  background: #00ff66;
-  color: #020904;
+  background: rgba(0, 255, 102, 0.15);
+  color: #00ff66;
   font-weight: 800;
+  border-radius: var(--radius-xs);
 }
 
 /* Mobile Menu Toggle Button */
@@ -3231,3 +3233,8 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 
+
+[data-theme="matrix"] .lang-switcher {
+  background: rgba(0, 255, 102, 0.05);
+  border: 1px solid rgba(0, 255, 102, 0.3);
+}

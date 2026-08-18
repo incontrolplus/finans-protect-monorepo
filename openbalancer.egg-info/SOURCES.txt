@@ -19,4 +19,7 @@ tests/test_circuit_breaker.py
 tests/test_cli.py
 tests/test_hot_reload.py
 tests/test_model_routing.py
+tests/test_multinode_routing.py
 tests/test_rate_limiter.py
+tests/test_storage_monitoring.py
+tests/test_tls_termination.py

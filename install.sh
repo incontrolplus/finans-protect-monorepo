@@ -20,7 +20,7 @@ echo "| | | | '_ \ / _ \ '_ \|  _ \ / _\` | |/ _\` | '_ \ / __/ _ \ '__|    "
 echo "| |_| | |_) |  __/ | | | |_) | (_| | | (_| | | | | (_|  __/ |       "
 echo " \___/| .__/ \___|_| |_|____/ \__,_|_|\__,_|_| |_|\___\___|_|       "
 echo "      |_|                                                           "
-echo -e "         Enterprise Async Load Balancer v1.4.2${COLOR_RESET}\n"
+echo -e "         Enterprise Async Load Balancer v1.5.0${COLOR_RESET}\n"
 
 INSTALL_DIR="/opt/openbalancer"
 CONFIG_FILE="${INSTALL_DIR}/config.json"

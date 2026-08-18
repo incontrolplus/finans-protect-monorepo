@@ -2,8 +2,8 @@ apiVersion: v2
 name: openbalancer
 description: Production-grade Helm Chart for OpenBalancer AI & API Load Balancer
 type: application
-version: 1.4.2
-appVersion: "1.4.2"
+version: 1.5.0
+appVersion: "1.5.0"
 home: https://openbalancer.com
 icon: https://openbalancer.com/logo.svg
 sources:

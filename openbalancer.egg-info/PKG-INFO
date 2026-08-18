@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: openbalancer
-Version: 1.4.2
+Version: 1.5.0
 Summary: Intelligent Asynchronous Reverse Proxy & High-Performance Load Balancer for AI Clusters and APIs
 Author-email: INCONTROL PLUS EOOD <support@openbalancer.com>
 License-Expression: MIT

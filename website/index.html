@@ -101,6 +101,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('openbalancer_theme');
+        if (savedTheme === 'matrix') {
+          document.documentElement.setAttribute('data-theme', 'matrix');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -117,7 +127,7 @@
           <li><a href="#architecture" data-i18n="nav_architecture">Architecture</a></li>
           <li><a href="#simulator" data-i18n="nav_simulator">Live Visualizer</a></li>
           <li><a href="#matrix" data-i18n="nav_matrix">Comparison Matrix</a></li>
-          <li><a href="#config-generator" data-i18n="nav_config">Config Builder</a></li>
+          <li><a href="docs.html" data-i18n="nav_docs">Documentation</a></li>
           <li><a href="#enterprise" data-i18n="nav_enterprise">Enterprise SLA</a></li>
           <li><a href="#pricing" data-i18n="nav_pricing">Pricing</a></li>
           <li><a href="#faq" data-i18n="nav_faq">FAQ</a></li>
@@ -125,6 +135,13 @@
         </ul>
       </nav>
       <div class="nav-actions">
+        <!-- Theme Switcher (Deep Space Dark vs Matrix Console) -->
+        <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme Mode" title="Toggle Theme (Deep Space / Matrix Terminal)" data-i18n-title="nav_theme_toggle">
+          <svg class="theme-icon-dark" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="theme-icon-matrix" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          <span class="theme-btn-text" data-i18n="theme_btn_label">Theme</span>
+        </button>
+
         <!-- Language Switcher (EN / BG) -->
         <div class="lang-switcher" aria-label="Language Selector">
           <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
@@ -153,6 +170,7 @@
       <button type="button" class="modal-close" id="mobile-drawer-close" aria-label="Close Navigation Menu">&times;</button>
     </div>
     <ul class="mobile-drawer-links">
+      <li><a href="docs.html" class="mobile-nav-link" data-i18n="nav_docs">Documentation</a></li>
       <li><a href="#benchmarks" class="mobile-nav-link" data-i18n="nav_benchmarks">Benchmarks</a></li>
       <li><a href="#architecture" class="mobile-nav-link" data-i18n="nav_architecture">Architecture</a></li>
       <li><a href="#simulator" class="mobile-nav-link" data-i18n="nav_simulator">Live Visualizer</a></li>
@@ -163,6 +181,14 @@
       <li><a href="#faq" class="mobile-nav-link" data-i18n="nav_faq">FAQ</a></li>
       <li><a href="https://github.com/incontrolplus/openbalancer" target="_blank" rel="noopener">GitHub Repository</a></li>
       <li><a href="contact.html">Company Impressum</a></li>
+      <li style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-top: 1px solid var(--border-subtle); margin-top: 0.5rem;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);" data-i18n="theme_btn_label">Theme Mode</span>
+        <button type="button" class="theme-toggle-btn" id="mobile-theme-toggle-btn" aria-label="Toggle Theme Mode">
+          <svg class="theme-icon-dark" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="theme-icon-matrix" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          <span class="theme-btn-text" data-i18n="theme_matrix">Matrix Console</span>
+        </button>
+      </li>
     </ul>
     <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
       <a href="#enterprise" class="btn btn-primary" style="width: 100%;" data-action="enterprise-inquiry" data-plan="B2B Pro SLA Retainer" data-i18n="nav_request_sla">Request Enterprise SLA</a>
@@ -351,6 +377,55 @@
           </svg>
         </div>
 
+        <!-- Protocol Stream Selector (#protocol-selector) -->
+        <div class="protocol-selector-bar" id="protocol-selector" role="tablist" aria-label="Protocol Stream Selector">
+          <div class="protocol-selector-info">
+            <span class="protocol-selector-label" data-i18n="proto_label">Active Protocol Stream:</span>
+            <span class="protocol-active-badge" id="protocol-active-badge">HTTP/1.1 (Keep-Alive)</span>
+          </div>
+          <div class="protocol-pills">
+            <button type="button" class="protocol-pill active" data-protocol="http1" id="proto-btn-http1" role="tab" aria-selected="true">
+              <span class="proto-dot"></span>
+              <span class="proto-name" data-i18n="proto_http1_name">HTTP/1.1</span>
+              <span class="proto-desc" data-i18n="proto_http1_desc">REST &amp; Keep-Alive</span>
+            </button>
+            <button type="button" class="protocol-pill" data-protocol="sse" id="proto-btn-sse" role="tab" aria-selected="false">
+              <span class="proto-dot"></span>
+              <span class="proto-name" data-i18n="proto_sse_name">SSE LLM Stream</span>
+              <span class="proto-desc" data-i18n="proto_sse_desc">Bufferless Token Pipe</span>
+            </button>
+            <button type="button" class="protocol-pill" data-protocol="ws" id="proto-btn-ws" role="tab" aria-selected="false">
+              <span class="proto-dot"></span>
+              <span class="proto-name" data-i18n="proto_ws_name">WebSockets</span>
+              <span class="proto-desc" data-i18n="proto_ws_desc">Duplex Socket Sync</span>
+            </button>
+            <button type="button" class="protocol-pill" data-protocol="grpc" id="proto-btn-grpc" role="tab" aria-selected="false">
+              <span class="proto-dot"></span>
+              <span class="proto-name" data-i18n="proto_grpc_name">gRPC (HTTP/2)</span>
+              <span class="proto-desc" data-i18n="proto_grpc_desc">Multiplexed Protobuf</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SSE LLM Live Bufferless Token Stream Inspector -->
+        <div class="sse-token-inspector" id="sse-token-inspector" style="display: none;">
+          <div class="sse-inspector-header">
+            <div class="sse-title-box">
+              <span class="sse-pulse-dot"></span>
+              <strong data-i18n="sse_inspector_title">SSE Live Bufferless Token Stream Inspector</strong>
+              <span class="sse-tag" data-i18n="sse_tag_bufferless">0ms Buffer Overhead</span>
+            </div>
+            <div class="sse-stats-chips">
+              <span class="sse-stat-chip"><span data-i18n="sse_stat_ttft">TTFT:</span> <strong id="sse-ttft-val">8.4 ms</strong></span>
+              <span class="sse-stat-chip"><span data-i18n="sse_stat_rate">Throughput:</span> <strong id="sse-rate-val">134 tok/s</strong></span>
+              <span class="sse-stat-chip"><span data-i18n="sse_stat_chunk">Kernel Transfer:</span> <strong data-i18n="sse_pipe_mode">Direct Zero-Copy Pipe</strong></span>
+            </div>
+          </div>
+          <div class="sse-token-stream-window">
+            <span class="sse-token-stream-prefix">event: token_chunk<br>data: {"tokens": [</span><span class="sse-tokens-container" id="sse-tokens-container"></span><span class="sse-cursor">_</span><span class="sse-token-stream-suffix">]}</span>
+          </div>
+        </div>
+
         <div class="sim-controls">
           <div class="sim-stats">
             <div class="stat-item">
@@ -365,8 +440,12 @@
               <span class="stat-label" data-i18n="sim_dispatched_node">Dispatched Node</span>
               <span class="stat-value" id="sim-active-node">srv-us-east-1</span>
             </div>
+            <div class="stat-item">
+              <span class="stat-label" data-i18n="sim_stat_protocol">Active Protocol</span>
+              <span class="stat-value" id="sim-protocol-indicator" style="color: #60a5fa; font-size: 1rem;">HTTP/1.1</span>
+            </div>
           </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+          <div class="sim-actions-bar">
             <button type="button" class="btn btn-secondary btn-sm" id="sim-toggle-outage-btn" data-i18n="sim_btn_outage">Crash Node 2 (Failover)</button>
             <button type="button" class="btn btn-secondary btn-sm" id="sim-latency-spike-btn" data-i18n="sim_btn_latency">Inject 500ms Spike (Node 1)</button>
             <button type="button" class="btn btn-secondary btn-sm" id="sim-traffic-surge-btn" data-i18n="sim_btn_surge">Surge (1k Req/s)</button>
@@ -381,45 +460,76 @@
           <span id="sim-event-text" data-i18n="sim_event_baseline">Cluster Status: All 3 upstream nodes online. Dynamic load distribution active.</span>
         </div>
 
-        <div class="sim-visualizer">
-          <!-- Client Ingestion -->
-          <div class="sim-client-node">
-            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #94a3b8; margin-bottom: 0.25rem;">INGRESS</div>
-            <h4 style="margin-bottom: 0.25rem;" data-i18n="sim_client_ingress">Client Ingestion</h4>
-            <p style="font-size: 0.8rem;" data-i18n="sim_client_sub">TCP Sockets &amp; Webhooks</p>
+        <!-- Live Topology Map Wrapper (#topology-canvas) -->
+        <div class="topology-wrapper" id="topology-wrapper">
+          <div class="topology-top-bar">
+            <div class="topology-legend">
+              <div class="legend-item"><span class="legend-dot green"></span><span data-i18n="leg_healthy">200 OK (Healthy)</span></div>
+              <div class="legend-item"><span class="legend-dot amber"></span><span data-i18n="leg_latency">500ms Latency Spike (Degraded)</span></div>
+              <div class="legend-item"><span class="legend-dot red"></span><span data-i18n="leg_outage">Node Outage / Circuit Breaker Drop</span></div>
+            </div>
+            <div class="topology-hint">
+              <span class="hint-icon">⚡</span>
+              <span data-i18n="sim_click_hint">Tip: Click canvas or send requests to spawn live particle streams</span>
+            </div>
           </div>
 
-          <!-- Balancer Engine -->
-          <div class="sim-balancer-node">
-            <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #60a5fa; margin-bottom: 0.25rem;">ASYNC ROUTER</div>
-            <h4 data-i18n="sim_core_title">OpenBalancer Core</h4>
-            <span style="font-size: 0.75rem; color: #34d399; font-family: var(--font-mono);" data-i18n="sim_core_sub">Weighted Round-Robin</span>
-          </div>
-
-          <!-- Upstreams -->
-          <div class="sim-backends">
-            <div class="backend-card" id="backend-card-1">
-              <div>
-                <strong>srv-us-east-1</strong>
-                <div style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">AI Model Cluster A (Weight: 2)</div>
+          <div class="topology-stage" id="topology-stage">
+            <canvas id="topology-canvas" class="topology-canvas"></canvas>
+            
+            <div class="sim-visualizer" id="sim-visualizer">
+              <!-- Client Ingestion -->
+              <div class="sim-client-node" id="sim-ingress-node">
+                <div class="node-badge-tag">INGRESS</div>
+                <h4 data-i18n="sim_client_ingress">Client Ingestion</h4>
+                <p data-i18n="sim_client_sub">TCP Sockets &amp; Webhooks</p>
+                <div class="ingress-meta-pill">Port 443 • TLS 1.3</div>
               </div>
-              <span class="backend-status-pill up" id="status-pill-1">HEALTHY</span>
-            </div>
 
-            <div class="backend-card" id="backend-card-2">
-              <div>
-                <strong>srv-eu-west-1</strong>
-                <div style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">API Primary Node (Weight: 1)</div>
+              <!-- Balancer Engine -->
+              <div class="sim-balancer-node" id="sim-core-node">
+                <div class="node-badge-tag router">ASYNC ROUTER</div>
+                <div class="core-radar-ring"></div>
+                <h4 data-i18n="sim_core_title">OpenBalancer Core</h4>
+                <span class="core-algo-label" id="topo-algo-display" data-i18n="sim_core_sub">Weighted Round-Robin</span>
+                <div class="core-mode-badge" id="core-mode-badge">Non-Blocking Epoll</div>
               </div>
-              <span class="backend-status-pill up" id="status-pill-2">HEALTHY</span>
-            </div>
 
-            <div class="backend-card" id="backend-card-3">
-              <div>
-                <strong>srv-ap-southeast-1</strong>
-                <div style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">Failover Redundancy Pool</div>
+              <!-- Upstreams -->
+              <div class="sim-backends" id="sim-backends">
+                <div class="backend-card" id="backend-card-1" data-node-id="1">
+                  <div class="backend-card-main">
+                    <div class="backend-title-row">
+                      <span class="node-indicator-dot online" id="dot-1"></span>
+                      <strong>srv-us-east-1</strong>
+                    </div>
+                    <div class="backend-sub">AI Model Cluster A (Weight: 2)</div>
+                  </div>
+                  <span class="backend-status-pill up" id="status-pill-1" data-i18n="sim_circuit_healthy">HEALTHY</span>
+                </div>
+
+                <div class="backend-card" id="backend-card-2" data-node-id="2">
+                  <div class="backend-card-main">
+                    <div class="backend-title-row">
+                      <span class="node-indicator-dot online" id="dot-2"></span>
+                      <strong>srv-eu-west-1</strong>
+                    </div>
+                    <div class="backend-sub">API Primary Node (Weight: 1)</div>
+                  </div>
+                  <span class="backend-status-pill up" id="status-pill-2" data-i18n="sim_circuit_healthy">HEALTHY</span>
+                </div>
+
+                <div class="backend-card" id="backend-card-3" data-node-id="3">
+                  <div class="backend-card-main">
+                    <div class="backend-title-row">
+                      <span class="node-indicator-dot online" id="dot-3"></span>
+                      <strong>srv-ap-southeast-1</strong>
+                    </div>
+                    <div class="backend-sub">Failover Redundancy Pool</div>
+                  </div>
+                  <span class="backend-status-pill up" id="status-pill-3" data-i18n="sim_circuit_healthy">HEALTHY</span>
+                </div>
               </div>
-              <span class="backend-status-pill up" id="status-pill-3">HEALTHY</span>
             </div>
           </div>
         </div>

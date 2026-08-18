@@ -10,6 +10,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('openbalancer_theme');
+        if (savedTheme === 'matrix') {
+          document.documentElement.setAttribute('data-theme', 'matrix');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -21,10 +31,18 @@
         <span>OpenBalancer</span>
       </a>
       <div class="nav-actions">
+        <!-- Theme Switcher -->
+        <button type="button" class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle Theme Mode" title="Toggle Theme (Deep Space / Matrix Terminal)" data-i18n-title="nav_theme_toggle">
+          <svg class="theme-icon-dark" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="theme-icon-matrix" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          <span class="theme-btn-text" data-i18n="theme_btn_label">Theme</span>
+        </button>
+
         <div class="lang-switcher" aria-label="Language Selector">
           <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
           <button type="button" class="lang-btn" data-lang="bg" onclick="setLanguage('bg')">BG</button>
         </div>
+        <a href="docs.html" class="btn btn-outline btn-sm" data-i18n="nav_docs">Documentation</a>
         <a href="index.html" class="btn btn-secondary btn-sm">Back to Home</a>
       </div>
     </div>

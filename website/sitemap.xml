@@ -4,9 +4,17 @@
     <loc>https://www.openbalancer.com/</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.openbalancer.com/"/>
     <xhtml:link rel="alternate" hreflang="bg" href="https://www.openbalancer.com/"/>
-    <lastmod>2026-08-17</lastmod>
+    <lastmod>2026-08-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.openbalancer.com/docs.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.openbalancer.com/docs.html"/>
+    <xhtml:link rel="alternate" hreflang="bg" href="https://www.openbalancer.com/docs.html"/>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://www.openbalancer.com/contact.html</loc>

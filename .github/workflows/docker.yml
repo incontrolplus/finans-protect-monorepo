@@ -5,18 +5,32 @@ on:
     branches: [ main ]
     paths:
       - 'core/**'
+      - 'mesh/**'
+      - 'Dockerfile*'
       - '.github/workflows/docker.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'core/**'
+      - 'mesh/**'
+      - 'Dockerfile*'
       - '.github/workflows/docker.yml'
   workflow_dispatch:
 
 jobs:
   docker-build-verify:
-    name: Build & Verify Container Image
+    name: Build & Verify (${{ matrix.target.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: openbalancer-core
+            dockerfile: ./Dockerfile
+            port: 8088
+          - name: openbalancer-mesh
+            dockerfile: ./Dockerfile.mesh
+            port: 8888
 
     steps:
       - name: Checkout Repository
@@ -28,34 +42,33 @@ jobs:
       - name: Build Container Image
         uses: docker/build-push-action@v5
         with:
-          context: ./core
-          file: ./core/Dockerfile
+          context: .
+          file: ${{ matrix.target.dockerfile }}
           load: true
-          tags: openbalancer:local-test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ matrix.target.name }}:local-test
+          cache-from: type=gha,scope=${{ matrix.target.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target.name }}
 
       - name: Verify Container Execution & Status Endpoint
         run: |
-          echo "Starting OpenBalancer container in detached mode on port 8088..."
-          docker run -d --name openbalancer-test-container -p 8088:8088 openbalancer:local-test
+          echo "Starting ${{ matrix.target.name }} container in detached mode on port ${{ matrix.target.port }}..."
+          docker run -d --name ${{ matrix.target.name }}-test -p ${{ matrix.target.port }}:${{ matrix.target.port }} ${{ matrix.target.name }}:local-test
           sleep 2
           
           echo "Checking container logs..."
-          docker logs openbalancer-test-container
+          docker logs ${{ matrix.target.name }}-test
           
-          echo "Querying status endpoint on port 8088..."
-          curl -f -s http://127.0.0.1:8088/openbalancer/status | jq .
-          
-          echo "Verifying HTTP response code..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8088/openbalancer/status)
+          echo "Querying status endpoint on port ${{ matrix.target.port }}..."
+          STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" http://127.0.0.1:${{ matrix.target.port }}/openbalancer/status || curl -k -s -o /dev/null -w "%{http_code}" https://127.0.0.1:${{ matrix.target.port }}/openbalancer/status || true)
+          echo "HTTP Status Code: $STATUS"
           if [ "$STATUS" -ne 200 ]; then
             echo "❌ Expected HTTP 200, got $STATUS"
+            docker logs ${{ matrix.target.name }}-test
             exit 1
           fi
-          echo "✅ Container is healthy and responding with HTTP 200 OK!"
+          echo "✅ Container ${{ matrix.target.name }} is healthy and responding with HTTP 200 OK!"
 
       - name: Clean up Container
         if: always()
         run: |
-          docker rm -f openbalancer-test-container || true
+          docker rm -f ${{ matrix.target.name }}-test || true

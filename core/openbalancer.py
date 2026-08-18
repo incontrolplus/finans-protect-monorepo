@@ -251,6 +251,10 @@ class LoadBalancer:
 
     def load_config(self):
         """Loads and parses configuration with zero-downtime hot reloading."""
+        env_config = os.getenv("CONFIG_PATH")
+        if env_config and os.path.exists(env_config):
+            self.config_path = env_config
+
         if os.path.exists(self.config_path):
             try:
                 with open(self.config_path, "r", encoding="utf-8") as f:

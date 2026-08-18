@@ -117,8 +117,20 @@ Or 1-line curl installer:
 curl -fsSL https://www.openbalancer.com/install.sh | bash
 ```
 
-### 3. Run Turnkey Docker Mesh (OpenBalancer + Prometheus + Grafana)
+### 3. Run with Docker (Multi-Arch: `linux/amd64`, `linux/arm64`)
+
+#### OpenBalancer Core:
 ```bash
+# Pull from GitHub Container Registry (GHCR):
+docker run -d --name openbalancer -p 8088:8088 ghcr.io/incontrolplus/openbalancer:latest
+
+# Or pull from Docker Hub:
+docker run -d --name openbalancer -p 8088:8088 incontrolplus/openbalancer:latest
+```
+
+#### OpenBalancer Turnkey Service Mesh Stack:
+```bash
+# Run Turnkey Stack (OpenBalancer Mesh Proxy + Prometheus + Grafana):
 docker compose -f docker-compose.mesh.yml up -d
 ```
 

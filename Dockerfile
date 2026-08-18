@@ -1,11 +1,12 @@
 # ==============================================================================
-# OpenBalancer Core Engine Dockerfile (Core Context)
+# OpenBalancer Core Engine — Production Multi-Architecture Dockerfile
 # Supported Architectures: linux/amd64, linux/arm64 (linux/arm64/v8)
-# Maintained by INCONTROL PLUS EOOD (https://openbalancer.com)
+# Maintained & Engineered by INCONTROL PLUS EOOD (https://openbalancer.com)
 # ==============================================================================
 
 FROM python:3.12-alpine AS runtime
 
+# OCI Metadata Annotations
 LABEL org.opencontainers.image.title="OpenBalancer Core" \
       org.opencontainers.image.description="High-Throughput Asynchronous AI & API Load Balancer & Reverse Proxy" \
       org.opencontainers.image.url="https://openbalancer.com" \
@@ -21,17 +22,20 @@ ENV PYTHONUNBUFFERED=1 \
     HOST=0.0.0.0 \
     CONFIG_PATH=/app/config/config.json
 
+# Install curl and ca-certificates, and create dedicated unprivileged user
 RUN apk add --no-cache curl ca-certificates && \
     addgroup -g 10001 -S openbalancer && \
     adduser -u 10001 -S openbalancer -G openbalancer
 
 WORKDIR /app
 
+# Setup default directories
 RUN mkdir -p /app/config /app/certs && \
     chown -R openbalancer:openbalancer /app
 
-COPY --chown=openbalancer:openbalancer openbalancer.py /app/openbalancer.py
-COPY --chown=openbalancer:openbalancer config.json /app/config/config.json
+# Copy application files
+COPY --chown=openbalancer:openbalancer core/openbalancer.py /app/openbalancer.py
+COPY --chown=openbalancer:openbalancer core/config.json /app/config/config.json
 
 USER openbalancer
 

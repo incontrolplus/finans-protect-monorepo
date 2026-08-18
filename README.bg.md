@@ -115,8 +115,20 @@ python3 core/openbalancer.py start -c core/config.json
 curl -fsSL https://www.openbalancer.com/install.sh | bash
 ```
 
-### 3. Готов Docker Mesh Стек (OpenBalancer + Prometheus + Grafana)
+### 3. Стартиране с Docker (Мулти-архитектура: `linux/amd64`, `linux/arm64`)
+
+#### OpenBalancer Core:
 ```bash
+# Изтегляне от GitHub Container Registry (GHCR):
+docker run -d --name openbalancer -p 8088:8088 ghcr.io/incontrolplus/openbalancer:latest
+
+# Или изтегляне от Docker Hub:
+docker run -d --name openbalancer -p 8088:8088 incontrolplus/openbalancer:latest
+```
+
+#### OpenBalancer Service Mesh Стек:
+```bash
+# Стартиране на пълен стек (OpenBalancer Mesh Proxy + Prometheus + Grafana):
 docker compose -f docker-compose.mesh.yml up -d
 ```
 

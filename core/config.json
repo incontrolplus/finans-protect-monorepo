@@ -3,6 +3,20 @@
   "port": 8088,
   "algorithm": "round_robin",
   "health_interval": 5,
+  "tls": {
+    "enabled": false,
+    "cert_file": "certs/server.crt",
+    "key_file": "certs/server.key",
+    "min_version": "TLSv1.2"
+  },
+  "path_routing": {
+    "/windows": "http://100.70.181.127:8006",
+    "/vm/windows": "http://100.70.181.127:8006",
+    "/novnc": "http://100.70.181.127:8006",
+    "/qemu": "http://100.70.181.127:8006",
+    "/storage/philips-ssd": "http://100.70.181.127:18795/storage",
+    "/backup/status": "http://100.70.181.127:18795/backup/status"
+  },
   "backends": [
     {
       "host": "127.0.0.1",

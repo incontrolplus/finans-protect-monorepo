@@ -75,7 +75,7 @@ OpenBalancer solves this with:
 At INCONTROL PLUS, we believe open-source innovation should be backed by enterprise-grade reliability. That is why we offer formal 24/7 SLAs, turnkey deployments, and dedicated B2B support for teams operating mission-critical pipelines.
 
 Check out the code on GitHub or explore our enterprise tiers:
-👉 GitHub: https://github.com/incontrol-plus/openbalancer
+👉 GitHub: https://github.com/incontrolplus/openbalancer
 👉 Website & SLAs: https://openbalancer.com
 
 #OpenSource #DevOps #LoadBalancing #AIEngineering #CloudInfrastructure #IncontrolPlus

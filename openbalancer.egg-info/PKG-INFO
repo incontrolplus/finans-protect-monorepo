@@ -3,16 +3,16 @@ Name: openbalancer
 Version: 1.4.2
 Summary: Intelligent Asynchronous Reverse Proxy & High-Performance Load Balancer for AI Clusters and APIs
 Author-email: INCONTROL PLUS EOOD <support@openbalancer.com>
-License: MIT
+License-Expression: MIT
 Project-URL: Homepage, https://www.openbalancer.com
 Project-URL: Documentation, https://www.openbalancer.com/docs
 Project-URL: Repository, https://github.com/incontrolplus/openbalancer
 Project-URL: Issues, https://github.com/incontrolplus/openbalancer/issues
+Project-URL: Changelog, https://github.com/incontrolplus/openbalancer/releases
 Keywords: loadbalancer,reverse-proxy,asyncio,ai-gateway,llm-streaming,sse,websockets,devops
 Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: System Administrators
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
@@ -99,6 +99,17 @@ openbalancer/
 ---
 
 ## 🚀 Quickstart
+
+### 0. Install via PyPI (Recommended for CLI & Python API)
+```bash
+pip install openbalancer
+
+# Launch interactive demo sandbox with 3 mock backends:
+openbalancer demo
+
+# Or start with custom configuration:
+openbalancer start -c config.json
+```
 
 ### 1. Instant Interactive Demo Sandbox (Zero Configuration)
 Launch OpenBalancer together with 3 built-in mock upstream backends (ALPHA, BETA, GAMMA) in a single command:

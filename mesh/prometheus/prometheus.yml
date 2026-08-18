@@ -1,5 +1,5 @@
 # ==============================================================================
-# Prometheus Configuration for OpenBalancer Mesh
+# Prometheus Configuration for OpenBalancer Multi-Node Mesh
 # ==============================================================================
 
 global:
@@ -10,13 +10,28 @@ rule_files:
   - "/etc/prometheus/alerts.yml"
 
 scrape_configs:
-  - job_name: "openbalancer"
+  - job_name: "openbalancer-tls"
+    scheme: "https"
+    tls_config:
+      insecure_skip_verify: true
     metrics_path: "/metrics"
     static_configs:
       - targets: ["openbalancer:8888"]
         labels:
           environment: "mesh"
           cluster: "openbalancer-mesh-cluster"
+          node: "macmini-primary"
+          host: "100.83.83.8"
+
+  - job_name: "macmini-secondary"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["100.70.181.127:18795"]
+        labels:
+          environment: "mesh"
+          cluster: "openbalancer-mesh-cluster"
+          node: "macmini-secondary"
+          host: "100.70.181.127"
 
   - job_name: "prometheus"
     static_configs:

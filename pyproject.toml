@@ -8,19 +8,18 @@ version = "1.4.2"
 description = "Intelligent Asynchronous Reverse Proxy & High-Performance Load Balancer for AI Clusters and APIs"
 readme = "README.md"
 authors = [{ name = "INCONTROL PLUS EOOD", email = "support@openbalancer.com" }]
-license = { text = "MIT" }
+license = "MIT"
 keywords = ["loadbalancer", "reverse-proxy", "asyncio", "ai-gateway", "llm-streaming", "sse", "websockets", "devops"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: System :: Networking",
-    "Topic :: Internet :: Proxy Servers"
+    "Topic :: Internet :: Proxy Servers",
 ]
 requires-python = ">=3.10"
 dependencies = []
@@ -30,6 +29,7 @@ Homepage = "https://www.openbalancer.com"
 Documentation = "https://www.openbalancer.com/docs"
 Repository = "https://github.com/incontrolplus/openbalancer"
 Issues = "https://github.com/incontrolplus/openbalancer/issues"
+Changelog = "https://github.com/incontrolplus/openbalancer/releases"
 
 [project.scripts]
 openbalancer = "core.openbalancer:main"
@@ -37,3 +37,4 @@ openbalancer = "core.openbalancer:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["core*", "openbalancer*"]
+exclude = ["tests*", "benchmark*", "mesh*", "charts*", "website*", "deploy*", "compliance*", "telemetry*"]

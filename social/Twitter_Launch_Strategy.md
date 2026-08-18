@@ -72,7 +72,7 @@ Read the full case study: https://openbalancer.com/#case-studies
 ```
 Try OpenBalancer today and take back control of your infrastructure:
 
-⭐ GitHub: https://github.com/incontrol-plus/openbalancer
+⭐ GitHub: https://github.com/incontrolplus/openbalancer
 🌐 Live Visualizer & SLAs: https://openbalancer.com
 💬 Feedback, PRs & stars are welcomed!
 ```

@@ -35,11 +35,11 @@ Production-grade Kubernetes Helm Chart for **OpenBalancer** — the enterprise A
 
 ```bash
 # Clone the repository
-git clone https://github.com/incontrol-plus/openbalancer.git
-cd openbalancer
+git clone https://github.com/incontrolplus/openbalancer.git
+cd openbalancer/charts/openbalancer
 
 # Install chart into 'openbalancer' namespace
-helm install openbalancer ./charts/openbalancer \
+helm install openbalancer . \
   --create-namespace \
   --namespace openbalancer
 ```

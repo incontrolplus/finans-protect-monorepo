@@ -36,7 +36,7 @@ While the core engine is free and open-source under the MIT license, INCONTROL P
 - Monthly retainer maintenance & architecture audits
 
 Explore OpenBalancer:
-GitHub: https://github.com/incontrol-plus/openbalancer
+GitHub: https://github.com/incontrolplus/openbalancer
 Enterprise Plans: https://openbalancer.com/#pricing
 Inquiries: support@openbalancer.com
 ```

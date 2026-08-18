@@ -1,4 +1,18 @@
 {
+  "tls": {
+    "enabled": true,
+    "cert_file": "certs/server.crt",
+    "key_file": "certs/server.key",
+    "min_version": "TLSv1.2"
+  },
+  "path_routing": {
+    "/windows": "http://100.70.181.127:8006",
+    "/vm/windows": "http://100.70.181.127:8006",
+    "/novnc": "http://100.70.181.127:8006",
+    "/qemu": "http://100.70.181.127:8006",
+    "/storage/philips-ssd": "http://100.70.181.127:18795/storage",
+    "/backup/status": "http://100.70.181.127:18795/backup/status"
+  },
   "model_routing": {
     "llama3": "http://mock-ai-llama:8000",
     "qwen": "http://mock-ai-qwen:8000",
@@ -8,12 +22,52 @@
   "fallback_pool": [
     "http://mock-ai-default:8000"
   ],
+  "backends": [
+    {
+      "host": "mock-ai-llama",
+      "port": 8000,
+      "weight": 1,
+      "health_path": "/healthz"
+    },
+    {
+      "host": "mock-ai-qwen",
+      "port": 8000,
+      "weight": 1,
+      "health_path": "/healthz"
+    },
+    {
+      "host": "mock-ai-mistral",
+      "port": 8000,
+      "weight": 1,
+      "health_path": "/healthz"
+    },
+    {
+      "host": "mock-ai-default",
+      "port": 8000,
+      "weight": 1,
+      "health_path": "/healthz"
+    },
+    {
+      "host": "100.70.181.127",
+      "port": 8006,
+      "weight": 2,
+      "health_path": "/"
+    },
+    {
+      "host": "100.70.181.127",
+      "port": 18795,
+      "weight": 1,
+      "health_path": "/health"
+    }
+  ],
   "rate_limit": {
     "enabled": true,
     "requests_per_minute": 6000,
     "burst": 200,
     "whitelist": [
       "127.0.0.1",
+      "100.83.83.8",
+      "100.70.181.127",
       "10.0.0.0/8",
       "172.16.0.0/12",
       "192.168.0.0/16"

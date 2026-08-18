@@ -5,31 +5,40 @@ Engineered & Maintained by INCONTROL PLUS EOOD (https://www.openbalancer.com)
 License: MIT
 """
 
-from core.openbalancer import (
-    OpenBalancer,
-    LoadBalancer,
-    BackendNode,
-    RateLimiter,
-    Auth,
-    MetricsTracker,
-    metrics,
-    main,
-    run_demo,
-    start_mock_backend
-)
+try:
+    from core.openbalancer import (
+        LoadBalancer,
+        BackendNode,
+        RateLimiter,
+        Auth,
+        MetricsTracker,
+        metrics,
+        main,
+        __version__,
+    )
+except ImportError:
+    from .openbalancer import (
+        LoadBalancer,
+        BackendNode,
+        RateLimiter,
+        Auth,
+        MetricsTracker,
+        metrics,
+        main,
+        __version__,
+    )
 
-__version__ = "1.4.2"
-__author__ = "INCONTROL PLUS EOOD"
-__license__ = "MIT"
+# OpenBalancer alias for LoadBalancer
+OpenBalancer = LoadBalancer
+
 __all__ = [
-    "OpenBalancer",
     "LoadBalancer",
+    "OpenBalancer",
     "BackendNode",
     "RateLimiter",
     "Auth",
     "MetricsTracker",
     "metrics",
     "main",
-    "run_demo",
-    "start_mock_backend"
+    "__version__",
 ]

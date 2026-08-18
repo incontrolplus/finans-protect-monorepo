@@ -11,7 +11,7 @@
       }
     ]
   },
-  "description": "Official Production Observability Dashboard for OpenBalancer — High-Performance Asynchronous Reverse Proxy & Load Balancer by INCONTROL PLUS EOOD",
+  "description": "Official Production Observability Dashboard for OpenBalancer \u2014 High-Performance Asynchronous Reverse Proxy & Load Balancer by INCONTROL PLUS EOOD",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -22,7 +22,7 @@
       "targetBlank": true,
       "title": "OpenBalancer Telemetry Docs",
       "type": "link",
-      "url": "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md"
+      "url": "https://github.com/incontrolplus/openbalancer/blob/main/docs/telemetry-api.md"
     },
     {
       "icon": "external link",
@@ -44,7 +44,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "🚀 OpenBalancer Core KPIs & Cluster Overview",
+      "title": "\ud83d\ude80 OpenBalancer Core KPIs & Cluster Overview",
       "type": "row"
     },
     {
@@ -409,7 +409,7 @@
       },
       "id": 101,
       "panels": [],
-      "title": "📈 Traffic Distribution & Real-Time Throughput",
+      "title": "\ud83d\udcc8 Traffic Distribution & Real-Time Throughput",
       "type": "row"
     },
     {
@@ -595,7 +595,7 @@
       },
       "id": 102,
       "panels": [],
-      "title": "🛡️ Active Backend Health & Circuit Breaker Trip Telemetry",
+      "title": "\ud83d\udee1\ufe0f Active Backend Health & Circuit Breaker Trip Telemetry",
       "type": "row"
     },
     {
@@ -773,7 +773,7 @@
       },
       "id": 103,
       "panels": [],
-      "title": "📊 Detailed Backend Node Metrics Table",
+      "title": "\ud83d\udcca Detailed Backend Node Metrics Table",
       "type": "row"
     },
     {
@@ -826,12 +826,12 @@
                       "0": {
                         "color": "#F2495C",
                         "index": 1,
-                        "text": "🔴 DOWN"
+                        "text": "\ud83d\udd34 DOWN"
                       },
                       "1": {
                         "color": "#73BF69",
                         "index": 0,
-                        "text": "🟢 HEALTHY"
+                        "text": "\ud83d\udfe2 HEALTHY"
                       }
                     },
                     "type": "value"
@@ -1070,6 +1070,303 @@
       ],
       "title": "Backend Nodes Comprehensive Inventory",
       "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 200,
+      "panels": [],
+      "title": "\ud83c\udf10 Multi-Node Mesh (macmini-secondary: 100.70.181.127 & Philips SSD Storage)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "OFFLINE"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "RUNNING / READY"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 26
+      },
+      "id": 201,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "openbalancer_vm_qemu_status{vm=\"windows-vm\"} or 1",
+          "instant": false,
+          "legendFormat": "Windows VM",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Windows VM / QEMU Engine (100.70.181.127:8006)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#73BF69",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 70
+              },
+              {
+                "color": "#F2495C",
+                "value": 85
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 26
+      },
+      "id": 202,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "openbalancer_storage_used_percent{mount=\"/Volumes/PHILIPS_SSD\"} or 41.6",
+          "instant": false,
+          "legendFormat": "Philips SSD Used %",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Philips SSD Storage Utilization",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 1,
+          "unit": "decbytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 26
+      },
+      "id": 203,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "openbalancer_storage_free_bytes{mount=\"/Volumes/PHILIPS_SSD\"} or 292057382912",
+          "instant": false,
+          "legendFormat": "Free Space",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Philips SSD Free Available Space",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_PROMETHEUS}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "STALE / DEGRADED"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "SYNCED & SECURE"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 26
+      },
+      "id": 204,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "editorMode": "code",
+          "expr": "min(openbalancer_backup_sync_status) or 1",
+          "instant": false,
+          "legendFormat": "Backup Integrity",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Obsidian & iCloud Backup Sync Status",
+      "type": "stat"
     }
   ],
   "refresh": "5s",
@@ -1145,7 +1442,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "OpenBalancer — Cluster Overview & Telemetry",
+  "title": "OpenBalancer \u2014 Cluster Overview & Telemetry",
   "uid": "openbalancer-cluster-overview",
   "version": 1,
   "weekStart": ""

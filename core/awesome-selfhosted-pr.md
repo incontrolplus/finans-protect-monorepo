@@ -2,40 +2,60 @@
 
 **Repository:** `awesome-selfhosted/awesome-selfhosted`  
 **Target File:** `README.md`  
-**Section:** `Proxy` or `Web Servers`  
+**Section:** `### Proxy` (under `## Software`)  
+**Alphabetical Placement:** Between `Oathkeeper` / `Nginx...` and `Pomerium` / `Pound` / `Privoxy`
 
 ---
 
-## 1. Markdown Diff to Add
+## 1. Markdown Entry to Add to `README.md`
 
 ```markdown
-### Web Servers - Proxies
-
-* [OpenBalancer](https://openbalancer.com) - Lightweight, asynchronous intelligent load balancer and API reverse proxy optimized for AI workloads, microservices, and automated health failovers. `MIT` `Python/Docker`
+* [OpenBalancer](https://www.openbalancer.com) - Lightweight asynchronous reverse proxy and load balancer with live telemetry and SSE streaming support for AI inference and microservices. ([Source Code](https://github.com/incontrolplus/openbalancer)) `MIT` `Python/Docker`
 ```
 
 ---
 
-## 2. PR Title & Description Template
+## 2. Official PR Title & Description Template
 
-### **Title:**
-`Add OpenBalancer to Proxy section`
+### **PR Title:**
+```
+Add OpenBalancer to Proxy section
+```
 
-### **Description:**
+### **PR Body:**
 ```markdown
 ### Summary
-This PR adds **OpenBalancer** to the **Proxy / Web Servers** section.
+This PR adds **OpenBalancer** to the **Proxy** section.
 
 - **Name:** OpenBalancer
-- **Website:** https://openbalancer.com
-- **Source Code:** https://github.com/incontrol-plus/openbalancer
-- **License:** MIT
-- **Description:** Lightweight, asynchronous intelligent load balancer and API reverse proxy optimized for AI workloads, microservices, and automated health failovers.
-- **Docker Support:** Yes (`openbalancer/core:latest`)
+- **Website:** https://www.openbalancer.com
+- **Source Code:** https://github.com/incontrolplus/openbalancer
+- **License:** MIT (OSI-Approved)
+- **Primary Language / Platform:** Python, Docker
+- **Docker Image:** `ghcr.io/incontrolplus/openbalancer:latest`
+- **Description:** Lightweight asynchronous reverse proxy and load balancer with live telemetry and SSE streaming support for AI inference and microservices.
 
 ### Checklist
 - [x] Item is open-source (MIT License).
-- [x] Item is self-hostable.
-- [x] Follows formatting and alphabetical ordering guidelines.
-- [x] Links to active official website and source repository.
+- [x] Item is self-hostable with clear deployment instructions (Docker, PyPI, CLI).
+- [x] Placed strictly in alphabetical order within the `### Proxy` section.
+- [x] Description is objective, concise, and avoids marketing buzzwords.
+- [x] Description begins with a capital letter and ends with a period.
+- [x] Proper tag formatting used: `` `MIT` `Python/Docker` ``.
+- [x] Links to active official website and open-source GitHub repository.
 ```
+
+---
+
+## 3. GitHub CLI Submission Command (Optional)
+
+```bash
+# If submitting via GitHub CLI from a forked awesome-selfhosted repository:
+gh pr create \
+  --repo awesome-selfhosted/awesome-selfhosted \
+  --title "Add OpenBalancer to Proxy section" \
+  --body-file core/awesome-selfhosted-pr.md \
+  --base master \
+  --head <your-username>:add-openbalancer
+```
+

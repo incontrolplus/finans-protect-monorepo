@@ -21,7 +21,7 @@ groups:
           summary: "OpenBalancer High Latency Detected on {{ $labels.backend }}"
           description: "Backend node {{ $labels.backend }} (host: {{ $labels.host }}, port: {{ $labels.port }}) has a response/health latency of {{ $value }}ms, exceeding the 200ms SLA threshold."
           dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
-          runbook_url: "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md#troubleshooting-high-latency"
+          runbook_url: "https://github.com/incontrolplus/openbalancer/blob/main/docs/telemetry-api.md#troubleshooting-high-latency"
           action: "Investigate upstream CPU/memory pressure, slow database queries, or network bottlenecks on target host {{ $labels.host }}."
 
       # -----------------------------------------------------------------------
@@ -38,7 +38,7 @@ groups:
           summary: "OpenBalancer Backend Node DOWN: {{ $labels.backend }}"
           description: "Backend node {{ $labels.backend }} (host: {{ $labels.host }}, port: {{ $labels.port }}) failed consecutive health checks (failures: {{ $value }}) and was isolated from the load balancer pool."
           dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
-          runbook_url: "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md#backend-recovery"
+          runbook_url: "https://github.com/incontrolplus/openbalancer/blob/main/docs/telemetry-api.md#backend-recovery"
           action: "Check if the application container/service on {{ $labels.host }}:{{ $labels.port }} is running and replying with HTTP 200 to health probes."
 
       # -----------------------------------------------------------------------
@@ -55,7 +55,7 @@ groups:
           summary: "CRITICAL: All OpenBalancer Backends DOWN (Cluster Outage)"
           description: "All upstream backend nodes in the OpenBalancer cluster are unreachable or unhealthy. OpenBalancer is currently responding with 503 Service Unavailable."
           dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
-          runbook_url: "https://github.com/incontrol-plus/openbalancer/blob/main/docs/telemetry-api.md#disaster-recovery"
+          runbook_url: "https://github.com/incontrolplus/openbalancer/blob/main/docs/telemetry-api.md#disaster-recovery"
           action: "IMMEDIATE ACTION: Restart upstream services or initiate emergency failover pool."
 
       # -----------------------------------------------------------------------
@@ -89,3 +89,51 @@ groups:
           description: "Backend node {{ $labels.backend }} is failing {{ $value | humanizePercentage }} of proxied requests over the last 1 minute."
           dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
           action: "Inspect backend application error logs and gateway socket timeouts."
+
+      # -----------------------------------------------------------------------
+      # 6. Secondary Node: Philips SSD Low Disk Space Alert (>85% used)
+      # -----------------------------------------------------------------------
+      - alert: PhilipsSSDLowDiskSpace
+        expr: openbalancer_storage_used_percent{mount="/Volumes/PHILIPS_SSD"} > 85
+        for: 2m
+        labels:
+          severity: warning
+          service: openbalancer-storage
+          component: philips-ssd
+        annotations:
+          summary: "Low Disk Space Alert on Philips SSD (/Volumes/PHILIPS_SSD)"
+          description: "Philips SSD on macmini-secondary (100.70.181.127) has reached {{ $value }}% capacity utilization. Remaining free space is constrained."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          action: "Clean up obsolete backup snapshots or offload historical datasets from /Volumes/PHILIPS_SSD."
+
+      # -----------------------------------------------------------------------
+      # 7. Secondary Node: Backup Sync Degraded / Stale
+      # -----------------------------------------------------------------------
+      - alert: PhilipsSSDBackupStale
+        expr: openbalancer_backup_sync_status == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: openbalancer-backup
+          component: backup-pipeline
+        annotations:
+          summary: "Backup Synchronization Failure on Target {{ $labels.target }}"
+          description: "Backup target {{ $labels.target }} on host {{ $labels.host }} failed health verification or has not synced recently."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          action: "Verify rsync bridge script and Obsidian Vault/iCloud backup pipeline executions on macmini-primary and secondary."
+
+      # -----------------------------------------------------------------------
+      # 8. Secondary Node: Windows VM / QEMU Service Down
+      # -----------------------------------------------------------------------
+      - alert: WindowsVMDown
+        expr: openbalancer_vm_qemu_status{vm="windows-vm"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: openbalancer-vm
+          component: qemu-engine
+        annotations:
+          summary: "Windows VM / QEMU Engine DOWN on 100.70.181.127"
+          description: "The Windows VM (Dockurr Windows / QEMU) or web console on macmini-secondary (100.70.181.127:8006) is unreachable."
+          dashboard_url: "http://localhost:3000/d/openbalancer-cluster-overview"
+          action: "Verify Docker / QEMU daemon and container status on macmini-secondary."

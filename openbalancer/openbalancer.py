@@ -909,7 +909,7 @@ class LoadBalancer:
         self.port = port
         self.start_watcher()
         self.ssl_context = ssl_context or self.get_ssl_context()
-        self.server = await asyncio.start_server(self.handle_client, self.host, self.port, ssl=self.ssl_context, reuse_address=True)
+        self.server = await asyncio.start_server(self.handle_client, self.host, self.port, ssl=self.ssl_context)
         proto = "HTTPS (TLS Terminated)" if self.ssl_context else "HTTP"
         logger.info(f"Serving on {self.host}:{self.port} [{proto}]")
         asyncio.create_task(self.health_check_loop())

@@ -1,9 +1,7 @@
 """
-OpenBalancer Core Engine Package
+OpenBalancer core engine package.
 """
-
-from core.openbalancer import (
-    OpenBalancer,
+from .openbalancer import (
     LoadBalancer,
     BackendNode,
     RateLimiter,
@@ -11,19 +9,20 @@ from core.openbalancer import (
     MetricsTracker,
     metrics,
     main,
-    run_demo,
-    start_mock_backend
+    __version__,
 )
 
+# OpenBalancer alias for LoadBalancer
+OpenBalancer = LoadBalancer
+
 __all__ = [
-    "OpenBalancer",
     "LoadBalancer",
+    "OpenBalancer",
     "BackendNode",
     "RateLimiter",
     "Auth",
     "MetricsTracker",
     "metrics",
     "main",
-    "run_demo",
-    "start_mock_backend"
+    "__version__",
 ]

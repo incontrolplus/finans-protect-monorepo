@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-from setuptools import setup, find_packages
+"""
+OpenBalancer — High-Throughput Asynchronous Load Balancer & API Reverse Proxy
+Setup script for backward compatibility with legacy packaging tools.
+Metadata and build configuration are defined in pyproject.toml (PEP 621 / PEP 517).
+"""
+from setuptools import setup
 
-setup(
-    name="openbalancer",
-    version="1.4.2",
-    packages=find_packages(),
-    entry_points={
-        "console_scripts": [
-            "openbalancer = core.openbalancer:main",
-        ],
-    },
-)
+if __name__ == "__main__":
+    setup()

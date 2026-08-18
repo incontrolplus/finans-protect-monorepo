@@ -38,7 +38,7 @@ OpenBalancer is an ultra-fast, intelligent, open-source load balancer and API re
 
 **Official Links:**
 🌐 Website: https://openbalancer.com
-⭐ GitHub: https://github.com/incontrol-plus/openbalancer
+⭐ GitHub: https://github.com/incontrolplus/openbalancer
 📄 Docs: https://openbalancer.com/#features
 💼 Enterprise SLAs & B2B Retainers: https://openbalancer.com/#pricing
 🏢 Operated by: INCONTROL PLUS ЕООД (Sofia, Bulgaria)

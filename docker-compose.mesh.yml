@@ -6,9 +6,9 @@
 #   docker compose -f docker-compose.mesh.yml up -d
 #
 # Ports Exposed:
-#   - OpenBalancer Proxy: http://localhost:8888
-#   - Prometheus Metrics: http://localhost:9090
-#   - Grafana Dashboard:  http://localhost:3000 (admin / admin)
+#   - OpenBalancer TLS Proxy: https://localhost:8888 (or http://localhost:8888)
+#   - Prometheus Metrics:     http://localhost:9090
+#   - Grafana Dashboard:      http://localhost:3000 (admin / admin)
 # ==============================================================================
 
 version: '3.8'
@@ -31,8 +31,9 @@ services:
       - CONFIG_PATH=/app/config/config.json
     volumes:
       - ./mesh/config.json:/app/config/config.json:ro
+      - ./certs:/app/certs:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/healthz"]
+      test: ["CMD-SHELL", "curl -k -f https://localhost:8888/healthz 2>/dev/null || curl -f http://localhost:8888/healthz 2>/dev/null || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 3

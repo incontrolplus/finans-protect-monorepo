@@ -74,6 +74,17 @@ openbalancer/
 
 ## 🚀 Quickstart
 
+### 0. Install via PyPI (Recommended for CLI & Python API)
+```bash
+pip install openbalancer
+
+# Launch interactive demo sandbox with 3 mock backends:
+openbalancer demo
+
+# Or start with custom configuration:
+openbalancer start -c config.json
+```
+
 ### 1. Instant Interactive Demo Sandbox (Zero Configuration)
 Launch OpenBalancer together with 3 built-in mock upstream backends (ALPHA, BETA, GAMMA) in a single command:
 ```bash

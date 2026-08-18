@@ -53,8 +53,8 @@ docker run -d \
 Clone the repository and spin up OpenBalancer alongside two upstream backend services:
 
 ```bash
-git clone https://github.com/incontrol-plus/openbalancer.git
-cd openbalancer
+git clone https://github.com/incontrolplus/openbalancer.git
+cd openbalancer/core
 docker-compose up -d
 ```
 

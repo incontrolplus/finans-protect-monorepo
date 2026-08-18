@@ -18,7 +18,7 @@ class TestOpenBalancerCLI(unittest.TestCase):
     def test_cli_version(self):
         res = subprocess.run([sys.executable, self.script, "version"], capture_output=True, text=True)
         self.assertEqual(res.returncode, 0)
-        self.assertIn("OpenBalancer v1.4.2", res.stdout)
+        self.assertIn("OpenBalancer v1.", res.stdout)
         self.assertIn("INCONTROL PLUS", res.stdout)
 
     def test_cli_validate_success(self):

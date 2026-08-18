@@ -7,7 +7,7 @@ appVersion: "1.4.2"
 home: https://openbalancer.com
 icon: https://openbalancer.com/logo.svg
 sources:
-  - https://github.com/incontrol-plus/openbalancer
+  - https://github.com/incontrolplus/openbalancer
 maintainers:
   - name: INCONTROL PLUS EOOD
     email: enterprise@openbalancer.com

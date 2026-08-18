@@ -50,8 +50,8 @@
           <li><a href="index.html#architecture" data-i18n="nav_architecture">Architecture</a></li>
           <li><a href="index.html#simulator" data-i18n="nav_simulator">Live Visualizer</a></li>
           <li><a href="index.html#matrix" data-i18n="nav_matrix">Comparison Matrix</a></li>
-          <li><a href="docs.html" class="active" style="color: #60a5fa; font-weight: 600;" data-i18n="nav_docs">Documentation</a></li>
-          <li><a href="blog.html" data-i18n="nav_blog">Blog</a></li>
+          <li><a href="docs.html" data-i18n="nav_docs">Documentation</a></li>
+          <li><a href="blog.html" class="active" style="color: #60a5fa; font-weight: 600;">Blog</a></li>
           <li><a href="index.html#enterprise" data-i18n="nav_enterprise">Enterprise SLA</a></li>
           <li><a href="index.html#pricing" data-i18n="nav_pricing">Pricing</a></li>
           <li><a href="https://github.com/incontrolplus/openbalancer" target="_blank" rel="noopener">GitHub</a></li>
@@ -93,8 +93,8 @@
       <button type="button" class="modal-close" id="mobile-drawer-close" aria-label="Close Navigation Menu">&times;</button>
     </div>
     <ul class="mobile-drawer-links">
-      <li><a href="docs.html" class="mobile-nav-link active" data-i18n="nav_docs">Documentation Portal</a></li>
-      <li><a href="blog.html" class="mobile-nav-link" data-i18n="nav_blog">Blog</a></li>
+      <li><a href="docs.html" class="mobile-nav-link" data-i18n="nav_docs">Documentation Portal</a></li>
+      <li><a href="blog.html" class="mobile-nav-link active">Blog</a></li>
       <li><a href="index.html#benchmarks" class="mobile-nav-link" data-i18n="nav_benchmarks">Benchmarks</a></li>
       <li><a href="index.html#architecture" class="mobile-nav-link" data-i18n="nav_architecture">Architecture</a></li>
       <li><a href="index.html#simulator" class="mobile-nav-link" data-i18n="nav_simulator">Live Visualizer</a></li>
@@ -1594,3 +1594,71 @@ docker kill -s HUP openbalancer
   <script src="js/main.js?v=2.0.5"></script>
 </body>
 </html>
+  <!-- Blog Section -->
+  <section class="docs-section" style="padding: 6rem 1.5rem; max-width: 800px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 3rem;">
+      <a href="blog.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">&larr; Back to all posts</a>
+    </div>
+
+    <article class="blog-post">
+      <div class="technical-release-tag" style="margin-bottom: 1.5rem; display: inline-flex;">
+        <span>Release</span>
+        <span>•</span>
+        <span>v1.5.0</span>
+        <span>•</span>
+        <span>Aug 18, 2026</span>
+      </div>
+
+      <h1 style="font-size: 2.5rem; margin-bottom: 1.5rem; line-height: 1.2; color: var(--text-primary);">Introducing OpenBalancer v1.5.0: The Enterprise AI Load Balancer</h1>
+      
+      <div class="docs-card" style="margin-bottom: 2.5rem; background: var(--bg-card);">
+        <p style="font-size: 1.1rem; line-height: 1.7; color: var(--text-secondary); margin: 0;">
+          We built <strong>OpenBalancer v1.5.0</strong> because we needed a lightweight, zero-dependency async reverse proxy and load balancer specifically tailored for LLM token streaming (SSE / WebSockets chunking) and microservice routing where heavy config reloads and huge RAM footprints were overkill.
+        </p>
+      </div>
+
+      <h3 style="margin-top: 2.5rem; margin-bottom: 1rem; color: var(--text-primary);">Why another load balancer?</h3>
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem;">
+        While battle-tested tools like NGINX, HAProxy, and Envoy are industry standards, setting them up for local LLM clusters (vLLM, Ollama, TGI) often involves complex buffering configurations, external health check sidecars, or high base memory overhead.
+      </p>
+
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem;">
+        OpenBalancer was engineered around a few core priorities:
+      </p>
+
+      <ul style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 2.5rem; padding-left: 1.5rem;">
+        <li style="margin-bottom: 0.5rem;"><strong style="color: var(--text-primary);">Zero-Buffer SSE / Token Streaming:</strong> Powered by native Python <code>asyncio</code> stream pipelines, OpenBalancer streams tokens chunk-by-chunk with constant O(1) memory overhead (~18MB base RSS).</li>
+        <li style="margin-bottom: 0.5rem;"><strong style="color: var(--text-primary);">AI Inference Failover &amp; Circuit Breaking:</strong> Automatically trips unhealthy backends when inference nodes run out of VRAM (OOM) or time out, instantly rerouting traffic in &lt;50ms without dropping active streaming clients.</li>
+        <li style="margin-bottom: 0.5rem;"><strong style="color: var(--text-primary);">Dual Observability Out-of-the-Box:</strong> Clean JSON telemetry endpoint (<code>/openbalancer/status</code>) and Prometheus metrics exporter (<code>/metrics</code>).</li>
+        <li style="margin-bottom: 0.5rem;"><strong style="color: var(--text-primary);">Adaptive Load Balancing Strategies:</strong> Round-Robin, Weighted Round-Robin, Least Connections, Consistent IP Hash, and Power-of-Two Random Choices (P2C).</li>
+        <li style="margin-bottom: 0.5rem;"><strong style="color: var(--text-primary);">Zero-Dependency Quickstart:</strong> Run as a standalone Python CLI, PyPI package, or ultralight Alpine container (&lt;45MB).</li>
+      </ul>
+
+      <h3 style="margin-top: 2.5rem; margin-bottom: 1rem; color: var(--text-primary);">🚀 10-Second Quickstart</h3>
+      <div class="code-block-wrapper" style="margin-bottom: 2.5rem;">
+        <div class="code-header">
+          <span class="code-lang">bash</span>
+        </div>
+        <pre><code class="language-bash"># Install via pip
+pip install openbalancer
+
+# Launch interactive demo sandbox with 3 mock backends:
+openbalancer demo
+
+# Or run via Docker:
+docker run -d -p 8088:8088 ghcr.io/incontrolplus/openbalancer:v1.5.0</code></pre>
+      </div>
+
+      <p style="color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.5rem;">
+        You can also try the interactive traffic simulator and visualizer directly in your browser on our <a href="index.html" style="color: var(--primary);">landing page</a> or read the <a href="docs.html" style="color: var(--primary);">documentation</a>.
+      </p>
+
+      <div style="padding: 1.5rem; background: rgba(52, 211, 153, 0.1); border-left: 4px solid #34d399; border-radius: 4px; margin-top: 2.5rem;">
+        <p style="margin: 0; color: var(--text-primary); line-height: 1.6;">
+          <strong>OpenBalancer v1.5.0 is 100% open-source under the MIT license.</strong> We’d love to hear your thoughts, feedback on our async event-loop architecture, HTTP/3 roadmap, and real-world AI inference routing use cases!
+        </p>
+      </div>
+    </article>
+  </section>
+

@@ -460,7 +460,7 @@ a:hover {
 .btn-primary {
   background: var(--primary);
   color: #ffffff;
-  border-color: #2563eb;
+  border-color: var(--primary-hover);
 }
 
 .btn-primary:hover {
@@ -1174,7 +1174,7 @@ a:hover {
 .core-radar-ring {
   width: 16px;
   height: 16px;
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--primary);
   border-radius: 50%;
   margin: 0.35rem auto 0.5rem;
   position: relative;
@@ -1428,7 +1428,7 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: var(--primary);
   cursor: pointer;
   border: 2px solid #ffffff;
 }
@@ -1528,7 +1528,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .faq-item.active {
-  border-color: #3b82f6;
+  border-color: var(--primary);
 }
 
 .faq-question {
@@ -1590,7 +1590,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 
 .pricing-card.featured {
-  border-color: #3b82f6;
+  border-color: var(--primary);
   background: linear-gradient(180deg, rgba(59, 130, 246, 0.06) 0%, var(--bg-surface) 100%);
 }
 
@@ -1598,7 +1598,7 @@ input[type="range"]::-webkit-slider-thumb {
   position: absolute;
   top: -12px;
   right: 20px;
-  background: #2563eb;
+  background: var(--primary-hover);
   color: #ffffff;
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -1959,7 +1959,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .payment-radio-label input[type="radio"] {
   margin-top: 0.2rem;
-  accent-color: #3b82f6;
+  accent-color: var(--primary);
   cursor: pointer;
 }
 
@@ -3220,7 +3220,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .error-preview-frame.theme-clean .err-icon-halo {
   background: rgba(59, 130, 246, 0.15);
-  border: 2px solid #3b82f6;
+  border: 2px solid var(--primary);
 }
 .error-preview-frame.theme-clean .err-code-badge {
   background: rgba(59, 130, 246, 0.15);
@@ -3228,7 +3228,7 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid rgba(59, 130, 246, 0.4);
 }
 .error-preview-frame.theme-clean .err-retry-btn {
-  background: #3b82f6;
+  background: var(--primary);
   color: #fff;
 }
 
@@ -3270,3 +3270,5 @@ input[type="range"]::-webkit-slider-thumb {
 
 
 
+
+.theme-btn-text { display: none; }

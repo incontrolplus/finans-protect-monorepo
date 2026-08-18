@@ -1,18 +1,19 @@
-# Show HN: OpenBalancer – Lightweight async load balancer with live visualizer & SSE streaming
+# Show HN: OpenBalancer v1.5.0 – Lightweight async load balancer with live visualizer & SSE streaming
 
-**Website & Visualizer:** https://www.openbalancer.com  
+**Website & Visualizer:** https://openbalancer.com  
+**Documentation:** https://openbalancer.com/docs  
 **GitHub Repository:** https://github.com/incontrolplus/openbalancer  
 
 ---
 
 ### Suggested Submission Title:
-`Show HN: OpenBalancer – Lightweight async load balancer with live visualizer & SSE streaming`
+`Show HN: OpenBalancer v1.5.0 – Lightweight async load balancer with live visualizer & SSE streaming`
 
 ### Post Text / Comment:
 
 Hi HN,
 
-We built **OpenBalancer** (https://github.com/incontrolplus/openbalancer) because we needed a lightweight, zero-dependency async reverse proxy and load balancer specifically tailored for LLM token streaming (SSE / WebSockets chunking) and microservice routing where heavy config reloads and huge RAM footprints were overkill.
+We built **OpenBalancer v1.5.0** (https://github.com/incontrolplus/openbalancer) because we needed a lightweight, zero-dependency async reverse proxy and load balancer specifically tailored for LLM token streaming (SSE / WebSockets chunking) and microservice routing where heavy config reloads and huge RAM footprints were overkill.
 
 ### Why another load balancer?
 While battle-tested tools like NGINX, HAProxy, and Envoy are industry standards, setting them up for local LLM clusters (vLLM, Ollama, TGI) often involves complex buffering configurations, external health check sidecars, or high base memory overhead.
@@ -39,10 +40,10 @@ pip install openbalancer
 openbalancer demo
 
 # Or run via Docker:
-docker run -d -p 8088:8088 ghcr.io/incontrolplus/openbalancer:latest
+docker run -d -p 8088:8088 ghcr.io/incontrolplus/openbalancer:v1.5.0
 ```
 
-You can also try the interactive traffic simulator and visualizer directly in your browser on our landing page: https://www.openbalancer.com
+You can also try the interactive traffic simulator and visualizer directly in your browser on our landing page: https://openbalancer.com (Docs: https://openbalancer.com/docs)
 
-OpenBalancer is 100% open-source under the MIT license. We’d love to hear your thoughts, feedback on our async event-loop architecture, HTTP/3 roadmap, and real-world AI inference routing use cases!
+OpenBalancer v1.5.0 is 100% open-source under the MIT license. We’d love to hear your thoughts, feedback on our async event-loop architecture, HTTP/3 roadmap, and real-world AI inference routing use cases!
 

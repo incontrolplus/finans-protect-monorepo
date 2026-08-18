@@ -1,6 +1,6 @@
 # Reddit Post: r/selfhosted & r/LocalLLaMA & r/homelab
 
-**Suggested Title:** `[Self-Hosted] OpenBalancer: Lightweight Async Load Balancer & Reverse Proxy for AI Clusters & Homelabs (MIT, <20MB RAM, SSE Streaming)`
+**Suggested Title:** `[Self-Hosted] OpenBalancer v1.5.0: Lightweight Async Load Balancer & Reverse Proxy for AI Clusters & Homelabs (MIT, <20MB RAM, SSE Streaming)`
 
 ---
 
@@ -8,10 +8,11 @@
 
 Hey r/selfhosted!
 
-I wanted to share **OpenBalancer**, a lightweight, open-source asynchronous reverse proxy and load balancer we've built and released under the MIT license.
+I wanted to share **OpenBalancer v1.5.0**, a lightweight, open-source asynchronous reverse proxy and load balancer we've built and released under the MIT license.
 
 * **GitHub:** https://github.com/incontrolplus/openbalancer
-* **Live Visualizer & Docs:** https://www.openbalancer.com
+* **Website & Live Visualizer:** https://openbalancer.com
+* **Documentation:** https://openbalancer.com/docs
 
 ### 💡 Why we built this:
 If you run homelabs with multiple local AI inference workers (e.g. Ollama, vLLM, LocalAI across multiple GPUs/machines) or small microservice clusters, traditional reverse proxies often require verbose configs, have heavy base memory footprints, or buffer Server-Sent Events (SSE) by default, causing jerky token streaming in WebUIs.
@@ -34,7 +35,7 @@ version: '3.8'
 
 services:
   openbalancer:
-    image: ghcr.io/incontrolplus/openbalancer:latest
+    image: ghcr.io/incontrolplus/openbalancer:v1.5.0
     container_name: openbalancer
     restart: unless-stopped
     ports:
@@ -70,7 +71,7 @@ openbalancer demo
 ```
 
 ### 🤝 Feedback & Roadmap:
-OpenBalancer is completely open source under the MIT license (no features locked behind enterprise paywalls in the core engine). 
+OpenBalancer v1.5.0 is completely open source under the MIT license (no features locked behind enterprise paywalls in the core engine). Docs and guides are live at https://openbalancer.com/docs.
 
 We'd love your feedback on features you'd like to see next (e.g. dynamic TLS cert management, HTTP/3, WebAssembly plugins). Check out the repository, give it a star if you find it useful, and feel free to open issues or PRs!
 

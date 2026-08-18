@@ -22,3 +22,9 @@
 
 4. **[Discord Структура на Общността](Discord_Community_Setup.md)**
    * Йерархия на каналите, правила на общността и организация на техническата поддръжка.
+
+5. **[Reddit Анонс за r/selfhosted & r/LocalLLaMA](Reddit_Selfhosted_Post.md)**
+   * Готов формат за публикация в r/selfhosted, r/LocalLLaMA и r/homelab с фокус върху SSE стрийминг за AI клъстери и хоумлаби.
+
+6. **[Hacker News: Show HN Анонс](HackerNews_Show_HN.md)**
+   * Технически пост за Hacker News (Show HN), акцентиращ върху асинхронната архитектура с нулева буферизация и CUDA OOM failover.

@@ -22,3 +22,9 @@ This directory contains corporate marketing materials, digital footprint copy, a
 
 4. **[Discord Community Server Setup](Discord_Community_Setup.md)**
    * Channel hierarchy, community rules, and support tier structure for developers.
+
+5. **[Reddit Post: r/selfhosted & r/LocalLLaMA](Reddit_Selfhosted_Post.md)**
+   * Ready-to-publish post tailored for self-hosted and AI homelab communities with zero-buffer SSE streaming benchmarks.
+
+6. **[Hacker News: Show HN Post](HackerNews_Show_HN.md)**
+   * Technical Show HN announcement focusing on lightweight non-blocking async architecture and LLM failover.

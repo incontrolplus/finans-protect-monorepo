@@ -55,6 +55,8 @@ class LoadBalancer:
         self.algorithm = "round_robin"  # round_robin, weighted, least_latency, random
         self.health_interval = 5
         self.backends: List[BackendNode] = []
+        self.path_routing: Dict[str, str] = {}
+        self.model_routing: Dict[str, str] = {}
         self.current_idx = 0
         self.start_time = time.time()
         self.total_proxied_requests = 0
@@ -68,6 +70,8 @@ class LoadBalancer:
                 self.host = os.getenv("HOST", data.get("host", "0.0.0.0"))
                 self.algorithm = os.getenv("ALGORITHM", data.get("algorithm", "round_robin"))
                 self.health_interval = int(os.getenv("HEALTHCHECK_INTERVAL", data.get("health_interval", 5)))
+                self.path_routing = data.get("path_routing", {})
+                self.model_routing = data.get("model_routing", {})
                 
                 self.backends = []
                 for b in data.get("backends", []):
@@ -86,12 +90,29 @@ class LoadBalancer:
             ]
         logger.info(f"Loaded {len(self.backends)} backends. Strategy: {self.algorithm}. Port: {self.port}")
 
-    def select_backend(self, client_ip: Optional[str] = None) -> Optional[BackendNode]:
+    def select_backend(self, client_ip: Optional[str] = None, path: Optional[str] = None, model: Optional[str] = None) -> Optional[BackendNode]:
         healthy_nodes = [node for node in self.backends if node.is_healthy]
         if not healthy_nodes:
             logger.error("All backend nodes are currently UNHEALTHY!")
             return None
 
+        # 1. AI Model-Aware Routing Match
+        if model and self.model_routing:
+            target_url = self.model_routing.get(model)
+            if target_url:
+                matched = next((n for n in healthy_nodes if n.url == target_url or f"{n.host}:{n.port}" in target_url), None)
+                if matched:
+                    return matched
+
+        # 2. Path-Prefix Routing Match (e.g. /webhook, /rest/v1, /v1/crawl)
+        if path and self.path_routing:
+            for prefix, target_url in self.path_routing.items():
+                if path.startswith(prefix):
+                    matched = next((n for n in healthy_nodes if n.url == target_url or f"{n.host}:{n.port}" in target_url), None)
+                    if matched:
+                        return matched
+
+        # 3. Algorithmic Balancing Strategies
         algo = self.algorithm.lower()
 
         if algo in ("least_connections", "least_conn"):
@@ -324,8 +345,26 @@ class LoadBalancer:
                 await writer.wait_closed()
                 return
 
-            # Select backend node
-            backend = self.select_backend()
+            # Extract client IP
+            client_ip = None
+            try:
+                peer = writer.get_extra_info('peername')
+                if peer:
+                    client_ip = peer[0]
+            except Exception:
+                pass
+
+            # Extract AI Model if JSON payload
+            model = None
+            if body and (path.startswith("/v1/chat/completions") or path.startswith("/api/generate") or path.startswith("/v1/models")):
+                try:
+                    payload_json = json.loads(body.decode('utf-8'))
+                    model = payload_json.get("model")
+                except Exception:
+                    pass
+
+            # Select backend node (considering model, path prefix, and algorithm)
+            backend = self.select_backend(client_ip=client_ip, path=path, model=model)
             if not backend:
                 err_resp = (
                     b"HTTP/1.1 503 Service Unavailable\r\n"

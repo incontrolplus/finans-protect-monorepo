@@ -1140,9 +1140,16 @@ function initLoadBalancerSimulator() {
     const pB3 = { x: (anchors.b3.left || anchors.b3.x - 80), y: anchors.b3.y };
 
     function drawBusLine(p0, p3, status = 'UP', isDegraded = false) {
-      const dx = (p3.x - p0.x) * 0.5;
-      const p1 = { x: p0.x + dx, y: p0.y };
-      const p2 = { x: p3.x - dx, y: p3.y };
+      const dx = p3.x - p0.x;
+      const dy = p3.y - p0.y;
+      let p1, p2;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        p1 = { x: p0.x + dx * 0.5, y: p0.y };
+        p2 = { x: p3.x - dx * 0.5, y: p3.y };
+      } else {
+        p1 = { x: p0.x, y: p0.y + dy * 0.5 };
+        p2 = { x: p3.x, y: p3.y - dy * 0.5 };
+      }
 
       ctx.beginPath();
       ctx.moveTo(p0.x, p0.y);
@@ -1224,9 +1231,19 @@ function initLoadBalancerSimulator() {
         pEnd = p.targetId === 1 ? pB1 : p.targetId === 2 ? pB2 : pB3;
       }
 
-      const dx = (pEnd.x - pStart.x) * 0.5;
-      const cp1 = { x: pStart.x + dx, y: pStart.y };
-      const cp2 = { x: pEnd.x - dx, y: pEnd.y };
+      const dx = pEnd.x - pStart.x;
+      const dy = pEnd.y - pStart.y;
+      
+      let cp1, cp2;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal curve
+        cp1 = { x: pStart.x + dx * 0.5, y: pStart.y };
+        cp2 = { x: pEnd.x - dx * 0.5, y: pEnd.y };
+      } else {
+        // Vertical curve
+        cp1 = { x: pStart.x, y: pStart.y + dy * 0.5 };
+        cp2 = { x: pEnd.x, y: pEnd.y - dy * 0.5 };
+      }
       const pos = getCubicBezierPoint(Math.min(1, Math.max(0, p.t)), pStart, cp1, cp2, pEnd);
 
       // Handle Red Deflection / Circuit Breaker Failover on Node 2 Outage

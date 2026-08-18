@@ -72,12 +72,26 @@ openbalancer/
 
 ## 🚀 Бърз Старт
 
-### 1. Инсталация и CLI Команди
+### 1. Моментален Интерактивен Демо Сандбокс (Без допълнителна настройка)
+Стартирайте OpenBalancer заедно с 3 вградени тестови сървъра (ALPHA, BETA, GAMMA) само с 1 команда:
 ```bash
-# Клониране на хранилището
-git clone https://github.com/incontrolplus/openbalancer.git
-cd openbalancer
+python3 core/openbalancer.py demo
+# Или на потребителски порт:
+python3 core/openbalancer.py demo -p 8088
+```
 
+В друг терминал изпратете тестова заявка:
+```bash
+# Балансирана заявка през ALPHA, BETA, GAMMA:
+curl -s http://localhost:8088/
+
+# Преглед на телеметрията в реално време:
+curl -s http://localhost:8088/openbalancer/status | jq .
+curl -s http://localhost:8088/metrics
+```
+
+### 2. Стандартен Продукционен Режим (С Ваши Услуги)
+```bash
 # Валидиране на конфигурация
 python3 core/openbalancer.py validate -c core/config.json
 
@@ -90,7 +104,12 @@ python3 core/openbalancer.py start -c core/config.json
 curl -fsSL https://www.openbalancer.com/install.sh | bash
 ```
 
-### 2. Стартиране на Стрес-Тест Бенчмарк (5,300+ Заявки/сек)
+### 3. Готов Docker Mesh Стек (OpenBalancer + Prometheus + Grafana)
+```bash
+docker compose -f docker-compose.mesh.yml up -d
+```
+
+### 4. Стартиране на Стрес-Тест Бенчмарк (5,300+ Заявки/сек)
 ```bash
 python3 benchmark/run_benchmark.py
 ```

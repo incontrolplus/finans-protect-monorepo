@@ -645,7 +645,19 @@ class LoadBalancer:
             # Direct socket proxying across active backends
             backend = self.select_backend(client_ip=client_ip, path=path, model=model)
             if not backend:
-                err_resp = b"HTTP/1.1 503 Service Unavailable\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n503 Service Unavailable: No Backends"
+                err_payload = json.dumps({
+                    "error": "503 Service Unavailable",
+                    "message": "All configured upstream backend nodes are currently offline or unreachable.",
+                    "configured_backends": [b.url for b in self.backends],
+                    "tip": "To launch OpenBalancer with automatic built-in mock backends for testing, run: python3 core/openbalancer.py demo"
+                }, indent=2).encode('utf-8')
+                err_resp = (
+                    b"HTTP/1.1 503 Service Unavailable\r\n"
+                    b"Content-Type: application/json; charset=utf-8\r\n"
+                    b"Server: OpenBalancer/1.4 (INCONTROL PLUS)\r\n"
+                    b"Connection: close\r\n"
+                    b"Content-Length: " + str(len(err_payload)).encode('utf-8') + b"\r\n\r\n" + err_payload
+                )
                 writer.write(err_resp)
                 await writer.drain()
                 writer.close()
@@ -713,10 +725,71 @@ class LoadBalancer:
 OpenBalancer = LoadBalancer
 
 
+async def start_mock_backend(port: int, name: str):
+    """Starts a lightweight async mock upstream HTTP server."""
+    async def handle_mock(reader, writer):
+        try:
+            while True:
+                line = await reader.readline()
+                if not line or line == b'\r\n':
+                    break
+            body = f'{{"server": "{name}", "port": {port}, "status": "UP", "message": "Response from Mock Server {name}-{port}"}}\n'.encode('utf-8')
+            resp = (
+                b"HTTP/1.1 200 OK\r\n"
+                b"Content-Type: application/json; charset=utf-8\r\n"
+                b"Connection: close\r\n"
+                b"Content-Length: " + str(len(body)).encode('utf-8') + b"\r\n\r\n" + body
+            )
+            writer.write(resp)
+            await writer.drain()
+        except Exception:
+            pass
+        finally:
+            try:
+                writer.close()
+                await writer.wait_closed()
+            except Exception:
+                pass
+
+    server = await asyncio.start_server(handle_mock, "127.0.0.1", port)
+    return server
+
+
+async def run_demo(port: int = 8088, config_path: str = "core/config.json"):
+    """Runs OpenBalancer in a self-contained interactive demo sandbox."""
+    mock_servers = await asyncio.gather(
+        start_mock_backend(9101, "ALPHA"),
+        start_mock_backend(9102, "BETA"),
+        start_mock_backend(9103, "GAMMA")
+    )
+    
+    cfg_to_use = config_path if os.path.exists(config_path) else "config.json"
+    lb = LoadBalancer(config_path=cfg_to_use)
+    lb.port = port
+    
+    print("\n" + "=" * 65)
+    print("🚀 OpenBalancer Interactive Demo Sandbox Started!")
+    print("=" * 65)
+    print(f"• Load Balancer:  http://127.0.0.1:{port}")
+    print(f"• Status API:     http://127.0.0.1:{port}/openbalancer/status")
+    print(f"• Metrics:        http://127.0.0.1:{port}/metrics")
+    print(f"• Dashboard:      http://127.0.0.1:{port}/openbalancer/dashboard")
+    print("• Mock Upstreams: ALPHA (9101), BETA (9102), GAMMA (9103)")
+    print("=" * 65)
+    print(f"💡 Try sending test requests in another terminal:")
+    print(f"   curl -s http://127.0.0.1:{port}/ | jq .")
+    print(f"   curl -s http://127.0.0.1:{port}/openbalancer/status | jq .\n")
+    
+    await lb.start_server(lb.host, lb.port)
+    await lb.serve_forever()
+
+
 def main():
     import argparse
     first_arg = sys.argv[1] if len(sys.argv) > 1 else None
-    if first_arg and (first_arg.endswith('.json') or os.path.isfile(first_arg)):
+
+    # Only treat first_arg as config file if it's explicitly a .json file or not a subcommand
+    if first_arg and first_arg.endswith('.json') and os.path.isfile(first_arg):
         lb = LoadBalancer(config_path=first_arg)
         try:
             asyncio.run(lb.start())
@@ -735,6 +808,12 @@ def main():
     start_parser.add_argument("-c", "--config", default="config.json", help="Path to config.json")
     start_parser.add_argument("-p", "--port", type=int, default=None, help="Override listen port")
     start_parser.add_argument("-a", "--algorithm", default=None, help="Override routing algorithm")
+    start_parser.add_argument("--demo", action="store_true", help="Launch with built-in mock backends on 9101, 9102, 9103")
+
+    # Demo
+    demo_parser = subparsers.add_parser("demo", help="Start OpenBalancer in self-contained demo sandbox with 3 mock backends")
+    demo_parser.add_argument("-p", "--port", type=int, default=8088, help="Listen port (default: 8088)")
+    demo_parser.add_argument("-c", "--config", default="core/config.json", help="Path to config.json")
 
     # Validate
     val_parser = subparsers.add_parser("validate", help="Validate configuration file")
@@ -753,6 +832,13 @@ def main():
         print("OpenBalancer v1.4.2 (Enterprise AI & API Load Balancer)")
         print("Engineered & Maintained by INCONTROL PLUS ЕООД (https://www.openbalancer.com)")
         print("License: MIT")
+        sys.exit(0)
+
+    elif args.subcommand == "demo":
+        try:
+            asyncio.run(run_demo(port=args.port, config_path=args.config))
+        except KeyboardInterrupt:
+            logger.info("Demo sandbox stopped.")
         sys.exit(0)
 
     elif args.subcommand == "validate":
@@ -782,6 +868,13 @@ def main():
             sys.exit(1)
 
     else:
+        if hasattr(args, "demo") and args.demo:
+            try:
+                asyncio.run(run_demo(port=args.port or 8088, config_path=args.config or "core/config.json"))
+            except KeyboardInterrupt:
+                logger.info("Demo sandbox stopped.")
+            return
+
         cfg_file = args.config if hasattr(args, "config") and args.config else "config.json"
         lb = LoadBalancer(config_path=cfg_file)
         if hasattr(args, "port") and args.port:

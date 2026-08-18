@@ -1,0 +1,42 @@
+{
+  "name": "OpenBalancer Dev Environment",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true"
+    }
+  },
+  "forwardPorts": [8088, 8888, 9090, 3000],
+  "portsAttributes": {
+    "8088": {
+      "label": "OpenBalancer Core / Demo",
+      "onAutoForward": "notify"
+    },
+    "8888": {
+      "label": "OpenBalancer Mesh Gateway",
+      "onAutoForward": "silent"
+    },
+    "9090": {
+      "label": "Prometheus Telemetry",
+      "onAutoForward": "silent"
+    },
+    "3000": {
+      "label": "Grafana Dashboards",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+  "postCreateCommand": "python3 core/openbalancer.py validate -c core/config.json",
+  "postAttachCommand": "echo '=======================================================\n🚀 Welcome to OpenBalancer!\n\nTo start a self-contained demo sandbox with 3 mock backends:\n  python3 core/openbalancer.py demo\n\nTo run the full unit test suite:\n  python3 -m unittest discover -s tests -p \"test_*.py\" -v\n======================================================='"
+}

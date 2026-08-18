@@ -74,16 +74,30 @@ openbalancer/
 
 ## 🚀 Quickstart
 
-### 1. Installation & CLI Usage
+### 1. Instant Interactive Demo Sandbox (Zero Configuration)
+Launch OpenBalancer together with 3 built-in mock upstream backends (ALPHA, BETA, GAMMA) in a single command:
 ```bash
-# Clone and run
-git clone https://github.com/incontrolplus/openbalancer.git
-cd openbalancer
+python3 core/openbalancer.py demo
+# Or on custom port:
+python3 core/openbalancer.py demo -p 8088
+```
 
-# Validate configuration
+Now in another terminal:
+```bash
+# Send load balanced requests across ALPHA, BETA, GAMMA:
+curl -s http://localhost:8088/
+
+# Inspect real-time cluster telemetry:
+curl -s http://localhost:8088/openbalancer/status | jq .
+curl -s http://localhost:8088/metrics
+```
+
+### 2. Standard Production Mode (Custom Upstream Targets)
+```bash
+# Validate your configuration
 python3 core/openbalancer.py validate -c core/config.json
 
-# Start OpenBalancer
+# Start OpenBalancer service
 python3 core/openbalancer.py start -c core/config.json
 ```
 
@@ -92,7 +106,12 @@ Or 1-line curl installer:
 curl -fsSL https://www.openbalancer.com/install.sh | bash
 ```
 
-### 2. Run High-Concurrency Benchmark (5,300+ RPS)
+### 3. Run Turnkey Docker Mesh (OpenBalancer + Prometheus + Grafana)
+```bash
+docker compose -f docker-compose.mesh.yml up -d
+```
+
+### 4. Run High-Concurrency Benchmark (5,300+ RPS)
 ```bash
 python3 benchmark/run_benchmark.py
 ```

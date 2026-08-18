@@ -1,0 +1,6 @@
+name = "openbalancer"
+pages_build_output_dir = "website-next/out"
+
+[build]
+command = "npm run build"
+cwd = "website-next"

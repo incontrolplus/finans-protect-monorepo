@@ -2,23 +2,55 @@ import unittest
 import asyncio
 import json
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from core.openbalancer import OpenBalancer
+
+class MockUpstreamHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if "/windows" in self.path:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"service": "windows-vm", "status": "running"}')
+        elif "/novnc" in self.path:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.end_headers()
+            self.wfile.write(b'<html>noVNC Desktop Session</html>')
+        elif "/qemu" in self.path:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(b'{"qemu": "active", "kvm": true}')
+        else:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b'Upstream Mock OK')
+
+    def log_message(self, format, *args):
+        pass
 
 class TestMultiNodeRouting(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        # 1. Start a real mock upstream server on port 9205
+        self.mock_upstream_port = 9205
+        self.mock_upstream_server = HTTPServer(('127.0.0.1', self.mock_upstream_port), MockUpstreamHandler)
+        self.mock_thread = threading.Thread(target=self.mock_upstream_server.serve_forever, daemon=True)
+        self.mock_thread.start()
+
+        # 2. Config mapping to the real mock upstream and an offline endpoint
         self.config_path = "core/config_test_multinode.json"
         config_data = {
             "path_routing": {
-                "/windows": "http://100.70.181.127:8006",
-                "/vm/windows": "http://100.70.181.127:8006",
-                "/novnc": "http://100.70.181.127:8006",
-                "/qemu": "http://100.70.181.127:8006",
-                "/storage/philips-ssd": "http://100.70.181.127:18795/storage",
-                "/backup/status": "http://100.70.181.127:18795/backup/status"
+                "/windows": f"http://127.0.0.1:{self.mock_upstream_port}",
+                "/novnc": f"http://127.0.0.1:{self.mock_upstream_port}",
+                "/qemu": f"http://127.0.0.1:{self.mock_upstream_port}",
+                "/offline_node": "http://127.0.0.1:9999"
             },
             "backends": [
-                {"host": "127.0.0.1", "port": 9201, "weight": 1},
-                {"host": "100.70.181.127", "port": 8006, "weight": 2}
+                {"host": "127.0.0.1", "port": self.mock_upstream_port, "weight": 1}
             ]
         }
         with open(self.config_path, "w") as f:
@@ -34,6 +66,8 @@ class TestMultiNodeRouting(unittest.IsolatedAsyncioTestCase):
             self.balancer.server.close()
             await self.balancer.server.wait_closed()
         await self.balancer.stop_watcher()
+        self.mock_upstream_server.shutdown()
+        self.mock_upstream_server.server_close()
         if os.path.exists(self.config_path):
             os.remove(self.config_path)
 
@@ -48,17 +82,29 @@ class TestMultiNodeRouting(unittest.IsolatedAsyncioTestCase):
         await writer.wait_closed()
         return resp.decode('utf-8')
 
-    async def test_windows_vm_routing(self):
+    async def test_windows_vm_real_proxy(self):
         resp = await self.send_request("/windows/console")
-        self.assertIn("X-Routed-Target: http://100.70.181.127:8006", resp)
+        self.assertIn("HTTP/1.1 200 OK", resp)
+        self.assertIn(f"X-Routed-Target: http://127.0.0.1:{self.mock_upstream_port}", resp)
+        self.assertIn("windows-vm", resp)
 
-    async def test_novnc_routing(self):
+    async def test_novnc_real_proxy(self):
         resp = await self.send_request("/novnc/vnc_lite.html")
-        self.assertIn("X-Routed-Target: http://100.70.181.127:8006", resp)
+        self.assertIn("HTTP/1.1 200 OK", resp)
+        self.assertIn(f"X-Routed-Target: http://127.0.0.1:{self.mock_upstream_port}", resp)
+        self.assertIn("noVNC Desktop Session", resp)
 
-    async def test_qemu_routing(self):
+    async def test_qemu_real_proxy(self):
         resp = await self.send_request("/qemu/status")
-        self.assertIn("X-Routed-Target: http://100.70.181.127:8006", resp)
+        self.assertIn("HTTP/1.1 200 OK", resp)
+        self.assertIn(f"X-Routed-Target: http://127.0.0.1:{self.mock_upstream_port}", resp)
+        self.assertIn("kvm", resp)
+
+    async def test_offline_backend_returns_502_bad_gateway(self):
+        resp = await self.send_request("/offline_node/test")
+        self.assertIn("HTTP/1.1 502 Bad Gateway", resp)
+        self.assertIn("502 Bad Gateway", resp)
+        self.assertIn("unreachable", resp)
 
     async def test_storage_endpoint(self):
         resp = await self.send_request("/storage/philips-ssd")

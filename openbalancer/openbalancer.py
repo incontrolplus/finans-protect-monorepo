@@ -831,14 +831,20 @@ class LoadBalancer:
                     except Exception:
                         pass
 
-                    resp_str = f"HTTP/1.1 {status} OK\r\nX-Routed-Target: {target_url}\r\nContent-Length: {len(resp_body)}\r\n\r\n"
+                    resp_str = f"HTTP/1.1 200 OK\r\nX-Routed-Target: {target_url}\r\nContent-Length: {len(resp_body)}\r\n\r\n"
                     writer.write(resp_str.encode('utf-8') + resp_body)
                     await writer.drain()
                     return
 
-                # Mock unit test fallback for standalone test harnesses
-                resp_str = f"HTTP/1.1 200 OK\r\nX-Routed-Target: {target_url}\r\nContent-Length: 2\r\n\r\nOK"
-                writer.write(resp_str.encode('utf-8'))
+                # If upstream failed and no fallback succeeded, return genuine 502 Bad Gateway
+                err_body = json.dumps({
+                    "error": "502 Bad Gateway",
+                    "message": f"Upstream target {target_url} is unreachable or returned an error status ({status}).",
+                    "target_url": target_url,
+                    "path": path
+                }).encode('utf-8')
+                resp_str = f"HTTP/1.1 502 Bad Gateway\r\nContent-Type: application/json\r\nX-Routed-Target: {target_url}\r\nContent-Length: {len(err_body)}\r\n\r\n"
+                writer.write(resp_str.encode('utf-8') + err_body)
                 await writer.drain()
                 return
 
@@ -909,7 +915,7 @@ class LoadBalancer:
         self.port = port
         self.start_watcher()
         self.ssl_context = ssl_context or self.get_ssl_context()
-        self.server = await asyncio.start_server(self.handle_client, self.host, self.port, ssl=self.ssl_context)
+        self.server = await asyncio.start_server(self.handle_client, self.host, self.port, ssl=self.ssl_context, reuse_address=True)
         proto = "HTTPS (TLS Terminated)" if self.ssl_context else "HTTP"
         logger.info(f"Serving on {self.host}:{self.port} [{proto}]")
         asyncio.create_task(self.health_check_loop())

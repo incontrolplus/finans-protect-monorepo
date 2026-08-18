@@ -1132,12 +1132,27 @@ function initLoadBalancerSimulator() {
     const isMatrix = document.documentElement.getAttribute('data-theme') === 'matrix';
 
     // 1. Draw Connecting Bus Bezier Lines
-    const pIngress = { x: (anchors.ingress.right || anchors.ingress.x + 50), y: anchors.ingress.y };
-    const pCoreIn = { x: (anchors.core.left || anchors.core.x - 60), y: anchors.core.y };
-    const pCoreOut = { x: (anchors.core.right || anchors.core.x + 60), y: anchors.core.y };
-    const pB1 = { x: (anchors.b1.left || anchors.b1.x - 80), y: anchors.b1.y };
-    const pB2 = { x: (anchors.b2.left || anchors.b2.x - 80), y: anchors.b2.y };
-    const pB3 = { x: (anchors.b3.left || anchors.b3.x - 80), y: anchors.b3.y };
+    const isMobile = window.innerWidth <= 992;
+    
+    let pIngress, pCoreIn, pCoreOut, pB1, pB2, pB3;
+    
+    if (isMobile) {
+      // Vertical Flow (Top to Bottom)
+      pIngress = { x: anchors.ingress.x, y: anchors.ingress.y + (anchors.ingress.height / 2) };
+      pCoreIn = { x: anchors.core.x, y: anchors.core.y - (anchors.core.height / 2) };
+      pCoreOut = { x: anchors.core.x, y: anchors.core.y + (anchors.core.height / 2) };
+      pB1 = { x: anchors.b1.x, y: anchors.b1.y - (anchors.b1.height / 2) };
+      pB2 = { x: anchors.b2.x, y: anchors.b2.y - (anchors.b2.height / 2) };
+      pB3 = { x: anchors.b3.x, y: anchors.b3.y - (anchors.b3.height / 2) };
+    } else {
+      // Horizontal Flow (Left to Right)
+      pIngress = { x: anchors.ingress.right || anchors.ingress.x + 50, y: anchors.ingress.y };
+      pCoreIn = { x: anchors.core.left || anchors.core.x - 60, y: anchors.core.y };
+      pCoreOut = { x: anchors.core.right || anchors.core.x + 60, y: anchors.core.y };
+      pB1 = { x: anchors.b1.left || anchors.b1.x - 80, y: anchors.b1.y };
+      pB2 = { x: anchors.b2.left || anchors.b2.x - 80, y: anchors.b2.y };
+      pB3 = { x: anchors.b3.left || anchors.b3.x - 80, y: anchors.b3.y };
+    }
 
     function drawBusLine(p0, p3, status = 'UP', isDegraded = false) {
       const dx = p3.x - p0.x;

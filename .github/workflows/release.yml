@@ -78,6 +78,41 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Compute Release Container Tags
+        id: docker_tags
+        run: |
+          TAG="${{ steps.vars.outputs.tag }}"
+          VER="${{ steps.vars.outputs.version }}"
+          OWNER="${{ github.repository_owner }}"
+          
+          CORE_TAGS="ghcr.io/${OWNER}/openbalancer:${TAG}
+          ghcr.io/${OWNER}/openbalancer:${VER}
+          ghcr.io/${OWNER}/openbalancer:latest"
+          
+          MESH_TAGS="ghcr.io/${OWNER}/openbalancer-mesh:${TAG}
+          ghcr.io/${OWNER}/openbalancer-mesh:${VER}
+          ghcr.io/${OWNER}/openbalancer-mesh:latest"
+          
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            CORE_TAGS="${CORE_TAGS}
+            incontrolplus/openbalancer:${TAG}
+            incontrolplus/openbalancer:${VER}
+            incontrolplus/openbalancer:latest"
+            
+            MESH_TAGS="${MESH_TAGS}
+            incontrolplus/openbalancer-mesh:${TAG}
+            incontrolplus/openbalancer-mesh:${VER}
+            incontrolplus/openbalancer-mesh:latest"
+          fi
+          
+          echo "core_tags<<EOF" >> $GITHUB_OUTPUT
+          echo "$CORE_TAGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "mesh_tags<<EOF" >> $GITHUB_OUTPUT
+          echo "$MESH_TAGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Build & Push OpenBalancer Core Multi-Arch Image
         uses: docker/build-push-action@v5
         with:
@@ -85,13 +120,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/openbalancer:${{ steps.vars.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/openbalancer:${{ steps.vars.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/openbalancer:latest
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('incontrolplus/openbalancer:{0}', steps.vars.outputs.tag) || '' }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('incontrolplus/openbalancer:{0}', steps.vars.outputs.version) || '' }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && 'incontrolplus/openbalancer:latest' || '' }}
+          tags: ${{ steps.docker_tags.outputs.core_tags }}
 
       - name: Build & Push OpenBalancer Mesh Proxy Multi-Arch Image
         uses: docker/build-push-action@v5
@@ -100,13 +129,7 @@ jobs:
           file: ./Dockerfile.mesh
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/openbalancer-mesh:${{ steps.vars.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/openbalancer-mesh:${{ steps.vars.outputs.version }}
-            ghcr.io/${{ github.repository_owner }}/openbalancer-mesh:latest
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('incontrolplus/openbalancer-mesh:{0}', steps.vars.outputs.tag) || '' }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('incontrolplus/openbalancer-mesh:{0}', steps.vars.outputs.version) || '' }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && 'incontrolplus/openbalancer-mesh:latest' || '' }}
+          tags: ${{ steps.docker_tags.outputs.mesh_tags }}
 
       - name: Create Standalone Release Archive & Bundle Assets
         run: |

@@ -11,7 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileDrawer();
   initTerminalTabs();
   initTelemetrySparkline();
+  initAudioMicroFeedback();
   initLoadBalancerSimulator();
+  initDocsLatencyHeatmap();
+  initCustomErrorPageStudio();
   initConfigBuilder();
   initFaqAccordion();
   initContactModal();
@@ -24,6 +27,375 @@ document.addEventListener('DOMContentLoaded', () => {
   initInteractiveApiTester();
   initCopySnippetButtons();
 });
+
+/**
+ * Web Audio Micro-Feedback Synthesizer
+ * Zero-asset, high-performance synthesized tones for routing, failover, and spikes.
+ */
+const SoundFX = (function () {
+  let audioCtx = null;
+  let isMuted = false;
+  try {
+    isMuted = localStorage.getItem('openbalancer_sfx_muted') === 'true';
+  } catch (e) {}
+
+  function getContext() {
+    if (!audioCtx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        audioCtx = new AudioCtx();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, type = 'sine', duration = 0.04, gainVal = 0.04, freqEnd = null) {
+    if (isMuted) return;
+    try {
+      const ctx = getContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      if (freqEnd) {
+        osc.frequency.exponentialRampToValueAtTime(Math.max(10, freqEnd), now + duration);
+      }
+
+      gain.gain.setValueAtTime(gainVal, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + duration + 0.01);
+    } catch (e) {}
+  }
+
+  return {
+    isMuted: () => isMuted,
+    setMuted: (val) => {
+      isMuted = val;
+      try {
+        localStorage.setItem('openbalancer_sfx_muted', val ? 'true' : 'false');
+      } catch (e) {}
+    },
+    toggleMuted: () => {
+      const next = !isMuted;
+      SoundFX.setMuted(next);
+      if (!next) {
+        playTone(880, 'sine', 0.05, 0.05);
+      }
+      return next;
+    },
+    playRouting: (latency = 12) => {
+      const freq = Math.max(380, 960 - (latency * 1.5));
+      playTone(freq, 'sine', 0.03, 0.035, freq * 1.05);
+    },
+    playTokenTick: () => {
+      playTone(1200, 'sine', 0.012, 0.018);
+    },
+    playFailover: () => {
+      playTone(440, 'sawtooth', 0.08, 0.06, 260);
+      setTimeout(() => playTone(240, 'triangle', 0.1, 0.06, 160), 70);
+    },
+    playSpike: () => {
+      playTone(380, 'sine', 0.09, 0.05, 290);
+    },
+    playRecovery: () => {
+      playTone(523.25, 'sine', 0.06, 0.04);
+      setTimeout(() => playTone(659.25, 'sine', 0.06, 0.04), 50);
+      setTimeout(() => playTone(783.99, 'sine', 0.1, 0.04), 100);
+    },
+    playSurge: () => {
+      playTone(600, 'triangle', 0.04, 0.04, 850);
+    },
+    playClick: () => {
+      playTone(1000, 'sine', 0.02, 0.025);
+    }
+  };
+})();
+
+/**
+ * Audio Micro-Feedback Controller
+ */
+function initAudioMicroFeedback() {
+  const toggleBtn = document.getElementById('sim-audio-toggle');
+  const icon = document.getElementById('sim-audio-icon');
+  const label = document.getElementById('sim-audio-label');
+
+  function updateAudioUI() {
+    const isMuted = SoundFX.isMuted();
+    if (toggleBtn) {
+      if (isMuted) {
+        toggleBtn.classList.add('muted');
+      } else {
+        toggleBtn.classList.remove('muted');
+      }
+    }
+    if (icon) {
+      icon.textContent = isMuted ? '🔇' : '🔊';
+    }
+    if (label) {
+      const isBg = (document.documentElement.lang || 'en') === 'bg';
+      label.textContent = isMuted 
+        ? (isBg ? 'Звукови ефекти: ИЗКЛ' : 'Sound FX: MUTED') 
+        : (isBg ? 'Звукови ефекти: ВКЛ' : 'Sound FX: ON');
+    }
+  }
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      SoundFX.toggleMuted();
+      updateAudioUI();
+    });
+  }
+
+  updateAudioUI();
+}
+
+/**
+ * Real-Time Latency Heatmap & Flamegraph Canvas Factory
+ */
+function createLatencyHeatmapEngine(canvasId, flamegraphContainerId, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  const flamegraphEl = document.getElementById(flamegraphContainerId);
+  if (!canvas) return null;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  const cols = 36;
+  const history = [];
+  for (let i = 0; i < cols; i++) {
+    history.push({
+      b0: Math.floor(Math.random() * 8 + 12),
+      b1: Math.floor(Math.random() * 4 + 2),
+      b2: Math.random() > 0.8 ? 1 : 0,
+      b3: 0
+    });
+  }
+
+  let rollingLatencies = [1.1, 1.2, 0.9, 1.4, 2.1, 8.4, 12.0, 1.18, 0.84, 1.35, 14.1];
+  let animId = null;
+
+  const buckets = [
+    { label: '<10ms', color: '#10b981', rgba: '16, 185, 129' },
+    { label: '10-50ms', color: '#06b6d4', rgba: '6, 182, 212' },
+    { label: '50-200ms', color: '#f59e0b', rgba: '245, 158, 11' },
+    { label: '>200ms', color: '#ef4444', rgba: '239, 68, 68' }
+  ];
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = rect.width * dpr;
+    canvas.height = (options.height || 120) * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  function record(latency) {
+    rollingLatencies.push(latency);
+    if (rollingLatencies.length > 80) rollingLatencies.shift();
+
+    const lastSlice = history[history.length - 1];
+    if (latency < 10) lastSlice.b0++;
+    else if (latency < 50) lastSlice.b1++;
+    else if (latency < 200) lastSlice.b2++;
+    else lastSlice.b3++;
+
+    updateStats();
+  }
+
+  function tickHistory() {
+    history.shift();
+    history.push({ b0: 0, b1: 0, b2: 0, b3: 0 });
+  }
+
+  function getPercentile(pct) {
+    if (rollingLatencies.length === 0) return 1.2;
+    const sorted = [...rollingLatencies].sort((a, b) => a - b);
+    const idx = Math.floor(sorted.length * (pct / 100));
+    return sorted[Math.min(idx, sorted.length - 1)];
+  }
+
+  function updateStats() {
+    let tot0 = 0, tot1 = 0, tot2 = 0, tot3 = 0;
+    history.forEach(s => {
+      tot0 += s.b0; tot1 += s.b1; tot2 += s.b2; tot3 += s.b3;
+    });
+    const total = Math.max(1, tot0 + tot1 + tot2 + tot3);
+
+    const prefix = options.idPrefix || 'sim';
+    const b0El = document.getElementById(`${prefix}-b0-pct`);
+    const b1El = document.getElementById(`${prefix}-b1-pct`);
+    const b2El = document.getElementById(`${prefix}-b2-pct`);
+    const b3El = document.getElementById(`${prefix}-b3-pct`);
+
+    if (b0El) b0El.textContent = `${Math.round((tot0 / total) * 100)}%`;
+    if (b1El) b1El.textContent = `${Math.round((tot1 / total) * 100)}%`;
+    if (b2El) b2El.textContent = `${Math.round((tot2 / total) * 100)}%`;
+    if (b3El) b3El.textContent = `${Math.round((tot3 / total) * 100)}%`;
+
+    const p50El = document.getElementById(`${prefix}-pct-p50`);
+    const p90El = document.getElementById(`${prefix}-pct-p90`);
+    const p99El = document.getElementById(`${prefix}-pct-p99`);
+    const p999El = document.getElementById(`${prefix}-pct-p999`);
+
+    if (p50El) p50El.textContent = `${getPercentile(50).toFixed(1)}ms`;
+    if (p90El) p90El.textContent = `${getPercentile(90).toFixed(1)}ms`;
+    if (p99El) p99El.textContent = `${getPercentile(99).toFixed(1)}ms`;
+    if (p999El) p999El.textContent = `${(getPercentile(99) * 1.8).toFixed(1)}ms`;
+
+    const fgTotalEl = document.getElementById(`${prefix}-fg-total-ms`);
+    if (fgTotalEl) {
+      const avg = (getPercentile(50) + 0.28).toFixed(2);
+      fgTotalEl.textContent = `${avg} ms`;
+    }
+  }
+
+  function draw() {
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = options.height || 120;
+    if (w === 0) return;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const marginL = 55;
+    const marginR = 12;
+    const marginT = 10;
+    const marginB = 20;
+
+    const plotW = w - marginL - marginR;
+    const plotH = h - marginT - marginB;
+
+    const numRows = 4;
+    const rowH = plotH / numRows;
+    const colW = plotW / cols;
+
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    const yLabels = ['>200ms', '50-200ms', '10-50ms', '<10ms'];
+    const rowColors = ['#ef4444', '#f59e0b', '#06b6d4', '#10b981'];
+
+    for (let r = 0; r < numRows; r++) {
+      const y = marginT + r * rowH + rowH / 2;
+      ctx.fillStyle = rowColors[r];
+      ctx.fillText(yLabels[r], marginL - 8, y);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.beginPath();
+      ctx.moveTo(marginL, marginT + r * rowH);
+      ctx.lineTo(marginL + plotW, marginT + r * rowH);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(marginL, marginT + plotH);
+    ctx.lineTo(marginL + plotW, marginT + plotH);
+    ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'left';
+    ctx.fillText('-60s', marginL, h - 6);
+    ctx.textAlign = 'center';
+    ctx.fillText('-30s', marginL + plotW / 2, h - 6);
+    ctx.textAlign = 'right';
+    ctx.fillText('Now', marginL + plotW, h - 6);
+
+    let maxVal = 1;
+    history.forEach(s => {
+      maxVal = Math.max(maxVal, s.b0, s.b1, s.b2, s.b3);
+    });
+
+    for (let c = 0; c < cols; c++) {
+      const slice = history[c];
+      const vals = [slice.b3, slice.b2, slice.b1, slice.b0];
+      const x = marginL + c * colW + 1;
+      const cellW = Math.max(2, colW - 2);
+
+      for (let r = 0; r < numRows; r++) {
+        const val = vals[r];
+        const y = marginT + r * rowH + 1;
+        const cellH = Math.max(2, rowH - 2);
+
+        if (val > 0) {
+          const intensity = Math.min(1, 0.25 + (val / maxVal) * 0.75);
+          const rgb = buckets[3 - r].rgba;
+          ctx.fillStyle = `rgba(${rgb}, ${intensity})`;
+          ctx.fillRect(x, y, cellW, cellH);
+
+          if (c === cols - 1 && val > 0) {
+            ctx.shadowColor = `rgba(${rgb}, 0.8)`;
+            ctx.shadowBlur = 4;
+            ctx.fillRect(x, y, cellW, cellH);
+            ctx.shadowBlur = 0;
+          }
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+          ctx.fillRect(x, y, cellW, cellH);
+        }
+      }
+    }
+  }
+
+  function loop() {
+    draw();
+    animId = requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize', resize);
+  setTimeout(resize, 50);
+  loop();
+
+  const tickInterval = setInterval(() => {
+    tickHistory();
+    record(Math.random() > 0.9 ? Math.floor(Math.random() * 40 + 12) : (Math.random() * 5 + 1.1));
+  }, 1500);
+
+  updateStats();
+
+  return {
+    record,
+    recordBatch: (count, baseLat = 12, jitter = 4) => {
+      for (let i = 0; i < count; i++) {
+        const lat = Math.max(1, baseLat + (Math.random() * jitter * 2 - jitter));
+        record(lat);
+      }
+    },
+    injectSpike: () => {
+      for (let i = 0; i < 15; i++) {
+        record(500 + Math.random() * 80);
+      }
+    },
+    injectOutage: () => {
+      for (let i = 0; i < 8; i++) {
+        record(220 + Math.random() * 40);
+      }
+    },
+    reset: () => {
+      history.forEach(s => {
+        s.b0 = Math.floor(Math.random() * 6 + 10);
+        s.b1 = Math.floor(Math.random() * 3 + 1);
+        s.b2 = 0;
+        s.b3 = 0;
+      });
+      rollingLatencies = [1.1, 1.2, 0.9, 1.4, 2.1, 8.4];
+      updateStats();
+    }
+  };
+}
 
 /**
  * Mobile Navigation Drawer
@@ -233,6 +605,36 @@ function initLoadBalancerSimulator() {
   let sseStreamInterval = null;
   let ambientEmitterInterval = null;
 
+  const simHeatmap = createLatencyHeatmapEngine('sim-latency-heatmap-canvas', 'sim-flamegraph-view', { idPrefix: 'sim', height: 120 });
+
+  // View Switcher (Heatmap vs Flamegraph)
+  const viewHeatmapBtn = document.getElementById('sim-view-heatmap-btn');
+  const viewFlamegraphBtn = document.getElementById('sim-view-flamegraph-btn');
+  const heatmapView = document.getElementById('sim-heatmap-view');
+  const flamegraphView = document.getElementById('sim-flamegraph-view');
+
+  if (viewHeatmapBtn && viewFlamegraphBtn && heatmapView && flamegraphView) {
+    viewHeatmapBtn.addEventListener('click', () => {
+      viewHeatmapBtn.classList.add('active');
+      viewHeatmapBtn.setAttribute('aria-selected', 'true');
+      viewFlamegraphBtn.classList.remove('active');
+      viewFlamegraphBtn.setAttribute('aria-selected', 'false');
+      heatmapView.style.display = 'block';
+      flamegraphView.style.display = 'none';
+      SoundFX.playClick();
+    });
+
+    viewFlamegraphBtn.addEventListener('click', () => {
+      viewFlamegraphBtn.classList.add('active');
+      viewFlamegraphBtn.setAttribute('aria-selected', 'true');
+      viewHeatmapBtn.classList.remove('active');
+      viewHeatmapBtn.setAttribute('aria-selected', 'false');
+      heatmapView.style.display = 'none';
+      flamegraphView.style.display = 'block';
+      SoundFX.playClick();
+    });
+  }
+
   // SSE Token generation dictionary
   const llmTokens = [
     'OpenBalancer', ' handles', ' async', ' non-blocking', ' socket',
@@ -252,6 +654,7 @@ function initLoadBalancerSimulator() {
   // Protocol Stream Selector
   function setProtocol(protocol) {
     activeProtocol = protocol;
+    SoundFX.playClick();
     document.querySelectorAll('.protocol-pill').forEach(btn => {
       const p = btn.getAttribute('data-protocol');
       if (p === protocol) {
@@ -332,6 +735,7 @@ function initLoadBalancerSimulator() {
 
       // Spawn SSE particle on canvas
       spawnParticle({ type: 'sse', tokenText: tok });
+      SoundFX.playTokenTick();
     }, 140);
   }
 
@@ -363,6 +767,8 @@ function initLoadBalancerSimulator() {
     if (availableNodes.length === 0) {
       setBanner('outage', 'Error 503: No healthy upstream nodes available in cluster!');
       spawnParticle({ targetNodeId: 2, forcedDrop: true });
+      SoundFX.playFailover();
+      if (simHeatmap) simHeatmap.injectOutage();
       return;
     }
 
@@ -397,9 +803,9 @@ function initLoadBalancerSimulator() {
     if (reqCountDisplay) {
       reqCountDisplay.textContent = totalRequests.toLocaleString();
     }
+    const jitter = Math.floor(Math.random() * 4) - 2 + customJitter;
+    const currentLat = Math.max(8, targetNode.latency + jitter);
     if (latencyDisplay) {
-      const jitter = Math.floor(Math.random() * 4) - 2 + customJitter;
-      const currentLat = Math.max(8, targetNode.latency + jitter);
       latencyDisplay.textContent = `${currentLat} ms`;
       if (currentLat > 200) {
         latencyDisplay.className = 'stat-value degraded';
@@ -410,6 +816,11 @@ function initLoadBalancerSimulator() {
     if (activeBackendDisplay) {
       activeBackendDisplay.textContent = targetNode.name;
     }
+
+    if (simHeatmap) {
+      simHeatmap.record(currentLat);
+    }
+    SoundFX.playRouting(currentLat);
   }
 
   // Buttons Event Bindings
@@ -436,8 +847,9 @@ function initLoadBalancerSimulator() {
         }
         outageBtn.textContent = 'Restore Node 2';
         setBanner('outage', 'Chaos Alert: Node 2 crashed (503 Service Unavailable). Circuit breaker tripped — traffic auto-rerouted to Node 1 & 3 with 0 dropped packets.');
-        // Spawn test dropped particle demonstrating failover
         spawnParticle({ targetNodeId: 2, forcedDrop: true });
+        SoundFX.playFailover();
+        if (simHeatmap) simHeatmap.injectOutage();
       } else {
         node2.status = 'UP';
         if (card2) card2.classList.remove('down');
@@ -450,6 +862,7 @@ function initLoadBalancerSimulator() {
         }
         outageBtn.textContent = 'Crash Node 2 (Failover)';
         setBanner('healthy', 'Health Check: Node 2 probe returned 200 OK. Node restored to active balancing pool.');
+        SoundFX.playRecovery();
         dispatchRequest(0, 2);
       }
     });
@@ -472,6 +885,8 @@ function initLoadBalancerSimulator() {
         }
         latencyBtn.textContent = 'Normalize Node 1 Latency';
         setBanner('degraded', 'Circuit Breaker: High latency detected on Node 1 (520ms). Shedding traffic to healthy peers.');
+        SoundFX.playSpike();
+        if (simHeatmap) simHeatmap.injectSpike();
       } else {
         node1.latency = 12;
         if (card1) card1.classList.remove('degraded');
@@ -482,6 +897,7 @@ function initLoadBalancerSimulator() {
         }
         latencyBtn.textContent = 'Inject 500ms Spike (Node 1)';
         setBanner('healthy', 'Latency Normalized: Node 1 responding in 12ms baseline.');
+        SoundFX.playRecovery();
       }
       dispatchRequest(0, 1);
     });
@@ -492,6 +908,8 @@ function initLoadBalancerSimulator() {
       setBanner('healthy', 'Stress Test: 1,000 req/sec burst ingested. Asynchronous queue depth optimal.');
       totalRequests += 1000;
       if (reqCountDisplay) reqCountDisplay.textContent = totalRequests.toLocaleString();
+      SoundFX.playSurge();
+      if (simHeatmap) simHeatmap.recordBatch(18, 14, 5);
       let burstCount = 0;
       const burstInterval = setInterval(() => {
         dispatchRequest(0);
@@ -520,6 +938,8 @@ function initLoadBalancerSimulator() {
       if (latencyBtn) latencyBtn.textContent = 'Inject 500ms Spike (Node 1)';
       if (latencyDisplay) latencyDisplay.className = 'stat-value healthy';
       setBanner('healthy', 'Cluster Status: All nodes restored to healthy baseline (12ms latency).');
+      SoundFX.playRecovery();
+      if (simHeatmap) simHeatmap.reset();
       dispatchRequest(0);
     });
   }
@@ -1925,4 +2345,439 @@ openbalancer_circuit_breaker_trips_total{backend="http://10.0.1.12:8000",host="1
   // Initial execution render
   executeApiRequest();
 }
+
+/**
+ * Interactive Latency Heatmap & Flamegraph in Documentation Portal
+ */
+function initDocsLatencyHeatmap() {
+  const canvas = document.getElementById('docs-latency-heatmap-canvas');
+  if (!canvas) return;
+
+  const docsHeatmap = createLatencyHeatmapEngine('docs-latency-heatmap-canvas', 'docs-flamegraph-view', { idPrefix: 'docs', height: 120 });
+  if (!docsHeatmap) return;
+
+  // View Switcher (Heatmap vs Flamegraph)
+  const viewHeatmapBtn = document.getElementById('docs-view-heatmap-btn');
+  const viewFlamegraphBtn = document.getElementById('docs-view-flamegraph-btn');
+  const heatmapView = document.getElementById('docs-heatmap-view');
+  const flamegraphView = document.getElementById('docs-flamegraph-view');
+
+  if (viewHeatmapBtn && viewFlamegraphBtn && heatmapView && flamegraphView) {
+    viewHeatmapBtn.addEventListener('click', () => {
+      viewHeatmapBtn.classList.add('active');
+      viewHeatmapBtn.setAttribute('aria-selected', 'true');
+      viewFlamegraphBtn.classList.remove('active');
+      viewFlamegraphBtn.setAttribute('aria-selected', 'false');
+      heatmapView.style.display = 'block';
+      flamegraphView.style.display = 'none';
+      SoundFX.playClick();
+    });
+
+    viewFlamegraphBtn.addEventListener('click', () => {
+      viewFlamegraphBtn.classList.add('active');
+      viewFlamegraphBtn.setAttribute('aria-selected', 'true');
+      viewHeatmapBtn.classList.remove('active');
+      viewHeatmapBtn.setAttribute('aria-selected', 'false');
+      heatmapView.style.display = 'none';
+      flamegraphView.style.display = 'block';
+      SoundFX.playClick();
+    });
+  }
+
+  // Interactive Test Triggers
+  const batchBtn = document.getElementById('btn-docs-batch-req');
+  const spikeBtn = document.getElementById('btn-docs-spike');
+  const fallbackBtn = document.getElementById('btn-docs-fallback');
+  const resetBtn = document.getElementById('btn-docs-reset-stream');
+
+  if (batchBtn) {
+    batchBtn.addEventListener('click', () => {
+      docsHeatmap.recordBatch(50, 11, 4);
+      SoundFX.playSurge();
+    });
+  }
+
+  if (spikeBtn) {
+    spikeBtn.addEventListener('click', () => {
+      docsHeatmap.injectSpike();
+      SoundFX.playSpike();
+    });
+  }
+
+  if (fallbackBtn) {
+    fallbackBtn.addEventListener('click', () => {
+      docsHeatmap.injectOutage();
+      SoundFX.playFailover();
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      docsHeatmap.reset();
+      SoundFX.playRecovery();
+    });
+  }
+}
+
+/**
+ * Custom Error Page Studio (Interactive Tool)
+ * Visual editor, live sandbox preview, countdown simulation, and ready-to-use HTML exporter.
+ */
+function initCustomErrorPageStudio() {
+  const scenarioSelect = document.getElementById('err-scenario-select');
+  const brandInput = document.getElementById('err-brand-name');
+  const headlineInput = document.getElementById('err-headline');
+  const messageInput = document.getElementById('err-message');
+  const retrySecSelect = document.getElementById('err-retry-sec');
+  const supportLinkInput = document.getElementById('err-support-link');
+  const themeButtons = document.querySelectorAll('.studio-theme-btn');
+  const copyBtn = document.getElementById('btn-err-copy-html');
+  const downloadBtn = document.getElementById('btn-err-download-html');
+  const testRetryBtn = document.getElementById('btn-err-test-retry');
+  const previewRetryActionBtn = document.getElementById('err-preview-retry-action-btn');
+
+  // Preview elements
+  const previewFrame = document.getElementById('err-preview-frame');
+  const previewHalo = document.getElementById('err-preview-halo');
+  const previewBadge = document.getElementById('err-preview-badge');
+  const previewTitle = document.getElementById('err-preview-title');
+  const previewDesc = document.getElementById('err-preview-desc');
+  const previewCountdownPill = document.getElementById('err-preview-countdown-pill');
+  const previewSecondsDisplay = document.getElementById('err-live-seconds-display');
+  const previewRay = document.getElementById('err-preview-ray');
+  const previewBrandTag = document.getElementById('err-preview-brand-tag');
+  const previewContactLink = document.getElementById('err-preview-contact-link');
+
+  if (!previewFrame) return;
+
+  let currentTheme = 'theme-cyber';
+  let countdownTimer = null;
+  let currentCountdownSec = 15;
+
+  const presets = {
+    '429': {
+      codeText: 'HTTP 429 TOO MANY REQUESTS',
+      headline: 'Rate Limit Exceeded (429)',
+      desc: 'Too many concurrent requests were received. Your token bucket will automatically refill shortly.',
+      icon: '🛡️',
+      defaultTheme: 'theme-cyber',
+      retrySec: 15
+    },
+    '502': {
+      codeText: 'HTTP 502 BAD GATEWAY',
+      headline: 'Bad Gateway (502)',
+      desc: 'Upstream microservice node unreachable or connection reset by peer. Traffic is being rerouted.',
+      icon: '⚡',
+      defaultTheme: 'theme-matrix',
+      retrySec: 10
+    },
+    '503': {
+      codeText: 'HTTP 503 SERVICE UNAVAILABLE',
+      headline: 'Service Temporarily Unavailable (503)',
+      desc: 'Circuit breaker tripped. All redundant failover nodes are currently undergoing health probing.',
+      icon: '⚠️',
+      defaultTheme: 'theme-crimson',
+      retrySec: 30
+    }
+  };
+
+  function updatePreview() {
+    const code = scenarioSelect ? scenarioSelect.value : '429';
+    const brand = (brandInput && brandInput.value) ? brandInput.value : 'OpenBalancer AI Edge';
+    const headline = (headlineInput && headlineInput.value) ? headlineInput.value : 'Rate Limit Exceeded (429)';
+    const desc = (messageInput && messageInput.value) ? messageInput.value : 'Request limit reached.';
+    const support = (supportLinkInput && supportLinkInput.value) ? supportLinkInput.value : 'support@openbalancer.com';
+    const retrySec = retrySecSelect ? parseInt(retrySecSelect.value, 10) : 15;
+
+    const preset = presets[code] || presets['429'];
+
+    if (previewBadge) previewBadge.textContent = preset.codeText;
+    if (previewHalo) previewHalo.textContent = preset.icon;
+    if (previewTitle) previewTitle.textContent = headline;
+    if (previewDesc) previewDesc.textContent = desc;
+    if (previewBrandTag) previewBrandTag.textContent = brand;
+    if (previewContactLink) {
+      previewContactLink.textContent = support;
+      previewContactLink.href = support.includes('@') ? `mailto:${support}` : support;
+    }
+
+    if (previewCountdownPill) {
+      previewCountdownPill.style.display = retrySec > 0 ? 'inline-flex' : 'none';
+    }
+
+    resetCountdown(retrySec);
+  }
+
+  function resetCountdown(sec) {
+    if (countdownTimer) clearInterval(countdownTimer);
+    currentCountdownSec = sec;
+    if (previewSecondsDisplay) previewSecondsDisplay.textContent = currentCountdownSec;
+    if (sec <= 0) return;
+
+    countdownTimer = setInterval(() => {
+      currentCountdownSec--;
+      if (previewSecondsDisplay) previewSecondsDisplay.textContent = currentCountdownSec;
+      if (currentCountdownSec <= 0) {
+        currentCountdownSec = sec;
+        if (previewSecondsDisplay) previewSecondsDisplay.textContent = sec;
+        triggerSimulatedReconnect();
+      }
+    }, 1000);
+  }
+
+  function triggerSimulatedReconnect() {
+    SoundFX.playClick();
+    if (previewTitle) {
+      const orig = previewTitle.textContent;
+      previewTitle.textContent = '🔄 Reconnecting to Cluster...';
+      setTimeout(() => {
+        previewTitle.textContent = orig;
+        SoundFX.playRecovery();
+      }, 600);
+    }
+  }
+
+  if (scenarioSelect) {
+    scenarioSelect.addEventListener('change', () => {
+      const code = scenarioSelect.value;
+      const preset = presets[code];
+      if (preset) {
+        if (headlineInput) headlineInput.value = preset.headline;
+        if (messageInput) messageInput.value = preset.desc;
+        if (retrySecSelect) retrySecSelect.value = preset.retrySec.toString();
+        setTheme(preset.defaultTheme);
+      }
+      updatePreview();
+    });
+  }
+
+  [brandInput, headlineInput, messageInput, retrySecSelect, supportLinkInput].forEach(inp => {
+    if (inp) inp.addEventListener('input', updatePreview);
+  });
+
+  function setTheme(theme) {
+    currentTheme = theme;
+    if (previewFrame) {
+      previewFrame.className = `error-preview-frame ${theme}`;
+    }
+    themeButtons.forEach(btn => {
+      if (btn.getAttribute('data-theme') === theme) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  themeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.getAttribute('data-theme');
+      if (t) {
+        setTheme(t);
+        SoundFX.playClick();
+      }
+    });
+  });
+
+  if (testRetryBtn) {
+    testRetryBtn.addEventListener('click', triggerSimulatedReconnect);
+  }
+  if (previewRetryActionBtn) {
+    previewRetryActionBtn.addEventListener('click', triggerSimulatedReconnect);
+  }
+
+  function generateStandaloneHtml() {
+    const code = scenarioSelect ? scenarioSelect.value : '429';
+    const brand = brandInput ? brandInput.value : 'OpenBalancer AI Edge';
+    const headline = headlineInput ? headlineInput.value : 'Rate Limit Exceeded (429)';
+    const desc = messageInput ? messageInput.value : 'Too many requests.';
+    const support = supportLinkInput ? supportLinkInput.value : 'support@openbalancer.com';
+    const retrySec = retrySecSelect ? parseInt(retrySecSelect.value, 10) : 15;
+    const preset = presets[code] || presets['429'];
+
+    let themeColors = {
+      bg: 'radial-gradient(circle at center, #0f172a 0%, #030712 100%)',
+      accent: '#06b6d4',
+      accentGlow: 'rgba(6, 182, 212, 0.4)',
+      btnBg: '#06b6d4',
+      btnColor: '#020617'
+    };
+
+    if (currentTheme === 'theme-matrix') {
+      themeColors = {
+        bg: '#010402',
+        accent: '#00ff66',
+        accentGlow: 'rgba(0, 255, 102, 0.4)',
+        btnBg: '#00ff66',
+        btnColor: '#000000'
+      };
+    } else if (currentTheme === 'theme-crimson') {
+      themeColors = {
+        bg: 'radial-gradient(circle at center, #1e0d16 0%, #080306 100%)',
+        accent: '#f43f5e',
+        accentGlow: 'rgba(244, 63, 94, 0.4)',
+        btnBg: '#f43f5e',
+        btnColor: '#ffffff'
+      };
+    } else if (currentTheme === 'theme-clean') {
+      themeColors = {
+        bg: '#0f172a',
+        accent: '#3b82f6',
+        accentGlow: 'rgba(59, 130, 246, 0.4)',
+        btnBg: '#3b82f6',
+        btnColor: '#ffffff'
+      };
+    }
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${headline} — ${brand}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: ${themeColors.bg};
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .err-card {
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .err-halo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid ${themeColors.accent};
+      box-shadow: 0 0 25px ${themeColors.accentGlow};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .err-badge {
+      font-family: monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: ${themeColors.accent};
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid ${themeColors.accent};
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      letter-spacing: 0.05em;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.75rem; font-weight: 700; color: #fff; }
+    p { font-size: 0.95rem; color: #94a3b8; line-height: 1.6; margin-bottom: 1.5rem; }
+    .countdown-pill {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+    .retry-btn {
+      background: ${themeColors.btnBg};
+      color: ${themeColors.btnColor};
+      border: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px ${themeColors.accentGlow};
+      transition: opacity 0.2s;
+    }
+    .retry-btn:hover { opacity: 0.9; }
+    .footer-meta {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    .footer-meta a { color: ${themeColors.accent}; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="err-card">
+    <div class="err-halo">${preset.icon}</div>
+    <div class="err-badge">${preset.codeText}</div>
+    <h1>${headline}</h1>
+    <p>${desc}</p>
+    ${retrySec > 0 ? `<div class="countdown-pill">⏱️ Auto-reconnecting in <strong id="countdown">${retrySec}</strong>s</div>` : ''}
+    <div>
+      <button class="retry-btn" onclick="location.reload()">🔄 Retry Connection Now</button>
+    </div>
+    <div class="footer-meta">
+      <div>Incident ID: ray_${Math.random().toString(16).substring(2, 10)} • ${brand}</div>
+      <div style="margin-top: 0.35rem;">Need support? <a href="${support.includes('@') ? `mailto:${support}` : support}">${support}</a></div>
+    </div>
+  </div>
+  ${retrySec > 0 ? `<script>
+    let sec = ${retrySec};
+    const el = document.getElementById('countdown');
+    setInterval(() => {
+      sec--;
+      if (el) el.textContent = sec;
+      if (sec <= 0) location.reload();
+    }, 1000);
+  </script>` : ''}
+</body>
+</html>`;
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const html = generateStandaloneHtml();
+      navigator.clipboard.writeText(html).then(() => {
+        SoundFX.playClick();
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = '✅ Copied to Clipboard!';
+        setTimeout(() => { copyBtn.innerHTML = orig; }, 2000);
+      });
+    });
+  }
+
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', () => {
+      const code = scenarioSelect ? scenarioSelect.value : '429';
+      const html = generateStandaloneHtml();
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `openbalancer-error-${code}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      SoundFX.playClick();
+    });
+  }
+
+  updatePreview();
+}
+
 

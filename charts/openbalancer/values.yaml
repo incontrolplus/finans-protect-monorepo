@@ -1,0 +1,164 @@
+# ==============================================================================
+# OpenBalancer Helm Chart Configuration Values
+# Maintained by INCONTROL PLUS EOOD (https://openbalancer.com)
+# ==============================================================================
+
+# Default number of replicas for high availability
+replicaCount: 2
+
+image:
+  repository: ghcr.io/incontrolplus/openbalancer
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# Pod annotations for Prometheus metrics discovery and scraping
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+  prometheus.io/path: "/metrics"
+
+# Custom labels to attach to pods
+podLabels:
+  app.kubernetes.io/component: load-balancer
+
+# Pod-level security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+# Container-level security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  capabilities:
+    drop:
+      - ALL
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 8888
+  targetPort: 8888
+  annotations: {}
+  # nodePort: 30888 # Only applicable if type is NodePort
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: openbalancer.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: openbalancer-tls
+  #    hosts:
+  #      - openbalancer.local
+
+# Resource requests and limits
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Horizontal Pod Autoscaling (HPA)
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 75
+  targetMemoryUtilizationPercentage: 80
+
+# Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+# Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 2
+  successThreshold: 1
+
+# Startup probe configuration
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 1
+  periodSeconds: 2
+  timeoutSeconds: 2
+  failureThreshold: 15
+
+# Additional environment variables
+env: []
+  # - name: LOG_LEVEL
+  #   value: "INFO"
+
+# OpenBalancer Core Routing & Security Configuration
+config:
+  # If specified, an existing ConfigMap will be used instead of creating one
+  configMapName: ""
+  mountPath: /app/config
+  fileName: config.json
+  data:
+    model_routing:
+      llama3: "http://mock-ai-llama:8000"
+      qwen: "http://mock-ai-qwen:8000"
+      mistral: "http://mock-ai-mistral:8000"
+    default_backend: "http://mock-ai-default:8000"
+    fallback_pool:
+      - "http://mock-ai-default:8000"
+    rate_limit:
+      enabled: true
+      requests_per_minute: 1200
+      burst: 100
+      whitelist:
+        - "127.0.0.1"
+        - "10.0.0.0/8"
+    auth:
+      enabled: false
+      api_keys: []
+
+# Node scheduling controls
+nodeSelector: {}
+tolerations: []
+affinity: {}

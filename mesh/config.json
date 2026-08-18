@@ -1,0 +1,26 @@
+{
+  "model_routing": {
+    "llama3": "http://mock-ai-llama:8000",
+    "qwen": "http://mock-ai-qwen:8000",
+    "mistral": "http://mock-ai-mistral:8000"
+  },
+  "default_backend": "http://mock-ai-default:8000",
+  "fallback_pool": [
+    "http://mock-ai-default:8000"
+  ],
+  "rate_limit": {
+    "enabled": true,
+    "requests_per_minute": 6000,
+    "burst": 200,
+    "whitelist": [
+      "127.0.0.1",
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ]
+  },
+  "auth": {
+    "enabled": false,
+    "api_keys": []
+  }
+}

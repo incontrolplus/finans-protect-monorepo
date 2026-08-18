@@ -1,0 +1,193 @@
+# ==============================================================================
+# OpenBalancer Turnkey Docker Compose Mesh Stack
+# Maintained by INCONTROL PLUS EOOD (https://openbalancer.com)
+#
+# Usage:
+#   docker compose -f docker-compose.mesh.yml up -d
+#
+# Ports Exposed:
+#   - OpenBalancer Proxy: http://localhost:8888
+#   - Prometheus Metrics: http://localhost:9090
+#   - Grafana Dashboard:  http://localhost:3000 (admin / admin)
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. OpenBalancer AI & API Load Balancer Core Engine
+  # ----------------------------------------------------------------------------
+  openbalancer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/incontrolplus/openbalancer:latest
+    container_name: openbalancer-core
+    ports:
+      - "8888:8888"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8888
+      - CONFIG_PATH=/app/config/config.json
+    volumes:
+      - ./mesh/config.json:/app/config/config.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
+    depends_on:
+      mock-ai-llama:
+        condition: service_healthy
+      mock-ai-qwen:
+        condition: service_healthy
+      mock-ai-mistral:
+        condition: service_healthy
+      mock-ai-default:
+        condition: service_healthy
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # 2. Prometheus Telemetry & Alerting Engine
+  # ----------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: openbalancer-prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./mesh/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./telemetry/alerts.yml:/etc/prometheus/alerts.yml:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # 3. Grafana Real-Time Observability Dashboard
+  # ----------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:10.0.3
+    container_name: openbalancer-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/openbalancer.json
+    volumes:
+      - ./mesh/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./mesh/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./telemetry/grafana-openbalancer-dashboard.json:/var/lib/grafana/dashboards/openbalancer.json:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # 4. Mock AI Upstream Nodes (Health checked inference backends)
+  # ----------------------------------------------------------------------------
+  mock-ai-llama:
+    image: python:3.12-alpine
+    container_name: mock-ai-llama
+    working_dir: /app
+    volumes:
+      - ./mesh/mock_server.py:/app/mock_server.py:ro
+    command: ["python", "mock_server.py"]
+    environment:
+      - MODEL_NAME=llama3
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 2s
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+  mock-ai-qwen:
+    image: python:3.12-alpine
+    container_name: mock-ai-qwen
+    working_dir: /app
+    volumes:
+      - ./mesh/mock_server.py:/app/mock_server.py:ro
+    command: ["python", "mock_server.py"]
+    environment:
+      - MODEL_NAME=qwen
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 2s
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+  mock-ai-mistral:
+    image: python:3.12-alpine
+    container_name: mock-ai-mistral
+    working_dir: /app
+    volumes:
+      - ./mesh/mock_server.py:/app/mock_server.py:ro
+    command: ["python", "mock_server.py"]
+    environment:
+      - MODEL_NAME=mistral
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 2s
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+  mock-ai-default:
+    image: python:3.12-alpine
+    container_name: mock-ai-default
+    working_dir: /app
+    volumes:
+      - ./mesh/mock_server.py:/app/mock_server.py:ro
+    command: ["python", "mock_server.py"]
+    environment:
+      - MODEL_NAME=default-ai-node
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 3s
+      timeout: 2s
+      retries: 3
+      start_period: 2s
+    networks:
+      - openbalancer-mesh
+    restart: unless-stopped
+
+networks:
+  openbalancer-mesh:
+    driver: bridge

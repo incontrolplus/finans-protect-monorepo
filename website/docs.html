@@ -187,6 +187,12 @@
               <span class="docs-nav-badge" style="color: #60a5fa;">Interactive</span>
             </a>
           </li>
+          <li>
+            <a href="#error-page-studio" class="docs-nav-link" data-section="error-page-studio">
+              <span data-i18n="doc_nav_error_studio">Custom Error Page Studio</span>
+              <span class="docs-nav-badge" style="color: #f43f5e;">Studio</span>
+            </a>
+          </li>
         </ul>
       </div>
 
@@ -197,6 +203,12 @@
           <li>
             <a href="#telemetry-api" class="docs-nav-link" data-section="telemetry-api">
               <span data-i18n="doc_nav_telemetry_api">Status & Prometheus API</span>
+            </a>
+          </li>
+          <li>
+            <a href="#latency-heatmap-docs" class="docs-nav-link" data-section="latency-heatmap-docs">
+              <span data-i18n="doc_nav_latency_heatmap">Latency Heatmap & Flamegraph</span>
+              <span class="docs-nav-badge" style="color: #38bdf8;">Real-Time</span>
             </a>
           </li>
           <li>
@@ -722,7 +734,135 @@ curl http://localhost:8080/metrics</code></pre>
         </div>
       </section>
 
-      <!-- Section 7: Telemetry & Prometheus API -->
+      <!-- Section 7: Custom Error Page Studio (Interactive Tool) -->
+      <section id="error-page-studio" class="docs-section">
+        <span class="docs-section-tag" data-i18n="doc_sec_error_tag">Interactive Designer</span>
+        <h2>
+          <span>Custom Error Page Studio</span>
+          <a href="#error-page-studio" class="docs-anchor-link" title="Direct anchor link">#</a>
+        </h2>
+        <p data-i18n="doc_error_intro">
+          Design, live-preview, and export branded, lightweight standalone HTML error pages for 429 Rate Limiting, 502 Bad Gateway, and 503 Outage scenarios. Zero external dependencies, automatic countdown retry logic, and pixel-perfect design.
+        </p>
+
+        <div class="error-studio-card">
+          <div class="error-studio-split">
+            <!-- Left Pane: Visual Controls -->
+            <div class="error-studio-controls">
+              <!-- Preset Scenario Selector -->
+              <div class="form-group">
+                <label for="err-scenario-select" data-i18n="err_preset_lbl">Select Error Scenario Preset:</label>
+                <select id="err-scenario-select" class="form-control">
+                  <option value="429" selected data-i18n="err_opt_429">429 Too Many Requests (Rate Limited)</option>
+                  <option value="502" data-i18n="err_opt_502">502 Bad Gateway (Upstream Unreachable)</option>
+                  <option value="503" data-i18n="err_opt_503">503 Service Unavailable (Circuit Breaker Tripped)</option>
+                </select>
+              </div>
+
+              <!-- Brand & Headline Inputs -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="err-brand-name" data-i18n="err_lbl_brand">Brand / Product Name</label>
+                  <input type="text" id="err-brand-name" class="form-control" value="OpenBalancer AI Edge">
+                </div>
+                <div class="form-group">
+                  <label for="err-retry-sec" data-i18n="err_lbl_retry_sec">Retry Countdown (Seconds)</label>
+                  <select id="err-retry-sec" class="form-control">
+                    <option value="5">5 Seconds</option>
+                    <option value="15" selected>15 Seconds</option>
+                    <option value="30">30 Seconds</option>
+                    <option value="60">60 Seconds</option>
+                    <option value="0">Disabled (No Auto-retry)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="err-headline" data-i18n="err_lbl_headline">Custom Error Headline</label>
+                <input type="text" id="err-headline" class="form-control" value="Rate Limit Exceeded (429)">
+              </div>
+
+              <div class="form-group">
+                <label for="err-message" data-i18n="err_lbl_message">Description / Guidance Message</label>
+                <textarea id="err-message" class="form-control" rows="2" style="font-size: 0.85rem;">Too many concurrent requests were received. Your token bucket will automatically refill shortly.</textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="err-support-link" data-i18n="err_lbl_support">Support Email or URL</label>
+                  <input type="text" id="err-support-link" class="form-control" value="support@openbalancer.com">
+                </div>
+                <div class="form-group">
+                  <label data-i18n="err_lbl_theme">Color Theme Preset</label>
+                  <div class="studio-theme-pills">
+                    <button type="button" class="studio-theme-btn active" data-theme="theme-cyber" data-i18n="err_theme_cyber">Cyber</button>
+                    <button type="button" class="studio-theme-btn" data-theme="theme-matrix" data-i18n="err_theme_matrix">Matrix</button>
+                    <button type="button" class="studio-theme-btn" data-theme="theme-crimson" data-i18n="err_theme_crimson">Crimson</button>
+                    <button type="button" class="studio-theme-btn" data-theme="theme-clean" data-i18n="err_theme_clean">Clean</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Pane: Live Interactive Preview -->
+            <div class="error-studio-preview-pane">
+              <div class="preview-pane-header">
+                <div class="preview-badge-chip">
+                  <span class="live-pulse-dot" style="width:6px; height:6px;"></span>
+                  <span data-i18n="err_preview_badge">LIVE INTERACTIVE PREVIEW</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-err-test-retry" data-i18n="err_btn_test_retry">
+                  ⚡ Test Retry Action
+                </button>
+              </div>
+
+              <!-- Embedded Preview Frame -->
+              <div class="error-preview-frame theme-cyber" id="err-preview-frame">
+                <div class="err-live-box">
+                  <div class="err-icon-halo" id="err-preview-halo">🛡️</div>
+                  <span class="err-code-badge" id="err-preview-badge">HTTP 429 TOO MANY REQUESTS</span>
+                  <h3 class="err-live-title" id="err-preview-title">Rate Limit Exceeded (429)</h3>
+                  <p class="err-live-desc" id="err-preview-desc">Too many concurrent requests were received. Your token bucket will automatically refill shortly.</p>
+                  
+                  <div class="err-countdown-pill" id="err-preview-countdown-pill">
+                    <span>⏱️</span>
+                    <span data-i18n="err_preview_countdown_prefix">Automatic reconnection in</span>
+                    <strong id="err-live-seconds-display">15</strong>
+                    <span data-i18n="err_preview_sec">seconds</span>
+                  </div>
+
+                  <button type="button" class="err-retry-btn" id="err-preview-retry-action-btn">
+                    <span>🔄</span>
+                    <span data-i18n="err_preview_retry_btn">Retry Connection Now</span>
+                  </button>
+
+                  <div class="err-ray-footer">
+                    <div><span data-i18n="err_preview_ray_id">Incident Ray ID:</span> <code id="err-preview-ray">ray_9x72b104a</code> • <span id="err-preview-brand-tag">OpenBalancer AI Edge</span></div>
+                    <div>Need assistance? Contact <a href="#" id="err-preview-contact-link">support@openbalancer.com</a></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action & Export Bar -->
+          <div class="error-studio-actions-bar">
+            <div style="font-family: var(--font-mono); font-size: 0.75rem; color: #94a3b8;">
+              <span>Zero external assets • Standalone self-contained HTML</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-err-copy-html">
+                📋 <span data-i18n="err_btn_copy_html">Copy Standalone HTML</span>
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-err-download-html">
+                💾 <span data-i18n="err_btn_download">Download .html File</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 8: Telemetry & Prometheus API -->
       <section id="telemetry-api" class="docs-section">
         <span class="docs-section-tag" data-i18n="doc_sec_telemetry_tag">Observability</span>
         <h2>
@@ -868,7 +1008,119 @@ openbalancer_circuit_breaker_trips_total{backend="http://10.0.1.10:8000",host="1
         </div>
       </section>
 
-      <!-- Section 8: Live Interactive API Tester ("Try it Out") -->
+      <!-- Section: Real-Time Latency Heatmap & Flamegraph -->
+      <section id="latency-heatmap-docs" class="docs-section">
+        <span class="docs-section-tag" data-i18n="doc_sec_heatmap_tag">Real-Time Telemetry</span>
+        <h2>
+          <span>Real-Time Latency Heatmap &amp; Flamegraph</span>
+          <a href="#latency-heatmap-docs" class="docs-anchor-link" title="Direct anchor link">#</a>
+        </h2>
+        <p data-i18n="doc_heatmap_intro">
+          Observe real-time latency distribution across 4 discrete threshold buckets (&lt;10ms green, 10-50ms cyan, 50-200ms yellow, &gt;200ms red) with live percentile calculations and execution waterfall stages.
+        </p>
+
+        <div class="latency-heatmap-panel" style="margin: 1.5rem 0;">
+          <div class="latency-panel-header">
+            <div class="latency-title-box">
+              <div class="latency-title-row">
+                <span class="latency-pulse-indicator"></span>
+                <strong data-i18n="sim_heatmap_title">Real-Time Latency Heatmap &amp; Flamegraph</strong>
+                <span class="heatmap-live-badge" data-i18n="sim_heatmap_live">DYNAMIC 60FPS</span>
+              </div>
+              <div class="latency-view-switcher" role="tablist" aria-label="Docs Latency View Mode">
+                <button type="button" class="view-switch-btn active" data-view="heatmap" id="docs-view-heatmap-btn" role="tab" aria-selected="true" data-i18n="sim_tab_heatmap">Distribution Heatmap</button>
+                <button type="button" class="view-switch-btn" data-view="flamegraph" id="docs-view-flamegraph-btn" role="tab" aria-selected="false" data-i18n="sim_tab_flamegraph">Flamegraph Waterfall</button>
+              </div>
+            </div>
+            
+            <div class="latency-percentiles-bar">
+              <div class="percentile-chip"><span class="pct-lbl">p50</span><span class="pct-val" id="docs-pct-p50">1.1ms</span></div>
+              <div class="percentile-chip"><span class="pct-lbl">p90</span><span class="pct-val" id="docs-pct-p90">7.9ms</span></div>
+              <div class="percentile-chip"><span class="pct-lbl">p99</span><span class="pct-val" id="docs-pct-p99">13.8ms</span></div>
+              <div class="percentile-chip"><span class="pct-lbl">p99.9</span><span class="pct-val" id="docs-pct-p999">24.5ms</span></div>
+            </div>
+          </div>
+
+          <!-- Heatmap View -->
+          <div class="heatmap-view-container" id="docs-heatmap-view">
+            <div class="heatmap-canvas-wrapper">
+              <canvas id="docs-latency-heatmap-canvas" class="latency-heatmap-canvas" width="800" height="120"></canvas>
+            </div>
+            <div class="heatmap-bucket-legend">
+              <div class="bucket-pill bucket-green">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_green">&lt;10ms (Optimal)</span>
+                <strong class="bucket-pct" id="docs-b0-pct">84%</strong>
+              </div>
+              <div class="bucket-pill bucket-cyan">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_cyan">10-50ms (Normal)</span>
+                <strong class="bucket-pct" id="docs-b1-pct">13%</strong>
+              </div>
+              <div class="bucket-pill bucket-yellow">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_yellow">50-200ms (Spike)</span>
+                <strong class="bucket-pct" id="docs-b2-pct">2%</strong>
+              </div>
+              <div class="bucket-pill bucket-red">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_red">&gt;200ms (Degraded)</span>
+                <strong class="bucket-pct" id="docs-b3-pct">1%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flamegraph View -->
+          <div class="flamegraph-view-container" id="docs-flamegraph-view" style="display: none;">
+            <div class="flamegraph-header">
+              <span class="fg-title" data-i18n="fg_title">Socket Pipeline Phase Execution &amp; TTFB Breakdown</span>
+              <span class="fg-total"><span data-i18n="fg_total_lbl">Total Time:</span> <strong id="docs-fg-total-ms">1.42 ms</strong></span>
+            </div>
+            <div class="flamegraph-bars-stack" id="docs-flamegraph-stack">
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_ingress">01. Ingress Socket Parse</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="docs-fg-bar-1" style="width: 12%; background: #34d399;"></div></div>
+                <span class="fg-time-val" id="docs-fg-val-1">0.12 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_ratelimit">02. Token Bucket Rate Check</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="docs-fg-bar-2" style="width: 5%; background: #38bdf8;"></div></div>
+                <span class="fg-time-val" id="docs-fg-val-2">0.04 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_routing">03. Dispatch Routing Strategy</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="docs-fg-bar-3" style="width: 6%; background: #a78bfa;"></div></div>
+                <span class="fg-time-val" id="docs-fg-val-3">0.05 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_tls">04. Upstream TCP &amp; TLS Pipe</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="docs-fg-bar-4" style="width: 30%; background: #60a5fa;"></div></div>
+                <span class="fg-time-val" id="docs-fg-val-4">0.45 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_ttfb">05. Upstream First Byte (TTFB)</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="docs-fg-bar-5" style="width: 55%; background: #fbbf24;"></div></div>
+                <span class="fg-time-val" id="docs-fg-val-5">0.78 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_flush">06. Zero-Copy Stream Flush</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="docs-fg-bar-6" style="width: 9%; background: #10b981;"></div></div>
+                <span class="fg-time-val" id="docs-fg-val-6">0.14 ms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Test Controls Bar -->
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-docs-batch-req" data-i18n="doc_btn_send_batch">Send 50 Reqs</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-docs-spike" data-i18n="doc_btn_spike">Inject 500ms Spike</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-docs-fallback" data-i18n="doc_btn_fallback">Simulate Outage Fallback</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-docs-reset-stream" data-i18n="doc_btn_reset_stream">Reset Baseline</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 10: Live Interactive API Tester ("Try it Out") -->
       <section id="api-tester" class="docs-section">
         <span class="docs-section-tag" data-i18n="doc_sec_tester_tag">Live API Console</span>
         <h2>

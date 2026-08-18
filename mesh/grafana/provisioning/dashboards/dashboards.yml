@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: 'OpenBalancer Observability'
+    orgId: 1
+    folder: 'AI & Infrastructure'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

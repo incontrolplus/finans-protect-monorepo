@@ -1,0 +1,11 @@
+{{- if not .Values.config.configMapName -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "openbalancer.configMapName" . }}
+  labels:
+    {{- include "openbalancer.labels" . | nindent 4 }}
+data:
+  {{ .Values.config.fileName | default "config.json" }}: |
+    {{- .Values.config.data | toPrettyJson | nindent 4 }}
+{{- end }}

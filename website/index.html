@@ -357,12 +357,19 @@
 
       <div class="simulator-container">
         <!-- Live Real-Time Prometheus Sparkline Telemetry -->
+        <!-- Live Real-Time Prometheus Sparkline Telemetry -->
         <div class="telemetry-chart-panel">
           <div class="chart-header">
             <div class="chart-title" data-i18n="sim_chart_title">Live Real-Time Ingress Telemetry (Prometheus Metric Stream)</div>
-            <div class="chart-live-badge">
-              <span class="live-pulse-dot"></span>
-              <span data-i18n="sim_chart_live">LIVE STREAM</span>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <button type="button" class="sim-audio-toggle-btn" id="sim-audio-toggle" aria-label="Toggle Audio Micro-Feedback" title="Toggle Web Audio SFX">
+                <span class="audio-icon-unmuted" id="sim-audio-icon">🔊</span>
+                <span class="audio-toggle-text" id="sim-audio-label" data-i18n="sim_audio_toggle">Sound FX: ON</span>
+              </button>
+              <div class="chart-live-badge">
+                <span class="live-pulse-dot"></span>
+                <span data-i18n="sim_chart_live">LIVE STREAM</span>
+              </div>
             </div>
           </div>
           <svg class="sparkline-svg" viewBox="0 0 800 60" preserveAspectRatio="none">
@@ -375,6 +382,99 @@
             <path id="sparkline-area" fill="url(#chartGrad)" d="M0,50 L50,45 L100,48 L150,35 L200,40 L250,25 L300,30 L350,20 L400,28 L450,18 L500,22 L550,15 L600,25 L650,18 L700,22 L750,12 L800,16 L800,60 L0,60 Z"/>
             <path id="sparkline-line" fill="none" stroke="#3b82f6" stroke-width="2" d="M0,50 L50,45 L100,48 L150,35 L200,40 L250,25 L300,30 L350,20 L400,28 L450,18 L500,22 L550,15 L600,25 L650,18 L700,22 L750,12 L800,16"/>
           </svg>
+        </div>
+
+        <!-- Real-Time Latency Heatmap & Flamegraph Panel (#sim-latency-heatmap-card) -->
+        <div class="latency-heatmap-panel" id="sim-latency-heatmap-card">
+          <div class="latency-panel-header">
+            <div class="latency-title-box">
+              <div class="latency-title-row">
+                <span class="latency-pulse-indicator"></span>
+                <strong data-i18n="sim_heatmap_title">Real-Time Latency Heatmap &amp; Flamegraph</strong>
+                <span class="heatmap-live-badge" data-i18n="sim_heatmap_live">DYNAMIC 60FPS</span>
+              </div>
+              <div class="latency-view-switcher" role="tablist" aria-label="Latency View Mode">
+                <button type="button" class="view-switch-btn active" data-view="heatmap" id="sim-view-heatmap-btn" role="tab" aria-selected="true" data-i18n="sim_tab_heatmap">Distribution Heatmap</button>
+                <button type="button" class="view-switch-btn" data-view="flamegraph" id="sim-view-flamegraph-btn" role="tab" aria-selected="false" data-i18n="sim_tab_flamegraph">Flamegraph Waterfall</button>
+              </div>
+            </div>
+            
+            <div class="latency-percentiles-bar">
+              <div class="percentile-chip"><span class="pct-lbl">p50</span><span class="pct-val" id="sim-pct-p50">1.2ms</span></div>
+              <div class="percentile-chip"><span class="pct-lbl">p90</span><span class="pct-val" id="sim-pct-p90">8.4ms</span></div>
+              <div class="percentile-chip"><span class="pct-lbl">p99</span><span class="pct-val" id="sim-pct-p99">14.1ms</span></div>
+              <div class="percentile-chip"><span class="pct-lbl">p99.9</span><span class="pct-val" id="sim-pct-p999">26.8ms</span></div>
+            </div>
+          </div>
+
+          <!-- Heatmap View -->
+          <div class="heatmap-view-container" id="sim-heatmap-view">
+            <div class="heatmap-canvas-wrapper">
+              <canvas id="sim-latency-heatmap-canvas" class="latency-heatmap-canvas" width="800" height="120"></canvas>
+            </div>
+            <div class="heatmap-bucket-legend">
+              <div class="bucket-pill bucket-green">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_green">&lt;10ms (Optimal)</span>
+                <strong class="bucket-pct" id="sim-b0-pct">82%</strong>
+              </div>
+              <div class="bucket-pill bucket-cyan">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_cyan">10-50ms (Normal)</span>
+                <strong class="bucket-pct" id="sim-b1-pct">14%</strong>
+              </div>
+              <div class="bucket-pill bucket-yellow">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_yellow">50-200ms (Spike)</span>
+                <strong class="bucket-pct" id="sim-b2-pct">3%</strong>
+              </div>
+              <div class="bucket-pill bucket-red">
+                <span class="bucket-dot"></span>
+                <span class="bucket-label" data-i18n="bucket_red">&gt;200ms (Degraded)</span>
+                <strong class="bucket-pct" id="sim-b3-pct">1%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flamegraph View -->
+          <div class="flamegraph-view-container" id="sim-flamegraph-view" style="display: none;">
+            <div class="flamegraph-header">
+              <span class="fg-title" data-i18n="fg_title">Socket Pipeline Phase Execution &amp; TTFB Breakdown</span>
+              <span class="fg-total"><span data-i18n="fg_total_lbl">Total Time:</span> <strong id="sim-fg-total-ms">1.48 ms</strong></span>
+            </div>
+            <div class="flamegraph-bars-stack" id="sim-flamegraph-stack">
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_ingress">01. Ingress Socket Parse</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="sim-fg-bar-1" style="width: 12%; background: #34d399;"></div></div>
+                <span class="fg-time-val" id="sim-fg-val-1">0.12 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_ratelimit">02. Token Bucket Rate Check</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="sim-fg-bar-2" style="width: 5%; background: #38bdf8;"></div></div>
+                <span class="fg-time-val" id="sim-fg-val-2">0.04 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_routing">03. Dispatch Routing Strategy</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="sim-fg-bar-3" style="width: 7%; background: #a78bfa;"></div></div>
+                <span class="fg-time-val" id="sim-fg-val-3">0.06 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_tls">04. Upstream TCP &amp; TLS Pipe</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="sim-fg-bar-4" style="width: 32%; background: #60a5fa;"></div></div>
+                <span class="fg-time-val" id="sim-fg-val-4">0.48 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_ttfb">05. Upstream First Byte (TTFB)</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="sim-fg-bar-5" style="width: 58%; background: #fbbf24;"></div></div>
+                <span class="fg-time-val" id="sim-fg-val-5">0.85 ms</span>
+              </div>
+              <div class="flamegraph-bar-row">
+                <span class="fg-phase-title" data-i18n="fg_phase_flush">06. Zero-Copy Stream Flush</span>
+                <div class="fg-bar-track"><div class="fg-bar-fill" id="sim-fg-bar-6" style="width: 10%; background: #10b981;"></div></div>
+                <span class="fg-time-val" id="sim-fg-val-6">0.15 ms</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Protocol Stream Selector (#protocol-selector) -->

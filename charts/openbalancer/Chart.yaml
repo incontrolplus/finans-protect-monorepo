@@ -1,0 +1,26 @@
+apiVersion: v2
+name: openbalancer
+description: Production-grade Helm Chart for OpenBalancer AI & API Load Balancer
+type: application
+version: 1.4.2
+appVersion: "1.4.2"
+home: https://openbalancer.com
+icon: https://openbalancer.com/logo.svg
+sources:
+  - https://github.com/incontrol-plus/openbalancer
+maintainers:
+  - name: INCONTROL PLUS EOOD
+    email: enterprise@openbalancer.com
+    url: https://openbalancer.com
+keywords:
+  - openbalancer
+  - load-balancer
+  - ai-gateway
+  - llm-routing
+  - reverse-proxy
+  - high-availability
+  - prometheus
+  - kubernetes
+annotations:
+  artifacthub.io/category: "integration-and-delivery"
+  artifacthub.io/license: "MIT"

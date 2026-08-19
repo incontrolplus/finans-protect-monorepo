@@ -1,0 +1,151 @@
+{
+  "id": "FleetHeartbeat01",
+  "name": "Open Balancer 9-Cluster Fleet Heartbeat Monitor",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger-1m",
+      "name": "Every 1 Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "command": "/usr/bin/python3 /Users/diokarabaz/Wallestars/scripts/heartbeat-monitor.py"
+      },
+      "id": "exec-heartbeat",
+      "name": "Execute Fleet Heartbeat",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.stdout;\nlet data = {};\ntry {\n  data = JSON.parse(raw);\n} catch(e) {\n  data = { healthy: false, error: raw };\n}\n\nreturn {\n  timestamp: data.timestamp || new Date().toISOString(),\n  healthy: Boolean(data.healthy),\n  checked: data.checked || 0,\n  details: data.details || {},\n  alert_required: !data.healthy\n};"
+      },
+      "id": "parse-health-output",
+      "name": "Parse Health Metrics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.alert_required }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "if-unhealthy",
+      "name": "Is Fleet Degraded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"8041248687\",\n  \"text\": \"🚨 *[n8n Fleet Health Alert]*\\n\\nOpen Balancer Fleet health check detected degraded endpoints!\\n\\nTimestamp: `{{ $json.timestamp }}`\\nChecked: `{{ $json.checked }}` services\\nStatus: *DEGRADED*\",\n  \"parse_mode\": \"Markdown\"\n}",
+        "options": {}
+      },
+      "id": "telegram-alert",
+      "name": "Telegram Critical Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1080,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Every 1 Minute": {
+      "main": [
+        [
+          {
+            "node": "Execute Fleet Heartbeat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Fleet Heartbeat": {
+      "main": [
+        [
+          {
+            "node": "Parse Health Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Health Metrics": {
+      "main": [
+        [
+          {
+            "node": "Is Fleet Degraded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Fleet Degraded?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Critical Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "SLA Uptime",
+      "id": "sla-uptime-id"
+    },
+    {
+      "name": "Heartbeat",
+      "id": "heartbeat-id"
+    }
+  ]
+}

@@ -1,0 +1,153 @@
+{
+  "id": "OpenBalancerGlobalErrorHandler",
+  "name": "Open Balancer Global Error & Self-Healing Handler",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "error-trigger-node",
+      "name": "Global Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        220,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorData = $input.first().json;\n\nconst workflow = errorData.workflow || {};\nconst execution = errorData.execution || {};\nconst errorObj = execution.error || {};\n\nconst workflowName = workflow.name || 'Unknown Workflow';\nconst workflowId = workflow.id || 'N/A';\nconst executionId = execution.id || 'N/A';\nconst lastNode = execution.lastNodeExecuted || 'Unknown Node';\nconst errorMessage = errorObj.message || 'Workflow execution failed';\nconst errorStack = errorObj.stack || '';\n\n// Determine Auto-Remediation Strategy\nlet remediationStrategy = 'NONE';\nlet isTransient = false;\n\nif (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('ETIMEDOUT')) {\n  remediationStrategy = 'RESTART_TARGET_CONTAINER';\n  isTransient = true;\n} else if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {\n  remediationStrategy = 'RATE_LIMIT_BACKOFF';\n  isTransient = true;\n} else if (errorMessage.includes('JWT') || errorMessage.includes('401')) {\n  remediationStrategy = 'REFRESH_AUTH_TOKEN';\n}\n\nreturn {\n  workflow_name: workflowName,\n  workflow_id: workflowId,\n  execution_id: executionId,\n  last_node: lastNode,\n  error_message: errorMessage,\n  remediation_strategy: remediationStrategy,\n  is_transient: isTransient,\n  timestamp: new Date().toISOString(),\n  payload: {\n    workflow: workflow,\n    execution_id: executionId,\n    last_node: lastNode,\n    error: errorMessage,\n    stack_snippet: errorStack.split('\\n').slice(0, 5).join('\\n')\n  }\n};"
+      },
+      "id": "parse-error-diagnostics",
+      "name": "Parse Error Diagnostics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/workflow_executions",
+        "headers": {
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wZW5iYWxhbmNlciIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3MTc5NTI5OTAsImV4cCI6MjAzMzUyODk5MH0.z5uXJq6k4fO6F4WwW8qXJq6k4fO6F4WwW8qXJq6k4fO",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wZW5iYWxhbmNlciIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3MTc5NTI5OTAsImV4cCI6MjAzMzUyODk5MH0.z5uXJq6k4fO6F4WwW8qXJq6k4fO6F4WwW8qXJq6k4fO",
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal"
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_name\": \"{{ $json.workflow_name }}\",\n  \"execution_source\": \"n8n\",\n  \"run_id\": \"{{ $json.execution_id }}\",\n  \"status\": \"FAILED\",\n  \"duration_ms\": 0,\n  \"host_node\": \"macmini-primary\",\n  \"error_message\": \"{{ $json.error_message }}\",\n  \"payload\": {{ JSON.stringify($json.payload) }}\n}",
+        "options": {}
+      },
+      "id": "log-to-supabase",
+      "name": "Register Execution in Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        700,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_transient }}",
+              "value2": false
+            }
+          ]
+        }
+      },
+      "id": "is-critical-incident",
+      "name": "Is Non-Transient Critical?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        940,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"8041248687\",\n  \"text\": \"⚠️ *[n8n Error Handler - Unresolved Failure]*\\n\\n• *Workflow:* `{{ $json.workflow_name }}`\\n• *Execution ID:* `{{ $json.execution_id }}`\\n• *Last Node:* `{{ $json.last_node }}`\\n• *Error:* `{{ $json.error_message }}`\\n• *Strategy:* `{{ $json.remediation_strategy }}`\\n\\n_Execution registered in supabase-ob._\",\n  \"parse_mode\": \"Markdown\"\n}",
+        "options": {}
+      },
+      "id": "telegram-incident-alert",
+      "name": "Telegram Alert (Critical Only)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1180,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Global Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Error Diagnostics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Error Diagnostics": {
+      "main": [
+        [
+          {
+            "node": "Register Execution in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Register Execution in Supabase": {
+      "main": [
+        [
+          {
+            "node": "Is Non-Transient Critical?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Non-Transient Critical?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert (Critical Only)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "Error Handler",
+      "id": "error-handler-tag"
+    },
+    {
+      "name": "SLA Uptime",
+      "id": "sla-uptime-tag"
+    }
+  ]
+}

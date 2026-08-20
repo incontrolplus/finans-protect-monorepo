@@ -1,6 +1,3 @@
 name = "openbalancer"
-pages_build_output_dir = "website-next/out"
-
-[build]
-command = "npm run build"
-cwd = "website-next"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-01-01"

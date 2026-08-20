@@ -30,8 +30,8 @@ if [ -d "$SPOOL_DIR" ] && [ "$(ls -A "$SPOOL_DIR" 2>/dev/null)" ]; then
         if [ -f "$f" ]; then
             # Attempt push to Supabase REST
             curl -s -X POST \
-                -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wZW5iYWxhbmNlciIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3MTc5NTI5OTAsImV4cCI6MjAzMzUyODk5MH0.z5uXJq6k4fO6F4WwW8qXJq6k4fO6F4WwW8qXJq6k4fO" \
-                -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wZW5iYWxhbmNlciIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3MTc5NTI5OTAsImV4cCI6MjAzMzUyODk5MH0.z5uXJq6k4fO6F4WwW8qXJq6k4fO6F4WwW8qXJq6k4fO" \
+                -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4" \
+                -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4" \
                 -H "Content-Type: application/json" \
                 -d @"$f" \
                 "http://100.83.83.8:8002/rest/v1/workflow_executions" > /dev/null 2>&1 && rm -f "$f"

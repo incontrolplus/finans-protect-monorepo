@@ -1,0 +1,191 @@
+{
+  "id": "OpenBalancerRegistrationValidator",
+  "name": "Open Balancer Registration & Lead Intake Validator",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "openbalancer-registration",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-intake",
+      "name": "Webhook Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "openbalancer-registration-intake"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawInput = $input.first().json;\nconst errors = [];\n\n// Валидационна проверка\nif (!rawInput.email || typeof rawInput.email !== 'string' || !rawInput.email.includes('@')) {\n  errors.push('Невалиден или липсващ email адрес');\n}\nif (!rawInput.company_name && !rawInput.name) {\n  errors.push('Липсва име на компания или лице');\n}\n\nconst needsManual = errors.length > 0 || rawInput.has_exception === true;\n\nreturn {\n  json: {\n    client_id: rawInput.client_id || rawInput.id || null,\n    email: rawInput.email || null,\n    phone: rawInput.phone || null,\n    company_name: rawInput.company_name || rawInput.name || null,\n    status: needsManual ? 'NEEDS_MANUAL_REVIEW' : (rawInput.status || 'PROCESSED'),\n    validation_errors: errors,\n    rejection_reason: errors.join('; ') || rawInput.error_message || null,\n    raw_payload: rawInput, // Пълно запазване на входните данни\n    source_workflow: $workflow.name,\n    is_manual_review: needsManual,\n    updated_at: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-and-route",
+      "name": "Validation & Error Routing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/registration_requests",
+        "headers": {
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4",
+          "Content-Type": "application/json",
+          "Prefer": "return=representation"
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_id\": {{ $json.client_id ? JSON.stringify($json.client_id) : null }},\n  \"email\": {{ $json.email ? JSON.stringify($json.email) : null }},\n  \"phone\": {{ $json.phone ? JSON.stringify($json.phone) : null }},\n  \"company_name\": {{ $json.company_name ? JSON.stringify($json.company_name) : null }},\n  \"status\": \"{{ $json.status }}\",\n  \"rejection_reason\": {{ $json.rejection_reason ? JSON.stringify($json.rejection_reason) : null }},\n  \"validation_errors\": {{ JSON.stringify($json.validation_errors) }},\n  \"raw_payload\": {{ JSON.stringify($json.raw_payload) }},\n  \"source_workflow\": \"{{ $json.source_workflow }}\"\n}",
+        "options": {}
+      },
+      "id": "persist-in-supabase",
+      "name": "Persist in Supabase registration_requests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json[0]?.status || $json.status }}",
+              "value2": "NEEDS_MANUAL_REVIEW"
+            }
+          ]
+        }
+      },
+      "id": "is-manual-review-needed",
+      "name": "Is Manual Review Needed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"8041248687\",\n  \"text\": \"⚠️ *[Open Balancer - Lead Needs Manual Review]*\\n\\n• *Record ID:* `{{ $json[0]?.id || $json.id }}`\\n• *Company/Name:* `{{ $json[0]?.company_name || $json.company_name || 'N/A' }}`\\n• *Email:* `{{ $json[0]?.email || $json.email || 'N/A' }}`\\n• *Status:* `NEEDS_MANUAL_REVIEW`\\n• *Reason:* `{{ $json[0]?.rejection_reason || $json.rejection_reason }}`\\n\\n_100% Zero Data Loss: Raw payload securely saved in Supabase (macmini-primary)._\",\n  \"parse_mode\": \"Markdown\"\n}",
+        "options": {}
+      },
+      "id": "telegram-lead-alert",
+      "name": "Telegram Alert (Manual Review)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1160,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"id\": \"{{ $('Persist in Supabase registration_requests').item.json[0]?.id || $('Persist in Supabase registration_requests').item.json.id }}\",\n  \"status\": \"{{ $('Persist in Supabase registration_requests').item.json[0]?.status || $('Persist in Supabase registration_requests').item.json.status }}\",\n  \"validation_errors\": {{ JSON.stringify($('Persist in Supabase registration_requests').item.json[0]?.validation_errors || $('Persist in Supabase registration_requests').item.json.validation_errors || []) }},\n  \"rejection_reason\": \"{{ $('Persist in Supabase registration_requests').item.json[0]?.rejection_reason || $('Persist in Supabase registration_requests').item.json.rejection_reason || '' }}\",\n  \"zero_data_loss\": true\n}",
+        "options": {}
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Intake": {
+      "main": [
+        [
+          {
+            "node": "Validation & Error Routing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation & Error Routing": {
+      "main": [
+        [
+          {
+            "node": "Persist in Supabase registration_requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist in Supabase registration_requests": {
+      "main": [
+        [
+          {
+            "node": "Is Manual Review Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Manual Review Needed?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert (Manual Review)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Alert (Manual Review)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "Registration",
+      "id": "registration-tag"
+    },
+    {
+      "name": "Error Routing",
+      "id": "error-routing-tag"
+    }
+  ]
+}

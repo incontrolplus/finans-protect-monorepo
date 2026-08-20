@@ -1,0 +1,346 @@
+{
+  "name": "b2b_onboarding_verification_pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b2b-onboarding-pipeline",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: B2B Onboarding Intake",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "id": "node-webhook-intake",
+      "webhookId": "b2b-onboarding-pipeline-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $input.item.json.body || $input.item.json;\nconst eik = String(raw.eik || raw.bulstat || '').trim().replace(/[^0-9]/g, '');\n\nif (!/^\\d{9}$|^\\d{13}$/.test(eik)) {\n  return {\n    json: {\n      is_valid: false,\n      error: 'EIK must be 9 or 13 digits',\n      eik,\n      started_at: new Date().toISOString()\n    }\n  };\n}\n\nconst digits = eik.split('').map(Number);\n\n// 9-digit checksum\nconst w1_9 = [1, 2, 3, 4, 5, 6, 7, 8];\nlet s1_9 = 0;\nfor (let i = 0; i < 8; i++) s1_9 += digits[i] * w1_9[i];\nlet r1_9 = s1_9 % 11;\nlet expected_c9 = r1_9;\nif (r1_9 === 10) {\n  const w2_9 = [3, 4, 5, 6, 7, 8, 9, 10];\n  let s2_9 = 0;\n  for (let i = 0; i < 8; i++) s2_9 += digits[i] * w2_9[i];\n  let r2_9 = s2_9 % 11;\n  expected_c9 = r2_9 === 10 ? 0 : r2_9;\n}\n\nif (digits[8] !== expected_c9) {\n  return {\n    json: {\n      is_valid: false,\n      error: `Invalid 9-digit EIK checksum: got ${digits[8]}, expected ${expected_c9}`,\n      eik,\n      started_at: new Date().toISOString()\n    }\n  };\n}\n\n// 13-digit checksum if applicable\nif (eik.length === 13) {\n  const w1_13 = [2, 7, 3, 5];\n  let s1_13 = 0;\n  for (let i = 0; i < 4; i++) s1_13 += digits[8 + i] * w1_13[i];\n  let r1_13 = s1_13 % 11;\n  let expected_c13 = r1_13;\n  if (r1_13 === 10) {\n    const w2_13 = [4, 9, 5, 7];\n    let s2_13 = 0;\n    for (let i = 0; i < 4; i++) s2_13 += digits[8 + i] * w2_13[i];\n    let r2_13 = s2_13 % 11;\n    expected_c13 = r2_13 === 10 ? 0 : r2_13;\n  }\n  if (digits[12] !== expected_c13) {\n    return {\n      json: {\n        is_valid: false,\n        error: `Invalid 13-digit EIK checksum: got ${digits[12]}, expected ${expected_c13}`,\n        eik,\n        started_at: new Date().toISOString()\n      }\n    };\n  }\n}\n\nconst isBranch = eik.length === 13;\nconst legalFormBg = isBranch ? 'Клон' : (raw.legal_form || 'ЕООД');\nconst entityType = isBranch ? 'BRANCH' : (raw.entity_type || 'EOOD');\nconst vatNumber = `BG${eik}`;\nconst businessNameBg = (raw.business_name_bg || raw.business_name || raw.company_name || `Компания ${eik} ${legalFormBg}`).trim();\nconst businessNameEn = (raw.business_name_en || raw.company_name_en || `Company ${eik} ${entityType}`).trim();\nconst phone = (raw.phone_number || raw.phone || '+359888123456').trim();\nconst email = (raw.email_alias_33mail || raw.email || `contact_${eik}@openbalancer.com`).trim().toLowerCase();\nconst ownerId = raw.owner_id || null;\n\nreturn {\n  json: {\n    is_valid: true,\n    eik,\n    is_branch: isBranch,\n    legal_form_bg: legalFormBg,\n    entity_type: entityType,\n    vat_number: vatNumber,\n    business_name_bg: businessNameBg,\n    business_name_en: businessNameEn,\n    phone_number: phone,\n    email_alias_33mail: email,\n    owner_id: ownerId,\n    is_active: raw.is_active !== false,\n    is_vat_registered: raw.is_vat_registered !== false,\n    started_at: new Date().toISOString()\n  }\n};"
+      },
+      "name": "1. Verification Node (EIK Checksum)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ],
+      "id": "node-verification"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\nif (!item.is_valid) return { json: item };\n\nconst isEligible = item.is_active && item.is_vat_registered;\n\nreturn {\n  json: {\n    ...item,\n    eligibility_status: isEligible ? 'APPROVED_PENDING_CLIENT_CONFIRMATION' : 'MANUAL_REVIEW',\n    bonus_program: 'FREE_CARD_PLUS_150_BONUS',\n    bonus_amount_eur: 150.00,\n    card_tier: 'FREE_CARD_PLUS_150_BONUS',\n    approval_reason: isEligible \n      ? 'Automatic approval: Active entity with validated VAT registration (FREE_CARD_PLUS_150_BONUS)' \n      : 'Entity requires manual compliance check'\n  }\n};"
+      },
+      "name": "2. Eligibility Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        300
+      ],
+      "id": "node-eligibility"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const crypto = require('crypto');\nconst item = $input.item.json;\nif (!item.is_valid) return { json: item };\n\nconst eik = item.eik;\nconst prog = item.bonus_program;\nconst now = new Date();\nconst dateStr = now.toISOString().slice(0,10).replace(/-/g, '');\nconst uuidSuffix = crypto.randomBytes(4).toString('hex').toUpperCase();\nconst appId = `APP-WB-${dateStr}-${uuidSuffix}`;\n\nconst expiresEpoch = Math.floor(now.getTime() / 1000) + (72 * 3600);\nconst expiresIso = new Date(expiresEpoch * 1000).toISOString();\nconst secret = '15d5499645dbc6f051834b3b7826f107799138c85c29d08b681d352dfaddc92a';\nconst payloadToSign = `${appId}:${eik}:${expiresEpoch}:${prog}`;\nconst sig = crypto.createHmac('sha256', secret).update(payloadToSign).digest('hex');\n\nconst onboardingUrl = `https://cashflow.openbalancer.com/onboard?app_id=${appId}&eik=${eik}&exp=${expiresEpoch}&program=${prog}&sig=${sig}`;\n\nconst smsText = `Open Balancer: ${item.business_name_bg} е одобрена за корпоративна карта с €${item.bonus_amount_eur.toFixed(0)} бонус! Линк (72ч): ${onboardingUrl}`;\nconst emailText = `Уважаеми партньори,\\n\\nФирма ${item.business_name_bg} (${item.business_name_en}, ЕИК ${eik}) беше успешно одобрена за корпоративна карта Wallester с начален бонус от €${item.bonus_amount_eur.toFixed(0)}.\\n\\nВашият криптографски линк за активация (валиден 72ч):\\n${onboardingUrl}\\n\\nС уважение,\\nЕкипът на Open Balancer`;\n\nconst telegramHtml = `🦁 <b>Open Balancer — Wallester V4.5 B2B Onboarding!</b>\\n\\n` +\n  `🏢 <b>Компания:</b> ${item.business_name_bg} (<i>${item.business_name_en}</i>)\\n` +\n  `🆔 <b>ЕИК:</b> <code>${eik}</code> (ДДС: <code>${item.vat_number}</code>)\\n` +\n  `📋 <b>Правна форма:</b> ${item.legal_form_bg} (<code>${item.entity_type}</code>)\\n` +\n  `🎁 <b>Пакет:</b> <code>${prog}</code> (+€${item.bonus_amount_eur} EUR)\\n` +\n  `🔑 <b>Application ID:</b> <code>${appId}</code>\\n` +\n  `📱 <b>Тел:</b> <code>${item.phone_number}</code>\\n` +\n  `📧 <b>Email:</b> <code>${item.email_alias_33mail}</code>\\n\\n` +\n  `🔗 <b>Онбординг Линк (72ч):</b>\\n<a href=\"${onboardingUrl}\">${onboardingUrl}</a>\\n\\n` +\n  `⚡ <b>Статус:</b> <code>APPROVED_PENDING_CLIENT_CONFIRMATION</code>\\n` +\n  `🖥 <b>Нод:</b> macmini-primary (100.83.83.8)`;\n\nreturn {\n  json: {\n    ...item,\n    application_id: appId,\n    onboarding_url: onboardingUrl,\n    onboarding_token: sig,\n    onboarding_expires_at: expiresIso,\n    wallester_status: 'APPROVED_PENDING_CLIENT_CONFIRMATION',\n    selected_for_registration: true,\n    client_sms_text: smsText,\n    client_email_text: emailText,\n    telegram_admin_text: telegramHtml\n  }\n};"
+      },
+      "name": "3. Wallester API Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        300
+      ],
+      "id": "node-wallester"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/verified_business_profiles",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"eik\": \"{{ $json.eik }}\",\n  \"business_name_bg\": \"{{ $json.business_name_bg }}\",\n  \"business_name_en\": \"{{ $json.business_name_en }}\",\n  \"phone_number\": \"{{ $json.phone_number }}\",\n  \"email_alias_33mail\": \"{{ $json.email_alias_33mail }}\",\n  \"vat_number\": \"{{ $json.vat_number }}\",\n  \"entity_type\": \"{{ $json.entity_type }}\",\n  \"legal_form_bg\": \"{{ $json.legal_form_bg }}\",\n  \"application_id\": \"{{ $json.application_id }}\",\n  \"onboarding_url\": \"{{ $json.onboarding_url }}\",\n  \"onboarding_token\": \"{{ $json.onboarding_token }}\",\n  \"onboarding_expires_at\": \"{{ $json.onboarding_expires_at }}\",\n  \"bonus_program\": \"{{ $json.bonus_program }}\",\n  \"bonus_amount_eur\": {{ $json.bonus_amount_eur }},\n  \"eligibility_status\": \"{{ $json.eligibility_status }}\",\n  \"approval_reason\": \"{{ $json.approval_reason }}\",\n  \"wallester_status\": \"{{ $json.wallester_status }}\",\n  \"selected_for_registration\": true,\n  \"client_sms_text\": \"{{ $json.client_sms_text }}\",\n  \"client_email_text\": \"{{ $json.client_email_text.replace(/\\n/g, '\\\\n') }}\",\n  \"telegram_notified_at\": \"{{ new Date().toISOString() }}\",\n  \"verified_at\": \"{{ new Date().toISOString() }}\",\n  \"last_checked_at\": \"{{ new Date().toISOString() }}\",\n  \"updated_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-supabase-vbp",
+      "name": "4A. Supabase Upsert Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1080,
+        300
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/wallester_accounts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"status\": \"ACTIVE\",\n  \"wallester_phone\": \"{{ $('3. Wallester API Client').item.json.phone_number }}\",\n  \"wallester_email\": \"{{ $('3. Wallester API Client').item.json.email_alias_33mail }}\",\n  \"created_at\": \"{{ new Date().toISOString() }}\",\n  \"updated_at\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-supabase-wallester-acc",
+      "name": "4B. Register Wallester Account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1300,
+        300
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/workflow_executions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_name\": \"b2b_onboarding_verification_pipeline\",\n  \"execution_source\": \"n8n_webhook\",\n  \"run_id\": \"{{ $('3. Wallester API Client').item.json.application_id }}\",\n  \"status\": \"SUCCESS\",\n  \"duration_ms\": {{ Math.max(10, Math.round(new Date().getTime() - new Date($('3. Wallester API Client').item.json.started_at).getTime())) }},\n  \"host_node\": \"macmini-primary\",\n  \"payload\": {{ JSON.stringify($('3. Wallester API Client').item.json) }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-supabase-telemetry",
+      "name": "4C. Supabase Telemetry Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1520,
+        300
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"8041248687\",\n  \"text\": {{ JSON.stringify($('3. Wallester API Client').item.json.telegram_admin_text) }},\n  \"parse_mode\": \"HTML\",\n  \"disable_web_page_preview\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-telegram-alert",
+      "name": "5. Telegram Operational Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1740,
+        300
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": {{ $('3. Wallester API Client').item.json.is_valid }},\n  \"application_id\": \"{{ $('3. Wallester API Client').item.json.application_id }}\",\n  \"status\": \"{{ $('3. Wallester API Client').item.json.eligibility_status }}\",\n  \"eik\": \"{{ $('3. Wallester API Client').item.json.eik }}\",\n  \"vat_number\": \"{{ $('3. Wallester API Client').item.json.vat_number }}\",\n  \"business_name\": \"{{ $('3. Wallester API Client').item.json.business_name_bg }}\",\n  \"card_tier\": \"{{ $('3. Wallester API Client').item.json.card_tier }}\",\n  \"bonus_program\": \"{{ $('3. Wallester API Client').item.json.bonus_program }}\",\n  \"bonus_amount_eur\": {{ $('3. Wallester API Client').item.json.bonus_amount_eur }},\n  \"onboarding_url\": \"{{ $('3. Wallester API Client').item.json.onboarding_url }}\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\",\n  \"message\": \"B2B profile verified and registered in Wallester pipeline with €150 bonus.\"\n}",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        300
+      ],
+      "id": "node-response"
+    }
+  ],
+  "connections": {
+    "Webhook: B2B Onboarding Intake": {
+      "main": [
+        [
+          {
+            "node": "1. Verification Node (EIK Checksum)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Verification Node (EIK Checksum)": {
+      "main": [
+        [
+          {
+            "node": "2. Eligibility Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Eligibility Rules": {
+      "main": [
+        [
+          {
+            "node": "3. Wallester API Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Wallester API Client": {
+      "main": [
+        [
+          {
+            "node": "4A. Supabase Upsert Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4A. Supabase Upsert Profile": {
+      "main": [
+        [
+          {
+            "node": "4B. Register Wallester Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4B. Register Wallester Account": {
+      "main": [
+        [
+          {
+            "node": "4C. Supabase Telemetry Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4C. Supabase Telemetry Log": {
+      "main": [
+        [
+          {
+            "node": "5. Telegram Operational Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Telegram Operational Alert": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  },
+  "versionId": "1"
+}

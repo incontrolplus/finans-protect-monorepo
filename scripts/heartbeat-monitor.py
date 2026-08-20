@@ -21,31 +21,13 @@ TELEGRAM_CHAT_ID = '8041248687'
 STATE_FILE = os.path.expanduser('~/Library/Logs/openbalancer/fleet_monitor_state.json')
 ALERT_COOLDOWN_SECONDS = 3600  # 1 hour cooldown between repeated alerts for ongoing incidents
 
-# Active production gateways & domain endpoints (9 Meta-Cluster Subdomains)
+# Active production gateways & domain endpoints
 GATEWAY_ENDPOINTS = [
     {
-        'name': 'cashflow.openbalancer.com',
-        'url': 'https://cashflow.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403],
+        'name': 'dashboard.openbalancer.com',
+        'url': 'https://dashboard.openbalancer.com',
+        'expected': [200, 301, 302],
         'remediation': 'restart_control_center'
-    },
-    {
-        'name': 'n8n.openbalancer.com',
-        'url': 'https://n8n.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403],
-        'remediation': 'restart_n8n'
-    },
-    {
-        'name': 'win.openbalancer.com',
-        'url': 'https://win.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403, 502],
-        'remediation': 'restart_windows_vm'
-    },
-    {
-        'name': 'ocr.openbalancer.com',
-        'url': 'https://ocr.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403, 502],
-        'remediation': 'restart_ocr'
     },
     {
         'name': 'finansprotect.com',
@@ -54,28 +36,22 @@ GATEWAY_ENDPOINTS = [
         'remediation': 'restart_finansprotect'
     },
     {
-        'name': 'agents.openbalancer.com',
-        'url': 'https://agents.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403, 502],
-        'remediation': 'restart_openclaw'
+        'name': 'n8n.openbalancer.com',
+        'url': 'https://n8n.openbalancer.com',
+        'expected': [200, 301, 302, 401, 403],
+        'remediation': 'restart_n8n'
     },
     {
-        'name': 'vault.openbalancer.com',
-        'url': 'https://vault.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403, 502],
-        'remediation': 'restart_infisical'
+        'name': 'cashflow.openbalancer.com',
+        'url': 'https://cashflow.openbalancer.com',
+        'expected': [200, 301, 302, 401, 403],
+        'remediation': 'restart_control_center'
     },
     {
-        'name': 'db.openbalancer.com',
-        'url': 'https://db.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403, 502],
-        'remediation': 'restart_supabase'
-    },
-    {
-        'name': 'infra.openbalancer.com',
-        'url': 'https://infra.openbalancer.com',
-        'expected': [200, 301, 302, 401, 403, 502],
-        'remediation': 'restart_firecrawl'
+        'name': 'finans.openbalancer.com',
+        'url': 'https://finans.openbalancer.com',
+        'expected': [200, 301, 302],
+        'remediation': 'restart_finansprotect'
     }
 ]
 

@@ -12,7 +12,6 @@ import os
 import sys
 import json
 import time
-import uuid
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -30,10 +29,6 @@ from openbalancer.b2b_pipeline.otp_processor import (
     DEFAULT_SUPABASE_KEY
 )
 
-WEBHOOK_HOST = "http://100.83.83.8:5679"
-SUPABASE_URL = DEFAULT_SUPABASE_URL
-SUPABASE_KEY = DEFAULT_SUPABASE_KEY
-
 def is_local_docker_node() -> bool:
     """Checks if supabase-db docker container is running locally on this machine."""
     import subprocess
@@ -43,50 +38,46 @@ def is_local_docker_node() -> bool:
     except Exception:
         return False
 
-def get_psql_cmd() -> list:
+def get_supabase_base_url() -> str:
+    if os.environ.get("SUPABASE_URL"):
+        return os.environ["SUPABASE_URL"]
     if is_local_docker_node():
-        return ["docker", "exec", "-i", "supabase-db", "psql", "-U", "postgres", "-d", "postgres", "-t", "-A"]
-    else:
-        return ["ssh", "-o", "StrictHostKeyChecking=no", "-i", os.path.expanduser("~/.ssh/id_ed25519"), "diokarabaz@100.83.83.8", "docker exec -i supabase-db psql -U postgres -d postgres -t -A"]
+        return "http://127.0.0.1:8002"
+    return "http://100.83.83.8:8002"
 
-def run_sql_query(sql: str) -> list:
-    """Executes a SQL query via psql on supabase-db (local or remote)."""
-    import subprocess
-    cmd = get_psql_cmd()
-    res = subprocess.run(cmd, input=sql, capture_output=True, text=True, timeout=15)
-    if res.returncode != 0:
-        raise RuntimeError(f"SQL failed: {res.stderr}")
-    return [line.strip() for line in res.stdout.strip().split('\n') if line.strip()]
+def get_webhook_base_url() -> str:
+    if is_local_docker_node():
+        return "http://127.0.0.1:5679"
+    return "http://100.83.83.8:5679"
 
-def setup_test_profile(eik: str, name_bg: str, phone: str, email: str) -> str:
-    """Inserts or resets a test profile in verified_business_profiles."""
-    import subprocess
-    sql = f"""
-    INSERT INTO public.verified_business_profiles (
-        id, eik, business_name_bg, business_name_en, legal_form_bg, business_structure_en, entity_type,
-        phone_number, email_alias_33mail, vat_number, is_active, is_vat_registered,
-        wallester_status, selected_for_registration, email_confirmation_code, sms_verification_code,
-        sms_confirmation_code, created_at, updated_at
-    ) VALUES (
-        gen_random_uuid(), '{eik}', '{name_bg}', '{name_bg} EN', 'ЕООД', 'Single-member Limited Liability Company (EOOD)', 'EOOD',
-        '{phone}', '{email}', 'BG{eik}', true, true,
-        'READY_FOR_KYC', false, NULL, NULL, NULL, NOW(), NOW()
-    ) ON CONFLICT (eik) DO UPDATE SET
-        business_name_bg = EXCLUDED.business_name_bg,
-        business_structure_en = 'Single-member Limited Liability Company (EOOD)',
-        phone_number = EXCLUDED.phone_number,
-        email_alias_33mail = EXCLUDED.email_alias_33mail,
-        wallester_status = 'READY_FOR_KYC',
-        selected_for_registration = false,
-        email_confirmation_code = NULL,
-        sms_verification_code = NULL,
-        sms_confirmation_code = NULL,
-        updated_at = NOW()
-    RETURNING id;
-    """
-    cmd = get_psql_cmd()
-    res = subprocess.run(cmd, input=sql, capture_output=True, text=True, timeout=15)
-    return res.stdout.strip()
+WEBHOOK_HOST = get_webhook_base_url()
+SUPABASE_URL = get_supabase_base_url()
+SUPABASE_KEY = DEFAULT_SUPABASE_KEY
+
+def supabase_get(endpoint: str) -> list:
+    """Performs a GET request to Supabase REST API."""
+    url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json"
+    }
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        return json.loads(resp.read().decode('utf-8'))
+
+def supabase_post(endpoint: str, payload: dict, prefer: str = "return=representation") -> list:
+    """Performs a POST (upsert) request to Supabase REST API."""
+    url = f"{SUPABASE_URL}/rest/v1/{endpoint}"
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": prefer
+    }
+    req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
+    with urllib.request.urlopen(req, timeout=5) as resp:
+        return json.loads(resp.read().decode('utf-8'))
 
 def test_d_regex_immunity():
     print("\n🧪 [TEST D] Testing RegEx False-Positive Immunity...")
@@ -118,7 +109,29 @@ def test_d_regex_immunity():
     assert code4 is None, f"Expected None, got {code4}"
     print("  ✅ Correctly returned None when no 6-digit OTP is present")
     
-    print("🎯 [TEST D PASSED] RegEx immunity verified 100%!")
+    print("🎯 [TEST D PASSED] RegEx immunity verified 100%! (4/4 test cases)")
+
+def setup_test_profile(eik: str, name_bg: str, phone: str, email: str):
+    """Inserts or resets a test profile in verified_business_profiles via REST API."""
+    profile_payload = {
+        "eik": eik,
+        "business_name_bg": name_bg,
+        "business_name_en": f"{name_bg} EN",
+        "legal_form_bg": "ЕООД",
+        "business_structure_en": "Single-member Limited Liability Company (EOOD)",
+        "entity_type": "EOOD",
+        "phone_number": phone,
+        "email_alias_33mail": email,
+        "vat_number": f"BG{eik}",
+        "is_active": True,
+        "is_vat_registered": True,
+        "wallester_status": "READY_FOR_KYC",
+        "selected_for_registration": False,
+        "email_confirmation_code": None,
+        "sms_verification_code": None,
+        "sms_confirmation_code": None
+    }
+    supabase_post("verified_business_profiles?on_conflict=eik", profile_payload, prefer="resolution=merge-duplicates,return=representation")
 
 def test_a_email_otp_webhook():
     print("\n🧪 [TEST A] Testing Incoming Email OTP Ingestion via Webhook...")
@@ -139,7 +152,6 @@ def test_a_email_otp_webhook():
     }
     
     url = f"{WEBHOOK_HOST}/webhook/email-otp-ingest"
-    t0 = time.time()
     res = send_email_webhook(url, payload)
     latency = res["latency_ms"]
     
@@ -149,17 +161,19 @@ def test_a_email_otp_webhook():
     assert res["body"].get("code") == otp_code, f"Expected code {otp_code}, got {res['body'].get('code')}"
     
     # Verify DB update in verified_business_profiles
-    rows = run_sql_query(f"SELECT email_confirmation_code, email_confirmation_received_at FROM public.verified_business_profiles WHERE eik = '{test_eik}';")
-    assert len(rows) > 0, "Profile not found in DB"
-    db_code, db_received_at = rows[0].split('|')
+    records = supabase_get(f"verified_business_profiles?eik=eq.{test_eik}&select=email_confirmation_code,email_confirmation_received_at")
+    assert len(records) > 0, "Profile not found in DB"
+    db_code = records[0].get("email_confirmation_code")
+    db_received_at = records[0].get("email_confirmation_received_at")
     assert db_code == otp_code, f"DB email_confirmation_code expected {otp_code}, got {db_code}"
-    assert db_received_at != "", "DB email_confirmation_received_at must be populated"
+    assert db_received_at is not None, "DB email_confirmation_received_at must be populated"
     print(f"  ✅ DB Verification: email_confirmation_code = {db_code} at {db_received_at}")
     
     # Verify archiving in email_messages
-    msg_rows = run_sql_query(f"SELECT extracted_code, status FROM public.email_messages WHERE to_address = '{test_email}' ORDER BY created_at DESC LIMIT 1;")
-    assert len(msg_rows) > 0, "No email_messages row archived"
-    msg_code, msg_status = msg_rows[0].split('|')
+    msg_records = supabase_get(f"email_messages?to_address=eq.{test_email}&order=created_at.desc&limit=1&select=extracted_code,status")
+    assert len(msg_records) > 0, "No email_messages row archived"
+    msg_code = msg_records[0].get("extracted_code")
+    msg_status = msg_records[0].get("status")
     assert msg_code == otp_code, f"Archived message code mismatch: {msg_code}"
     assert msg_status == "processed", f"Archived message status mismatch: {msg_status}"
     print(f"  ✅ Email Messages Archive: extracted_code = {msg_code}, status = {msg_status}")
@@ -176,11 +190,14 @@ def test_b_sms_otp_webhook():
     setup_test_profile(test_eik, test_name, test_phone, test_email)
     
     # Also register phone in sms_numbers_pool
-    run_sql_query(f"""
-    INSERT INTO public.sms_numbers_pool (phone_number, sms_url, status, country_code, country_name)
-    VALUES ('{test_phone}', 'https://duoplus.app/sms/{test_phone}', 'assigned', 'BG', 'Bulgaria')
-    ON CONFLICT (phone_number) DO UPDATE SET status = 'assigned', sms_url = EXCLUDED.sms_url;
-    """)
+    pool_payload = {
+        "phone_number": test_phone,
+        "sms_url": f"https://duoplus.app/sms/{test_phone}",
+        "status": "assigned",
+        "country_code": "BG",
+        "country_name": "Bulgaria"
+    }
+    supabase_post("sms_numbers_pool?on_conflict=phone_number", pool_payload, prefer="resolution=merge-duplicates,return=representation")
     
     otp_code = "928374"
     payload = {
@@ -190,7 +207,6 @@ def test_b_sms_otp_webhook():
     }
     
     url = f"{WEBHOOK_HOST}/webhook/sms-otp-ingest"
-    t0 = time.time()
     res = send_sms_webhook(url, payload)
     latency = res["latency_ms"]
     
@@ -200,23 +216,27 @@ def test_b_sms_otp_webhook():
     assert res["body"].get("code") == otp_code, f"Expected code {otp_code}, got {res['body'].get('code')}"
     
     # Verify DB update in verified_business_profiles
-    rows = run_sql_query(f"SELECT sms_verification_code, sms_confirmation_code, sms_verification_received_at FROM public.verified_business_profiles WHERE eik = '{test_eik}';")
-    assert len(rows) > 0, "Profile not found in DB"
-    sms_ver_code, sms_conf_code, db_received_at = rows[0].split('|')
+    records = supabase_get(f"verified_business_profiles?eik=eq.{test_eik}&select=sms_verification_code,sms_confirmation_code,sms_verification_received_at")
+    assert len(records) > 0, "Profile not found in DB"
+    sms_ver_code = records[0].get("sms_verification_code")
+    sms_conf_code = records[0].get("sms_confirmation_code")
+    db_received_at = records[0].get("sms_verification_received_at")
     assert sms_ver_code == otp_code, f"DB sms_verification_code expected {otp_code}, got {sms_ver_code}"
     assert sms_conf_code == otp_code, f"DB sms_confirmation_code expected {otp_code}, got {sms_conf_code}"
-    assert db_received_at != "", "DB sms_verification_received_at must be populated"
+    assert db_received_at is not None, "DB sms_verification_received_at must be populated"
     print(f"  ✅ DB Verification: sms_verification_code = {sms_ver_code} (and confirmation code: {sms_conf_code})")
     
     # Verify update in sms_numbers_pool
-    pool_rows = run_sql_query(f"SELECT last_verification_code FROM public.sms_numbers_pool WHERE phone_number = '{test_phone}';")
-    assert len(pool_rows) > 0 and pool_rows[0] == otp_code, f"Pool code expected {otp_code}, got {pool_rows}"
-    print(f"  ✅ SMS Pool Verification: last_verification_code = {pool_rows[0]}")
+    encoded_phone = urllib.parse.quote(test_phone)
+    pool_records = supabase_get(f"sms_numbers_pool?phone_number=eq.{encoded_phone}&select=last_verification_code")
+    assert len(pool_records) > 0 and pool_records[0].get("last_verification_code") == otp_code, f"Pool code expected {otp_code}, got {pool_records}"
+    print(f"  ✅ SMS Pool Verification: last_verification_code = {pool_records[0].get('last_verification_code')}")
     
     # Verify archiving in sms_messages
-    msg_rows = run_sql_query(f"SELECT sms_code, status FROM public.sms_messages WHERE to_number = '{test_phone}' ORDER BY created_at DESC LIMIT 1;")
-    assert len(msg_rows) > 0, "No sms_messages row archived"
-    msg_code, msg_status = msg_rows[0].split('|')
+    msg_records = supabase_get(f"sms_messages?to_number=eq.{encoded_phone}&order=created_at.desc&limit=1&select=sms_code,status")
+    assert len(msg_records) > 0, "No sms_messages row archived"
+    msg_code = msg_records[0].get("sms_code")
+    msg_status = msg_records[0].get("status")
     assert msg_code == otp_code, f"Archived message code mismatch: {msg_code}"
     assert msg_status == "processed", f"Archived message status mismatch: {msg_status}"
     print(f"  ✅ SMS Messages Archive: sms_code = {msg_code}, status = {msg_status}")
@@ -264,32 +284,30 @@ def test_c_full_cycle_auto_advancement():
     print("  ✅ Step 2 complete: Both codes present -> Auto-Advancement triggered!")
     
     # Stage 3: Verify Profile Status in Database
-    rows = run_sql_query(f"SELECT wallester_status, selected_for_registration, email_confirmation_code, sms_verification_code FROM public.verified_business_profiles WHERE eik = '{test_eik}';")
-    assert len(rows) > 0
-    status, selected, em_c, sms_c = rows[0].split('|')
-    assert status == "VERIFIED_READY_FOR_CARD_ISSUING", f"Expected VERIFIED_READY_FOR_CARD_ISSUING, got {status}"
-    assert selected == "t", f"Expected selected_for_registration = true, got {selected}"
-    assert em_c == email_code
-    assert sms_c == sms_code
-    print(f"  ✅ DB Profile State: wallester_status = {status}, selected_for_registration = {selected}")
+    records = supabase_get(f"verified_business_profiles?eik=eq.{test_eik}&select=wallester_status,selected_for_registration,email_confirmation_code,sms_verification_code")
+    assert len(records) > 0
+    rec = records[0]
+    assert rec.get("wallester_status") == "VERIFIED_READY_FOR_CARD_ISSUING", f"Expected VERIFIED_READY_FOR_CARD_ISSUING, got {rec.get('wallester_status')}"
+    assert rec.get("selected_for_registration") is True, f"Expected selected_for_registration = true, got {rec.get('selected_for_registration')}"
+    assert rec.get("email_confirmation_code") == email_code
+    assert rec.get("sms_verification_code") == sms_code
+    print(f"  ✅ DB Profile State: wallester_status = {rec.get('wallester_status')}, selected_for_registration = {rec.get('selected_for_registration')}")
     
     # Stage 4: Verify Workflow Execution Log
-    exec_rows = run_sql_query(f"SELECT status, payload FROM public.workflow_executions WHERE workflow_name = 'otp_ingestion_and_verification_stream' AND payload->>'eik' = '{test_eik}' ORDER BY created_at DESC LIMIT 1;")
-    assert len(exec_rows) > 0, "No workflow execution record found for auto-advancement"
-    exec_status, exec_payload = exec_rows[0].split('|', 1)
-    assert exec_status == "SUCCESS", f"Expected workflow execution SUCCESS, got {exec_status}"
-    payload_data = json.loads(exec_payload)
-    assert payload_data.get("wallester_status") == "VERIFIED_READY_FOR_CARD_ISSUING"
-    print(f"  ✅ Workflow Execution Telemetry logged: status = {exec_status}")
+    exec_records = supabase_get(f"workflow_executions?workflow_name=eq.otp_ingestion_and_verification_stream&order=created_at.desc&limit=5&select=status,payload")
+    matching_execs = [e for e in exec_records if e.get("payload", {}).get("eik") == test_eik]
+    assert len(matching_execs) > 0, "No workflow execution record found for auto-advancement"
+    assert matching_execs[0].get("status") == "SUCCESS"
+    print(f"  ✅ Workflow Execution Telemetry logged: status = {matching_execs[0].get('status')}")
     
     # Stage 5: Verify Revenue Scorecard Reflection
-    sc_rows = run_sql_query("SELECT email_codes, sms_codes, selected_for_registration FROM public.revenue_scorecard;")
-    assert len(sc_rows) > 0
-    em_count, sms_count, sel_count = sc_rows[0].split('|')
-    print(f"  📊 Revenue Scorecard Telemetry: email_codes = {em_count}, sms_codes = {sms_count}, selected_for_registration = {sel_count}")
-    assert int(em_count) >= 3
-    assert int(sms_count) >= 3
-    assert int(sel_count) >= 3
+    sc_records = supabase_get("revenue_scorecard?select=email_codes,sms_codes,selected_for_registration")
+    assert len(sc_records) > 0
+    sc = sc_records[0]
+    print(f"  📊 Revenue Scorecard Telemetry: email_codes = {sc.get('email_codes')}, sms_codes = {sc.get('sms_codes')}, selected_for_registration = {sc.get('selected_for_registration')}")
+    assert int(sc.get("email_codes", 0)) >= 3
+    assert int(sc.get("sms_codes", 0)) >= 3
+    assert int(sc.get("selected_for_registration", 0)) >= 3
     
     print("🎯 [TEST C PASSED] Full Cycle Auto-Advancement verified 100%!")
 

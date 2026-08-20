@@ -187,6 +187,21 @@ const SUBDOMAINS_DATA: SubdomainItem[] = [
     latency: 46,
     dnsTarget: "Cloudflare Pages Edge",
     iconName: "zap"
+  },
+  {
+    domain: "win.openbalancer.com",
+    title: "Windows 11 VM & Microinvest Delta Pro",
+    category: "infra",
+    categoryLabel: "VM Matrix & VNC",
+    desc: "QEMU Windows 11 виртуална машина, Web VNC десктоп и автоматично Microinvest Delta Pro счетоводство на Philips SSD.",
+    httpStatus: 200,
+    sslValid: true,
+    sslIssuer: "Cloudflare Origin CA",
+    sslExpiry: "2026-11-17",
+    daysLeft: 89,
+    latency: 24,
+    dnsTarget: "Cloudflare Tunnel (macmini-secondary:8006)",
+    iconName: "server"
   }
 ];
 

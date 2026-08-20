@@ -1,4 +1,36 @@
-/* Tailwind handles layout & styling. This file only contains exceptions. */
+/* Global Resets & Component Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #090a0f !important;
+  color: #f1f5f9 !important;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+.brand-logo-img {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+}
+
+header img, nav img {
+  max-height: 36px !important;
+  width: auto !important;
+}
+
 #simulator {
   position: relative;
   border-radius: 12px;
@@ -6,6 +38,7 @@
   background: #0f172a;
   border: 1px solid #1e293b;
 }
+
 #topology-canvas {
   width: 100%;
   height: 400px;

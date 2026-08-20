@@ -97,7 +97,9 @@
   <link rel="apple-touch-icon" href="assets/favicon.svg">
 
   <!-- Stylesheet & Typography -->
-  <link rel="stylesheet" href="css/style.css?v=3.0.0">
+  <!-- Stylesheet & Typography (100% Self-Hosted & CSP Compliant) -->
+  <link rel="stylesheet" href="css/tailwind.min.css">
+  <link rel="stylesheet" href="css/style.css?v=3.2.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -111,34 +113,21 @@
       } catch (e) {}
     })();
   </script>
-<script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: "#eff6ff",
-              100: "#dbeafe",
-              500: "#3b82f6",
-              600: "#2563eb",
-              900: "#1e3a8a",
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <style>
+    body { background-color: #090a0f !important; color: #f1f5f9 !important; }
+    .brand-logo-img { width: 36px !important; height: 36px !important; max-width: 36px !important; max-height: 36px !important; object-fit: contain !important; display: inline-block !important; }
+    img { max-width: 100%; }
+    header img, nav img { max-height: 36px !important; width: auto !important; }
+  </style>
 </head>
 <body class="bg-[#0b0f19] text-gray-200 antialiased font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
 
   <!-- Navigation -->
   <header class="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-[#0b0f19]/80 backdrop-blur-lg border-b border-gray-800/60">
-    <div class="container">
+    <div class="container flex items-center justify-between mx-auto">
       <a href="index.html" class="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 hover:to-white transition-all">
-        <img src="assets/logo.svg" alt="OpenBalancer Logo" class="brand-logo-img">
-        <span>OpenBalancer</span>
+        <img src="assets/logo.svg" alt="OpenBalancer Logo" class="brand-logo-img" width="36" height="36" style="width:36px;height:36px;max-width:36px;max-height:36px;object-fit:contain;">
+        <span class="text-white">OpenBalancer</span>
       </a>
       <nav>
         <ul class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">

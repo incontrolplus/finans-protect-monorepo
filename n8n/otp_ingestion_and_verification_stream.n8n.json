@@ -1,0 +1,398 @@
+{
+  "name": "otp_ingestion_and_verification_stream",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-otp-ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: Email OTP Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        200
+      ],
+      "id": "node-webhook-email-otp",
+      "webhookId": "email-otp-ingest-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $input.item.json.body || $input.item.json;\nconst toAddress = String(raw.to_address || raw.to || raw.recipient || raw.email || '').trim().toLowerCase();\nconst fromAddress = String(raw.from_address || raw.from || raw.sender || 'support@wallester.com').trim();\nconst subject = String(raw.subject || 'Wallester Verification Code').trim();\nconst bodyText = String(raw.body_full || raw.body_preview || raw.body || raw.text || raw.message || raw.html || '').trim();\nconst fullText = `${bodyText} ${subject}`;\n\n// RegEx for 6-digit OTP code (with context priority)\nconst contextMatch = fullText.match(/(?:code|код|otp|pin|is|e|е|:|\\s|^)(\\d{6})(?:\\.|\\s|$|,|!)/i);\nlet code = contextMatch ? contextMatch[1] : null;\nif (!code) {\n  const fallbackMatch = fullText.match(/\\b\\d{6}\\b/);\n  code = fallbackMatch ? fallbackMatch[0] : null;\n}\n\nconst isValid = Boolean(code && toAddress);\n\nreturn {\n  json: {\n    is_valid: isValid,\n    code: code,\n    to_address: toAddress,\n    from_address: fromAddress,\n    subject: subject,\n    body_preview: bodyText.slice(0, 250),\n    body_full: bodyText,\n    raw_payload: raw,\n    ingest_type: 'EMAIL_OTP',\n    started_at: new Date().toISOString()\n  }\n};"
+      },
+      "name": "1A. Parse & Normalize Email Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        200
+      ],
+      "id": "node-parse-email-otp"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/rpc/process_email_otp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_to_address\": \"{{ $json.to_address }}\",\n  \"p_from_address\": \"{{ $json.from_address }}\",\n  \"p_subject\": \"{{ $json.subject.replace(/\"/g, '\\\\\"') }}\",\n  \"p_body\": \"{{ $json.body_full.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n') }}\",\n  \"p_metadata\": {{ JSON.stringify($json.raw_payload) }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-supabase-rpc-email",
+      "name": "2A. Supabase RPC Process Email OTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        680,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const rpc = $input.item.json;\nconst prev = $('1A. Parse & Normalize Email Payload').item.json;\n\nlet alertText = '';\nif (rpc.auto_advanced) {\n  alertText = `🦁 <b>Open Balancer — B2B Profile Auto-Advanced! 🚀</b>\\n\\n` +\n    `🏢 <b>Компания:</b> ${rpc.business_name_bg || 'Компания'} (<i>${rpc.business_name_en || ''}</i>)\\n` +\n    `🆔 <b>ЕИК:</b> <code>${rpc.eik || 'N/A'}</code>\\n` +\n    `📧 <b>Email Код:</b> <code>${rpc.code}</code> (${rpc.email_alias_33mail || prev.to_address})\\n` +\n    `📱 <b>SMS Код:</b> <code>${rpc.sms_code || 'Verified'}</code> (${rpc.phone_number || 'SIM Pool'})\\n` +\n    `⚡ <b>Нов Статус:</b> <code>VERIFIED_READY_FOR_CARD_ISSUING</code>\\n` +\n    `🎯 <b>Auto-Advancement:</b> <code>SUCCESS</code> (Zero-Touch Onboarding)\\n` +\n    `🖥 <b>Нод:</b> macmini-primary (100.83.83.8)`;\n} else {\n  alertText = `🦁 <b>Open Balancer — Email OTP Ingested 📧</b>\\n\\n` +\n    `🏢 <b>Компания:</b> ${rpc.business_name_bg || 'N/A'} (ЕИК: <code>${rpc.eik || 'N/A'}</code>)\\n` +\n    `📬 <b>Получател:</b> <code>${prev.to_address}</code>\\n` +\n    `🔑 <b>Email Код:</b> <code>${rpc.code || prev.code}</code>\\n` +\n    `📝 <b>Тема:</b> ${prev.subject}\\n` +\n    `⚡ <b>Статус:</b> <code>PROCESSED</code>\\n` +\n    `🖥 <b>Нод:</b> macmini-primary (100.83.83.8)`;\n}\n\nreturn {\n  json: {\n    ...rpc,\n    telegram_text: alertText,\n    input_prev: prev\n  }\n};"
+      },
+      "name": "3A. Format Email Telegram Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        200
+      ],
+      "id": "node-format-email-alert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"8041248687\",\n  \"text\": {{ JSON.stringify($json.telegram_text) }},\n  \"parse_mode\": \"HTML\",\n  \"disable_web_page_preview\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-telegram-email-alert",
+      "name": "4A. Telegram Dispatch (Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1160,
+        200
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": {{ $('2A. Supabase RPC Process Email OTP').item.json.ok || false }},\n  \"stream\": \"EMAIL_OTP\",\n  \"code\": \"{{ $('2A. Supabase RPC Process Email OTP').item.json.code || '' }}\",\n  \"eik\": \"{{ $('2A. Supabase RPC Process Email OTP').item.json.eik || '' }}\",\n  \"business_name\": \"{{ $('2A. Supabase RPC Process Email OTP').item.json.business_name_bg || '' }}\",\n  \"auto_advanced\": {{ $('2A. Supabase RPC Process Email OTP').item.json.auto_advanced || false }},\n  \"wallester_status\": \"{{ $('2A. Supabase RPC Process Email OTP').item.json.wallester_status || '' }}\",\n  \"email_message_id\": \"{{ $('2A. Supabase RPC Process Email OTP').item.json.email_message_id || '' }}\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "name": "5A. Respond to Webhook (Email)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        200
+      ],
+      "id": "node-response-email"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sms-otp-ingest",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: SMS OTP Ingest",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        480
+      ],
+      "id": "node-webhook-sms-otp",
+      "webhookId": "sms-otp-ingest-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $input.item.json.body || $input.item.json;\nconst toNumber = String(raw.to_number || raw.to || raw.phone_number || raw.phone || '').trim();\nconst fromNumber = String(raw.from_number || raw.from || raw.sender || 'Wallester').trim();\nconst messageBody = String(raw.message_body || raw.message || raw.body || raw.text || raw.content || '').trim();\n\n// RegEx for 6-digit OTP code (with context priority)\nconst contextMatch = messageBody.match(/(?:code|код|otp|pin|is|e|е|:|\\s|^)(\\d{6})(?:\\.|\\s|$|,|!)/i);\nlet code = contextMatch ? contextMatch[1] : null;\nif (!code) {\n  const fallbackMatch = messageBody.match(/\\b\\d{6}\\b/);\n  code = fallbackMatch ? fallbackMatch[0] : null;\n}\n\nconst isValid = Boolean(code && toNumber);\n\nreturn {\n  json: {\n    is_valid: isValid,\n    code: code,\n    to_number: toNumber,\n    from_number: fromNumber,\n    message_body: messageBody,\n    raw_payload: raw,\n    ingest_type: 'SMS_OTP',\n    started_at: new Date().toISOString()\n  }\n};"
+      },
+      "name": "1B. Parse & Normalize SMS Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        480
+      ],
+      "id": "node-parse-sms-otp"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/rpc/process_sms_otp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_to_number\": \"{{ $json.to_number }}\",\n  \"p_from_number\": \"{{ $json.from_number }}\",\n  \"p_message_body\": \"{{ $json.message_body.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n') }}\",\n  \"p_metadata\": {{ JSON.stringify($json.raw_payload) }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-supabase-rpc-sms",
+      "name": "2B. Supabase RPC Process SMS OTP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        680,
+        480
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const rpc = $input.item.json;\nconst prev = $('1B. Parse & Normalize SMS Payload').item.json;\n\nlet alertText = '';\nif (rpc.auto_advanced) {\n  alertText = `🦁 <b>Open Balancer — B2B Profile Auto-Advanced! 🚀</b>\\n\\n` +\n    `🏢 <b>Компания:</b> ${rpc.business_name_bg || 'Компания'} (<i>${rpc.business_name_en || ''}</i>)\\n` +\n    `🆔 <b>ЕИК:</b> <code>${rpc.eik || 'N/A'}</code>\\n` +\n    `📧 <b>Email Код:</b> <code>${rpc.email_code || 'Verified'}</code> (${rpc.email_alias_33mail || '33Mail'})\\n` +\n    `📱 <b>SMS Код:</b> <code>${rpc.code}</code> (${rpc.to_number || prev.to_number})\\n` +\n    `⚡ <b>Нов Статус:</b> <code>VERIFIED_READY_FOR_CARD_ISSUING</code>\\n` +\n    `🎯 <b>Auto-Advancement:</b> <code>SUCCESS</code> (Zero-Touch Onboarding)\\n` +\n    `🖥 <b>Нод:</b> macmini-primary (100.83.83.8)`;\n} else {\n  alertText = `🦁 <b>Open Balancer — SMS OTP Ingested 📱</b>\\n\\n` +\n    `🏢 <b>Компания:</b> ${rpc.business_name_bg || 'N/A'} (ЕИК: <code>${rpc.eik || 'N/A'}</code>)\\n` +\n    `📞 <b>Телефон:</b> <code>${prev.to_number}</code>\\n` +\n    `🔑 <b>SMS Код:</b> <code>${rpc.code || prev.code}</code>\\n` +\n    `💬 <b>Текст:</b> ${prev.message_body}\\n` +\n    `⚡ <b>Статус:</b> <code>PROCESSED</code>\\n` +\n    `🖥 <b>Нод:</b> macmini-primary (100.83.83.8)`;\n}\n\nreturn {\n  json: {\n    ...rpc,\n    telegram_text: alertText,\n    input_prev: prev\n  }\n};"
+      },
+      "name": "3B. Format SMS Telegram Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        480
+      ],
+      "id": "node-format-sms-alert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"8041248687\",\n  \"text\": {{ JSON.stringify($json.telegram_text) }},\n  \"parse_mode\": \"HTML\",\n  \"disable_web_page_preview\": true\n}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "node-telegram-sms-alert",
+      "name": "4B. Telegram Dispatch (SMS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1160,
+        480
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"ok\": {{ $('2B. Supabase RPC Process SMS OTP').item.json.ok || false }},\n  \"stream\": \"SMS_OTP\",\n  \"code\": \"{{ $('2B. Supabase RPC Process SMS OTP').item.json.code || '' }}\",\n  \"eik\": \"{{ $('2B. Supabase RPC Process SMS OTP').item.json.eik || '' }}\",\n  \"business_name\": \"{{ $('2B. Supabase RPC Process SMS OTP').item.json.business_name_bg || '' }}\",\n  \"auto_advanced\": {{ $('2B. Supabase RPC Process SMS OTP').item.json.auto_advanced || false }},\n  \"wallester_status\": \"{{ $('2B. Supabase RPC Process SMS OTP').item.json.wallester_status || '' }}\",\n  \"sms_message_id\": \"{{ $('2B. Supabase RPC Process SMS OTP').item.json.sms_message_id || '' }}\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "name": "5B. Respond to Webhook (SMS)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        480
+      ],
+      "id": "node-response-sms"
+    }
+  ],
+  "connections": {
+    "Webhook: Email OTP Ingest": {
+      "main": [
+        [
+          {
+            "node": "1A. Parse & Normalize Email Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1A. Parse & Normalize Email Payload": {
+      "main": [
+        [
+          {
+            "node": "2A. Supabase RPC Process Email OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2A. Supabase RPC Process Email OTP": {
+      "main": [
+        [
+          {
+            "node": "3A. Format Email Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3A. Format Email Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "4A. Telegram Dispatch (Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4A. Telegram Dispatch (Email)": {
+      "main": [
+        [
+          {
+            "node": "5A. Respond to Webhook (Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: SMS OTP Ingest": {
+      "main": [
+        [
+          {
+            "node": "1B. Parse & Normalize SMS Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1B. Parse & Normalize SMS Payload": {
+      "main": [
+        [
+          {
+            "node": "2B. Supabase RPC Process SMS OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2B. Supabase RPC Process SMS OTP": {
+      "main": [
+        [
+          {
+            "node": "3B. Format SMS Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3B. Format SMS Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "4B. Telegram Dispatch (SMS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4B. Telegram Dispatch (SMS)": {
+      "main": [
+        [
+          {
+            "node": "5B. Respond to Webhook (SMS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  },
+  "versionId": "1"
+}

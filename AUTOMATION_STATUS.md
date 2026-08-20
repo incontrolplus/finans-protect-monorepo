@@ -31,30 +31,6 @@
 
 ---
 
-## 🔄 n8n Workflows (`https://n8n.openbalancer.com`)
-
-1.  **`OpenBalancerGlobalErrorHandler`**:
-    *   **File:** `n8n/openbalancer_global_error_handler.n8n.json`
-    *   **Type:** `errorTrigger` global listener
-    *   **Function:** Captures unhandled runtime errors, parses diagnostics with safe `try/catch` fallback, records telemetry in `workflow_executions` with `status: NEEDS_MANUAL_REVIEW`, and routes incident alerts to Telegram (`bot8545664325`).
-
-2.  **`OpenBalancerRegistrationValidator`**:
-    *   **File:** `n8n/openbalancer_registration_intake_validator.n8n.json`
-    *   **Endpoint:** `/webhook/openbalancer-registration`
-    *   **Function:** Validates leads and applications. Incomplete/invalid requests are automatically marked as `NEEDS_MANUAL_REVIEW`, preserved completely in `raw_payload` without drop, and alerted to the operator.
-
----
-
-## 🧪 Verification & E2E Test Suite
-
-*   **Test Runner:** `scripts/test_error_handling_e2e.py`
-*   **Results (100% PASS):**
-    *   **Test A (Valid Request):** Status `PROCESSED`, `validation_errors: []`, `raw_payload` stored intact.
-    *   **Test B (Invalid / Incomplete Request):** Status `NEEDS_MANUAL_REVIEW`, `validation_errors: ['Невалиден или липсващ email адрес', 'Липсва име на компания или лице']`, full payload preserved, Telegram alert sent.
-    *   **Test C (Pipeline Exception):** Status `NEEDS_MANUAL_REVIEW` in `workflow_executions`, `is_manual_review: true`, Telegram alert sent.
-
----
-
 ## 🦁 Wallester V4.5 B2B Onboarding & Verification Pipeline
 
 *   **Endpoint:** `/webhook/b2b-onboarding-pipeline` (POST) on `http://100.83.83.8:5679` / `https://n8n.openbalancer.com`
@@ -70,3 +46,28 @@
     *   `Wallester accounts`: `> 0` (Active)
     *   Blockers: `0` (Cleared `P0 · wallester_accounts_zero`, `P0 · trigger_not_run`, `P1 · stale_vbp_trigger`)
 *   **Test Runner:** `scripts/test_b2b_pipeline.py` & `scripts/deploy_b2b_pipeline_and_triggers.py` (100% PASS)
+
+---
+
+## 📱 Step 2: Email & SMS OTP Ingestion, Parser & Auto-Advancement Stream
+
+*   **Status:** 🟢 ACTIVE, DEPLOYED & TESTED (100% PASS)
+*   **Endpoints (`http://100.83.83.8:5679` & `https://n8n.openbalancer.com`):**
+    *   `POST /webhook/email-otp-ingest` — Ingestion for 33Mail / Hostinger email forwarder.
+    *   `POST /webhook/sms-otp-ingest` — Ingestion for DuoPlus / SIM pool SMS streams.
+*   **Workflow File:** `n8n/otp_ingestion_and_verification_stream.n8n.json`
+*   **Python Engine & CLI:**
+    *   `openbalancer/b2b_pipeline/otp_processor.py` (Core RegEx parser, phone normalizer, Supabase persistence & Telegram dispatcher).
+    *   `scripts/run_otp_ingestion_pipeline.py` (CLI runner with `--email-code`, `--sms-code`, `--scorecard`).
+    *   `scripts/deploy_otp_pipeline.py` (Automated n8n DB injector & deployment tool).
+    *   `scripts/test_otp_pipeline_e2e.py` (Comprehensive E2E test suite covering Tests A, B, C, D).
+*   **Database Innovations & Stored RPCs (`supabase-db` on `100.83.83.8:8002`):**
+    *   `public.process_email_otp(to_address, from_address, subject, body, metadata)` — Atomic parser, DB updater, message archiver in `email_messages`, auto-advancement engine.
+    *   `public.process_sms_otp(to_number, from_number, message_body, metadata)` — Atomic phone normalizer, DB updater, pool updater in `sms_numbers_pool`, message archiver in `sms_messages`, auto-advancement engine.
+    *   `trigger_otp_auto_advancement()` — BEFORE trigger on `verified_business_profiles` guaranteeing atomic transition to `VERIFIED_READY_FOR_CARD_ISSUING` and `selected_for_registration = true` whenever both codes are populated.
+*   **Revenue Scorecard Live Telemetry (`public.revenue_scorecard`):**
+    *   `email_codes`: Active and updating in real-time.
+    *   `sms_codes`: Active and updating in real-time.
+    *   `selected_for_registration`: Auto-advancing upon dual code reception.
+*   **Telegram Real-Time Alerts:**
+    *   Instant formatted HTML delivery to `Leon | DevOps 🦁` (`chat_id: 8041248687`) via bot `8545664325`.

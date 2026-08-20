@@ -8,6 +8,18 @@ from .wallester_client import generate_application_id, generate_hmac_onboarding_
 from .supabase_persistence import upsert_verified_business_profile, log_workflow_telemetry
 from .notifier import format_client_sms_text, format_client_email_text, send_telegram_notification
 from .pipeline import execute_b2b_onboarding_pipeline
+from .otp_processor import (
+    extract_otp_code,
+    normalize_phone_number,
+    normalize_email,
+    format_email_otp_telegram,
+    format_sms_otp_telegram,
+    send_telegram_alert,
+    process_email_otp_payload,
+    process_sms_otp_payload,
+    send_email_webhook,
+    send_sms_webhook
+)
 
 __all__ = [
     "validate_eik_checksum",
@@ -23,5 +35,15 @@ __all__ = [
     "format_client_sms_text",
     "format_client_email_text",
     "send_telegram_notification",
-    "execute_b2b_onboarding_pipeline"
+    "execute_b2b_onboarding_pipeline",
+    "extract_otp_code",
+    "normalize_phone_number",
+    "normalize_email",
+    "format_email_otp_telegram",
+    "format_sms_otp_telegram",
+    "send_telegram_alert",
+    "process_email_otp_payload",
+    "process_sms_otp_payload",
+    "send_email_webhook",
+    "send_sms_webhook"
 ]

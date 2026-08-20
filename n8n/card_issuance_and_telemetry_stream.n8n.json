@@ -1,0 +1,195 @@
+{
+  "name": "card_issuance_and_telemetry_stream",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "issue-card",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook: Issue Card",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "id": "node-webhook-issue-card",
+      "webhookId": "issue-card-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $input.item.json.body || $input.item.json;\nconst eik = String(raw.eik || raw.bulstat || '').trim();\nconst force = Boolean(raw.force || false);\nconst isBatch = Boolean(raw.batch || false);\nconst limit = Number(raw.limit || 50);\n\nreturn {\n  json: {\n    eik: eik,\n    force: force,\n    batch: isBatch,\n    limit: limit,\n    raw_payload: raw,\n    received_at: new Date().toISOString()\n  }\n};"
+      },
+      "name": "1. Parse & Validate Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "id": "node-parse-issue-request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://100.83.83.8:8002/rest/v1/rpc/issue_virtual_card",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE3ODIyMjY3OTksImV4cCI6MTkzOTkwNjc5OX0.5DAqw9x0gC7ZH-0UPg4eEkP2LqcW_PRk6O0AEISJUG4"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ p_eik: $json.eik, p_force: $json.force }) }}",
+        "options": {
+          "timeout": 8000
+        }
+      },
+      "name": "2. Call Supabase issue_virtual_card RPC",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ],
+      "id": "node-call-issue-rpc"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const resp = $input.item.json;\nconst parsedInput = $('1. Parse & Validate Request').item.json;\nconst ok = Boolean(resp && resp.ok);\n\nlet alertHtml = '';\nif (ok) {\n  const comp = resp.business_name_bg || resp.business_name_en || 'Компания ' + resp.eik;\n  alertHtml = `🦁 <b>Open Balancer — Wallester Virtual Card Issued! 💳</b>\\n\\n` +\n    `🏢 <b>Компания:</b> ${comp}\\n` +\n    `🆔 <b>ЕИК:</b> <code>${resp.eik}</code>\\n` +\n    `💳 <b>Продукт:</b> <code>${resp.card_type || 'VISA_CORPORATE_PLATINUM_VIRTUAL'}</code>\\n` +\n    `🔢 <b>Номер:</b> <code>${resp.masked_card_number || '**** **** **** ' + resp.card_number_last4}</code>\\n` +\n    `📅 <b>Валидност:</b> <code>${resp.expiry_date || '08/29'}</code> (+3 години)\\n` +\n    `💰 <b>Начален Лимит:</b> <b>€${Number(resp.balance || 150).toFixed(2)} ${resp.currency || 'EUR'}</b>\\n` +\n    `🏦 <b>Издател:</b> <code>${resp.issuer_bank || 'Wallester Business'}</code>\\n` +\n    `🔑 <b>Card UUID:</b> <code>${resp.card_uuid}</code>\\n` +\n    `⚡ <b>Статус:</b> <code>${resp.wallester_status || 'CARD_ISSUED_ACTIVE'}</code> 🟢\\n` +\n    `⏱ <b>Време за издаване:</b> ${resp.duration_ms || 45} ms\\n` +\n    `🖥 <b>Нод:</b> macmini-primary (100.83.83.8)\\n` +\n    `🚀 <b>Платформа:</b> n8n Card Issuance Webhook Stream`;\n}\n\nreturn {\n  json: {\n    success: ok,\n    status: ok ? 'CARD_ISSUED_ACTIVE' : (resp.status || 'ERROR'),\n    eik: resp.eik || parsedInput.eik,\n    card_data: resp,\n    telegram_html: alertHtml,\n    send_telegram: ok\n  }\n};"
+      },
+      "name": "3. Format Telegram Message & Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        300
+      ],
+      "id": "node-format-card-msg"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: $json.success, status: $json.status, eik: $json.eik, card: $json.card_data, timestamp: new Date().toISOString() }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "4. Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1160,
+        300
+      ],
+      "id": "node-respond-issue-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8545664325:AAF7-DKWStIgkzw4uWAm0dNU9LBR8Bcjm88/sendMessage",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ chat_id: '8041248687', text: $json.telegram_html, parse_mode: 'HTML', disable_web_page_preview: true }) }}",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "5. Dispatch Telegram Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        300
+      ],
+      "id": "node-telegram-card-alert"
+    }
+  ],
+  "connections": {
+    "Webhook: Issue Card": {
+      "main": [
+        [
+          {
+            "node": "1. Parse & Validate Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1. Parse & Validate Request": {
+      "main": [
+        [
+          {
+            "node": "2. Call Supabase issue_virtual_card RPC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Call Supabase issue_virtual_card RPC": {
+      "main": [
+        [
+          {
+            "node": "3. Format Telegram Message & Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Format Telegram Message & Response": {
+      "main": [
+        [
+          {
+            "node": "4. Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "5. Dispatch Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

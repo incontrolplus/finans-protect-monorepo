@@ -45,5 +45,20 @@ __all__ = [
     "process_email_otp_payload",
     "process_sms_otp_payload",
     "send_email_webhook",
-    "send_sms_webhook"
+    "send_sms_webhook",
+    "issue_card_for_profile",
+    "issue_cards_for_pending_profiles",
+    "get_issued_cards",
+    "get_revenue_scorecard",
+    "format_card_issued_telegram",
+    "handle_telegram_command"
 ]
+
+from .card_issuer import (
+    issue_card_for_profile,
+    issue_cards_for_pending_profiles,
+    get_issued_cards,
+    get_revenue_scorecard,
+    format_card_issued_telegram,
+    handle_telegram_command
+)

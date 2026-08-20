@@ -23,7 +23,12 @@ export default {
 
     // 1. Handle Subdomain Dashboard Root / Routing
     if (url.hostname === 'dashboard.openbalancer.com' && url.pathname === '/') {
-      return env.ASSETS.fetch(new URL('/dashboard', request.url));
+      return Response.redirect('https://dashboard.openbalancer.com/dashboard', 302);
+    }
+
+    // 1b. Handle Subdomain Cashflow Root / Routing
+    if (url.hostname === 'cashflow.openbalancer.com' && url.pathname === '/') {
+      return Response.redirect('https://cashflow.openbalancer.com/cashflow', 302);
     }
 
     // 2. Handle /api/subdomains/health endpoint

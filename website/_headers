@@ -9,11 +9,11 @@
 
 /*.svg
   Content-Type: image/svg+xml
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=0, must-revalidate
 
 /*.png
   Content-Type: image/png
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=0, must-revalidate
 
 /*.css
   Content-Type: text/css; charset=utf-8

@@ -1566,14 +1566,14 @@ docker kill -s HUP openbalancer
           <label data-i18n="modal_lbl_payment_method">Preferred Billing &amp; Payment Method</label>
           <div class="payment-method-selector">
             <label class="payment-radio-label">
-              <input type="radio" name="payment_pref" value="invoice" checked>
+              <input type="radio" id="payment_pref_invoice_docs" name="payment_pref" value="invoice" aria-label="Corporate Net-14 Invoicing" checked>
               <span>
                 <strong data-i18n="modal_opt_invoice">Corporate Net-14 Invoicing</strong>
                 <small data-i18n="modal_opt_invoice_sub">SEPA Bank Transfer / VAT Reverse Charge</small>
               </span>
             </label>
             <label class="payment-radio-label">
-              <input type="radio" name="payment_pref" value="stripe_card">
+              <input type="radio" id="payment_pref_stripe_docs" name="payment_pref" value="stripe_card" aria-label="Instant Stripe Card Checkout">
               <span>
                 <strong data-i18n="modal_opt_card">Instant Stripe Card Checkout</strong>
                 <small data-i18n="modal_opt_card_sub">Corporate Credit / Debit Card &amp; Apple Pay</small>

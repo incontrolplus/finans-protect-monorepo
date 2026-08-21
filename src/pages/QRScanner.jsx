@@ -213,257 +213,254 @@ Be concise and accurate. Extract actual text if visible. If no text, describe wh
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <Sparkles className="w-10 h-10 text-primary-400" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
-              AI Image Scanner & QR Generator
-            </h1>
+    <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">
+      {/* Liquid Glass Header Banner */}
+      <div className="relative rounded-3xl p-6 sm:p-8 overflow-hidden bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]">
+        {/* Glow Spheres */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] shadow-lg shadow-cyan-500/20 shrink-0">
+              <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+                <QrCode className="w-6 h-6 text-cyan-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                <span>AI Vision Scanner & QR Studio</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Анализ на изображения с Claude Vision AI и автоматично генериране на криптирани QR кодове.
+              </p>
+            </div>
           </div>
-          <p className="text-dark-400">
-            Upload an image for automatic analysis and QR code generation
-          </p>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-cyan-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Качи Изображение</span>
+            </button>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Upload Area */}
-            {!capturedImage && (
-              <div className="card">
-                <div
-                  className={`border-3 border-dashed rounded-xl p-12 text-center transition-all cursor-pointer ${
-                    dragActive
-                      ? 'border-primary-500 bg-primary-500/10'
-                      : 'border-dark-600 hover:border-primary-400 hover:bg-dark-700/50'
-                  }`}
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-16 h-16 text-dark-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    Upload Image
-                  </h3>
-                  <p className="text-dark-500 mb-4">
-                    Click or drag & drop file here
-                  </p>
-                  <p className="text-sm text-dark-500">
-                    Supported formats: JPG, PNG, WebP (max 10MB)
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Workspace (2 cols) */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Upload Dropzone */}
+          {!capturedImage && (
+            <div
+              className={`relative rounded-3xl p-10 sm:p-12 text-center transition-all cursor-pointer bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border-2 border-dashed ${
+                dragActive
+                  ? 'border-cyan-400 bg-cyan-500/10 shadow-2xl ring-4 ring-cyan-500/20'
+                  : 'border-white/15 hover:border-cyan-400/50 hover:bg-white/[0.04]'
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="w-16 h-16 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+                <Upload className="w-8 h-8 text-cyan-400" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1">
+                Качете или плъзнете файл тук
+              </h3>
+              <p className="text-xs text-slate-400 mb-3">
+                Автоматично разпознаване на текст, обекти и контекст
+              </p>
+              <span className="inline-block px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-white/5 text-slate-400 border border-white/10">
+                JPG, PNG, WebP (макс. 10MB)
+              </span>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+              {error}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <div className="rounded-3xl p-12 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col items-center justify-center gap-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-white/10 border-t-cyan-400" />
+              <p className="text-xs font-mono font-bold text-cyan-300">Claude AI Vision анализира изображението...</p>
+            </div>
+          )}
+
+          {/* Results Workspace */}
+          {capturedImage && !loading && (
+            <div className="space-y-6">
+              {/* Image Preview Bento */}
+              <div className="relative rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-4 overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Сканирано Изображение</h2>
+                  <button
+                    onClick={reset}
+                    className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-mono border border-white/10 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Нов Скан</span>
+                  </button>
                 </div>
-              </div>
-            )}
-
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                <p className="text-red-400">{error}</p>
-              </div>
-            )}
-
-            {/* Loading State */}
-            {loading && (
-              <div className="card">
-                <div className="flex flex-col items-center gap-4 py-8">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-500" />
-                  <p className="text-dark-300 font-medium">Analyzing image...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Results */}
-            {capturedImage && !loading && (
-              <div className="space-y-6">
-                {/* Image Preview */}
-                <div className="card">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">Image</h2>
-                    <button
-                      onClick={reset}
-                      className="btn-secondary flex items-center gap-2"
-                    >
-                      <X className="w-4 h-4" />
-                      New Scan
-                    </button>
-                  </div>
+                <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 p-2">
                   <img
                     src={capturedImage}
                     alt="Captured"
-                    className="w-full rounded-lg"
+                    className="w-full max-h-[350px] object-contain rounded-xl"
                   />
                 </div>
-
-                {/* Extracted Data */}
-                {extractedData && (
-                  <div className="card">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold">Extracted Data</h2>
-                      <button
-                        onClick={copyToClipboard}
-                        className="btn-secondary flex items-center gap-2"
-                      >
-                        {copied ? (
-                          <>
-                            <Check className="w-4 h-4" />
-                            Copied!
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            Copy
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-dark-400">Title</label>
-                        <p className="text-lg font-semibold mt-1">{extractedData.title}</p>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-dark-400">Category</label>
-                        <span className="inline-block mt-1 px-3 py-1 glass-effect text-primary-400 rounded-full text-sm">
-                          {extractedData.category}
-                        </span>
-                      </div>
-
-                      {extractedData.mainElements && extractedData.mainElements.length > 0 && (
-                        <div>
-                          <label className="text-sm font-medium text-dark-400">Key Elements</label>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {extractedData.mainElements.map((element, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1 glass-effect rounded-full text-sm"
-                              >
-                                {element}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {extractedData.text && (
-                        <div>
-                          <label className="text-sm font-medium text-dark-400">Extracted Text</label>
-                          <p className="mt-1 p-3 glass-effect rounded-lg">
-                            {extractedData.text}
-                          </p>
-                        </div>
-                      )}
-
-                      {extractedData.tags && extractedData.tags.length > 0 && (
-                        <div>
-                          <label className="text-sm font-medium text-dark-400">Tags</label>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {extractedData.tags.map((tag, idx) => (
-                              <span
-                                key={idx}
-                                className="px-3 py-1 glass-effect text-green-400 rounded-full text-sm"
-                              >
-                                #{tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* QR Code */}
-                {qrCodeUrl && (
-                  <div className="card">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold">QR Code</h2>
-                      <button
-                        onClick={downloadQR}
-                        className="btn-primary flex items-center gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </button>
-                    </div>
-                    <div className="flex justify-center p-6 glass-effect rounded-lg">
-                      <img src={qrCodeUrl} alt="QR Code" className="w-64 h-64" />
-                    </div>
-                    <p className="text-center text-sm text-dark-500 mt-4">
-                      Scan this code to view the data
-                    </p>
-                  </div>
-                )}
               </div>
-            )}
-          </div>
 
-          {/* Sidebar - Saved Records */}
-          <div className="lg:col-span-1">
-            <div className="card sticky top-8">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-primary-400" />
-                Saved ({savedRecords.length})
-              </h2>
-
-              {savedRecords.length === 0 ? (
-                <div className="text-center py-8">
-                  <QrCode className="w-12 h-12 text-dark-600 mx-auto mb-3" />
-                  <p className="text-dark-500 text-sm">
-                    No saved records yet
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                  {savedRecords.map((record) => (
-                    <div
-                      key={record.id}
-                      className="glass-effect rounded-lg p-3 hover:bg-white/10 transition-colors"
+              {/* Extracted Data Bento */}
+              {extractedData && (
+                <div className="relative rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-4 overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">AI Анализ & Екстракция</h2>
+                    <button
+                      onClick={copyToClipboard}
+                      className="px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-mono border border-white/10 flex items-center gap-1.5 cursor-pointer"
                     >
-                      <img
-                        src={record.image}
-                        alt={record.data.title}
-                        className="w-full h-32 object-cover rounded-lg mb-2"
-                      />
-                      <h3 className="font-medium text-sm mb-1 truncate">
-                        {record.data.title}
-                      </h3>
-                      <p className="text-xs text-dark-500 mb-3">
-                        {new Date(record.timestamp).toLocaleString()}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => viewRecord(record)}
-                          className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 glass-effect hover:bg-primary-500/20 rounded-lg text-xs transition-colors"
-                        >
-                          <Eye className="w-3 h-3" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => deleteRecord(record.id)}
-                          className="px-3 py-1.5 glass-effect hover:bg-red-500/20 text-red-400 rounded-lg text-xs transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-300">Копирано!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Копирай</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                      <label className="text-[10px] font-mono uppercase text-slate-400 block mb-1">Заглавие</label>
+                      <p className="text-sm font-bold text-white">{extractedData.title}</p>
                     </div>
-                  ))}
+
+                    <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+                      <span className="text-[10px] font-mono uppercase text-slate-400">Категория</span>
+                      <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                        {extractedData.category}
+                      </span>
+                    </div>
+
+                    {extractedData.text && (
+                      <div className="p-4 rounded-2xl bg-[#080d1a]/95 border border-white/10">
+                        <label className="text-[10px] font-mono uppercase text-slate-400 block mb-1">Разпознат Текст (OCR)</label>
+                        <p className="text-xs font-mono text-slate-300 leading-relaxed whitespace-pre-wrap">{extractedData.text}</p>
+                      </div>
+                    )}
+
+                    {extractedData.tags && extractedData.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {extractedData.tags.map((tag, idx) => (
+                          <span
+                            key={idx}
+                            className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* QR Code Bento */}
+              {qrCodeUrl && (
+                <div className="relative rounded-3xl p-6 sm:p-7 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-4 overflow-hidden">
+                  <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Генериран QR Код</h2>
+                    <button
+                      onClick={downloadQR}
+                      className="px-4 py-2 rounded-2xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 transition-all shadow-lg shadow-cyan-500/25 flex items-center gap-2 cursor-pointer active:scale-95"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Свали QR</span>
+                    </button>
+                  </div>
+                  <div className="flex justify-center p-6 rounded-2xl bg-white/[0.02] border border-white/5">
+                    <img src={qrCodeUrl} alt="QR Code" className="w-56 h-56 rounded-xl shadow-lg border border-white/10" />
+                  </div>
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        {/* Sidebar - Saved Scans (1 col) */}
+        <div className="lg:col-span-1">
+          <div className="relative rounded-3xl p-6 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-4 sticky top-6">
+            <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
+              <ImageIcon className="w-4 h-4 text-cyan-400" />
+              <span>Запазени Сканове ({savedRecords.length})</span>
+            </h2>
+
+            {savedRecords.length === 0 ? (
+              <div className="text-center py-8">
+                <QrCode className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                <p className="text-xs text-slate-500 font-mono">Няма запазени сканове</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
+                {savedRecords.map((record) => (
+                  <div
+                    key={record.id}
+                    className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-cyan-400/30 transition-all space-y-2"
+                  >
+                    <img
+                      src={record.image}
+                      alt={record.data?.title}
+                      className="w-full h-24 object-cover rounded-xl border border-white/10"
+                    />
+                    <h3 className="font-bold text-xs text-white truncate">
+                      {record.data?.title || 'Скан'}
+                    </h3>
+                    <p className="text-[10px] font-mono text-slate-400">
+                      {new Date(record.timestamp).toLocaleString()}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => viewRecord(record)}
+                        className="flex-1 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 text-xs font-mono border border-white/10 flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <Eye className="w-3 h-3" />
+                        Преглед
+                      </button>
+                      <button
+                        onClick={() => deleteRecord(record.id)}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

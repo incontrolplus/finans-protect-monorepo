@@ -388,197 +388,148 @@ Anthropic Prompt Generator ще създаде детайлен промпт к�
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-effect rounded-2xl p-6 border border-white/10"
-      >
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">Prompt Generator</h1>
-            <p className="text-dark-300">Generate prompts for Spark Visual App creation</p>
-          </div>
-        </div>
+    <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">
+      {/* Liquid Glass Header Banner */}
+      <div className="relative rounded-3xl p-6 sm:p-8 overflow-hidden bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]">
+        {/* Glow Spheres */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        {/* Info Box */}
-        <div className="glass-effect bg-primary-500/10 border border-primary-500/30 rounded-lg p-4 mt-4">
-          <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-primary-400 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-dark-200">
-              <p className="font-medium text-white mb-2">How to use this tool:</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Choose your preferred language (English or Bulgarian)</li>
-                <li>Copy the prompt using the "Copy to Clipboard" button</li>
-                <li>Go to <a href="https://console.anthropic.com/workbench/" target="_blank" rel="noopener noreferrer" className="text-primary-400 hover:text-primary-300 underline">Anthropic Console Workbench</a></li>
-                <li>Paste the prompt in the Prompt Generator</li>
-                <li>Review and refine the generated prompt</li>
-                <li>Use the final prompt to create your Spark application</li>
-              </ol>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] shadow-lg shadow-cyan-500/20 shrink-0">
+              <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-cyan-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                <span>AI Prompt Engineering Studio</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Генератор на мета-промптове за Spark Visual Applications и Anthropic Workbench.
+              </p>
             </div>
           </div>
-        </div>
-      </motion.div>
 
-      {/* Language Toggle */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="glass-effect rounded-2xl p-6 border border-white/10"
-      >
-        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Languages className="w-5 h-5 text-primary-400" />
-            <h2 className="text-xl font-semibold text-white">Language / Език</h2>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setLanguage('en')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                language === 'en'
-                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30'
-                  : 'bg-white/5 text-dark-300 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              English
-            </button>
             <button
               onClick={() => setLanguage('bg')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 py-2 rounded-2xl text-xs font-bold font-mono transition-all cursor-pointer ${
                 language === 'bg'
-                  ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30'
-                  : 'bg-white/5 text-dark-300 hover:text-white hover:bg-white/10'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md border border-cyan-400/40'
+                  : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
               }`}
             >
               Български
             </button>
+            <button
+              onClick={() => setLanguage('en')}
+              className={`px-4 py-2 rounded-2xl text-xs font-bold font-mono transition-all cursor-pointer ${
+                language === 'en'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md border border-cyan-400/40'
+                  : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
+              }`}
+            >
+              English
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Prompt Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="glass-effect rounded-2xl p-6 border border-white/10"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-white">
-            {language === 'en' ? 'Generated Prompt' : 'Генериран Промпт'}
-          </h2>
-          <div className="flex gap-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+      {/* Prompt Content Bento */}
+      <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-4 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">
+              {language === 'en' ? 'Meta-Prompt Blueprint' : 'Генериран Мета-Промпт'}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Копирайте и поставете директно в Anthropic Workbench</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
               onClick={() => handleDownload(
                 language === 'en' ? promptContentEn : promptContentBg,
                 language === 'en' ? 'spark-app-prompt-en.md' : 'spark-app-prompt-bg.md'
               )}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-all border border-white/10"
+              className="px-4 py-2 rounded-2xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold font-mono border border-white/10 flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
             >
-              <Download className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {language === 'en' ? 'Download' : 'Изтегли'}
-              </span>
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
+              <span>{language === 'en' ? 'Download .MD' : 'Свали .MD'}</span>
+            </button>
+
+            <button
               onClick={() => handleCopy(
                 language === 'en' ? promptContentEn : promptContentBg,
                 language === 'bg'
               )}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`px-5 py-2 rounded-2xl text-xs font-bold uppercase tracking-wider font-mono flex items-center gap-1.5 transition-all shadow-lg cursor-pointer active:scale-95 ${
                 (language === 'bg' ? copiedBg : copied)
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:shadow-lg hover:shadow-primary-500/30'
+                  ? 'bg-emerald-500 text-white shadow-emerald-500/25'
+                  : 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 text-white shadow-cyan-500/25'
               }`}
             >
               {(language === 'bg' ? copiedBg : copied) ? (
                 <>
                   <Check className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {language === 'en' ? 'Copied!' : 'Копирано!'}
-                  </span>
+                  <span>Копирано!</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    {language === 'en' ? 'Copy to Clipboard' : 'Копирай'}
-                  </span>
+                  <span>Копирай в Clipboard</span>
                 </>
               )}
-            </motion.button>
+            </button>
           </div>
         </div>
 
-        {/* Prompt Preview */}
-        <div className="bg-dark-900/50 rounded-lg p-4 border border-white/5 max-h-[600px] overflow-y-auto custom-scrollbar">
-          <pre className="text-sm text-dark-200 whitespace-pre-wrap font-mono leading-relaxed">
+        {/* Monospace Output Frame */}
+        <div className="p-5 rounded-2xl bg-[#080d1a]/95 border border-white/10 max-h-[500px] overflow-y-auto custom-scrollbar shadow-inner">
+          <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
             {language === 'en' ? promptContentEn : promptContentBg}
           </pre>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Quick Links */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="glass-effect rounded-2xl p-6 border border-white/10"
-      >
-        <h2 className="text-xl font-semibold text-white mb-4">
-          {language === 'en' ? 'Quick Links' : 'Бързи Връзки'}
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <a
-            href="https://console.anthropic.com/workbench/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/10 group"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-              <ExternalLink className="w-5 h-5 text-white" />
+      {/* Quick Links Bento */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <a
+          href="https://console.anthropic.com/workbench/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-5 rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 hover:border-cyan-400/40 transition-all shadow-xl flex items-center gap-4 group"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] shadow-md shrink-0">
+            <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+              <ExternalLink className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-white group-hover:text-primary-400 transition-colors">
-                {language === 'en' ? 'Anthropic Console' : 'Anthropic Конзола'}
-              </h3>
-              <p className="text-sm text-dark-400">
-                {language === 'en' ? 'Open Workbench' : 'Отвори Workbench'}
-              </p>
-            </div>
-            <ExternalLink className="w-4 h-4 text-dark-400 group-hover:text-primary-400 transition-colors" />
-          </a>
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-white group-hover:text-cyan-300 transition-colors">Anthropic Workbench Console</h3>
+            <p className="text-xs text-slate-400">Отворете конзолата за тестване на промптове</p>
+          </div>
+        </a>
 
-          <a
-            href="https://docs.anthropic.com/claude/docs"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-4 bg-white/5 hover:bg-white/10 rounded-lg transition-all border border-white/10 group"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-              <FileText className="w-5 h-5 text-white" />
+        <a
+          href="https://docs.anthropic.com/claude/docs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-5 rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 hover:border-cyan-400/40 transition-all shadow-xl flex items-center gap-4 group"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 p-[1px] shadow-md shrink-0">
+            <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+              <FileText className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-white group-hover:text-primary-400 transition-colors">
-                {language === 'en' ? 'Claude Documentation' : 'Claude Документация'}
-              </h3>
-              <p className="text-sm text-dark-400">
-                {language === 'en' ? 'Learn more about prompts' : 'Научи повече за промптове'}
-              </p>
-            </div>
-            <ExternalLink className="w-4 h-4 text-dark-400 group-hover:text-primary-400 transition-colors" />
-          </a>
-        </div>
-      </motion.div>
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-white group-hover:text-purple-300 transition-colors">Claude AI Документация</h3>
+            <p className="text-xs text-slate-400">Научете най-добрите практики за промпт инженеринг</p>
+          </div>
+        </a>
+      </div>
     </div>
   );
 }

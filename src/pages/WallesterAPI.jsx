@@ -1,29 +1,48 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  CreditCard,
+  Plus,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ShieldCheck,
+  RefreshCw,
+  X,
+  Lock,
+  Globe2,
+  Layers,
+  Sparkles,
+  ArrowRight,
+  Wifi,
+  Cpu
+} from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
 const CARD_TYPES = [
-  { id: 'virtual_debit', name: 'Virtual Debit', description: 'Виртуална дебитна карта за онлайн плащания', fee: 'Free', limit: '10,000 EUR/month' },
-  { id: 'plastic_debit', name: 'Plastic Debit', description: 'Физическа дебитна карта с безконтактно плащане', fee: '5 EUR', limit: '25,000 EUR/month' },
-  { id: 'virtual_prepaid', name: 'Virtual Prepaid', description: 'Предплатена виртуална карта', fee: 'Free', limit: '5,000 EUR/month' },
+  { id: 'virtual_debit', name: 'Virtual Debit Card', description: 'Моментална виртуална дебитна карта за дигитални разплащания', fee: 'Free (0 EUR)', limit: '10,000 EUR/месец', color: 'from-cyan-500/20 to-blue-600/20' },
+  { id: 'plastic_debit', name: 'Physical Plastic Debit', description: 'Физическа NFC карта с безконтактно плащане и банкомат теглене', fee: '5 EUR (Еднократно)', limit: '25,000 EUR/месец', color: 'from-purple-500/20 to-indigo-600/20' },
+  { id: 'virtual_prepaid', name: 'Virtual Prepaid Pro', description: 'Предплатена корпоративна карта за маркетинг и рекламни бюджети', fee: 'Free (0 EUR)', limit: '5,000 EUR/месец', color: 'from-emerald-500/20 to-teal-600/20' },
 ];
 
 const API_ENDPOINTS = [
-  { method: 'POST', path: '/cards', description: 'Create a new card', status: 'ready' },
-  { method: 'GET', path: '/cards/{id}', description: 'Get card details', status: 'ready' },
-  { method: 'GET', path: '/cards', description: 'List all cards', status: 'ready' },
-  { method: 'PATCH', path: '/cards/{id}/activate', description: 'Activate a card', status: 'ready' },
-  { method: 'PATCH', path: '/cards/{id}/block', description: 'Block a card', status: 'ready' },
-  { method: 'GET', path: '/cards/{id}/transactions', description: 'Card transactions', status: 'ready' },
-  { method: 'POST', path: '/cards/{id}/limits', description: 'Set card limits', status: 'planned' },
-  { method: 'GET', path: '/accounts/{id}/balance', description: 'Account balance', status: 'ready' },
+  { method: 'POST', path: '/api/wallester/cards', description: 'Издаване на нова виртуална или физическа карта', status: 'ready' },
+  { method: 'GET', path: '/api/wallester/cards/{id}', description: 'Извличане на ПИН, CVV и статус на карта', status: 'ready' },
+  { method: 'GET', path: '/api/wallester/cards', description: 'Списък с всички издадени корпоративни карти', status: 'ready' },
+  { method: 'PATCH', path: '/api/wallester/cards/{id}/activate', description: 'Активиране на новоиздадена карта', status: 'ready' },
+  { method: 'PATCH', path: '/api/wallester/cards/{id}/block', description: 'Временно замразяване или блокиране', status: 'ready' },
+  { method: 'GET', path: '/api/wallester/cards/{id}/transactions', description: 'Трансакционна история в реално време', status: 'ready' },
+  { method: 'POST', path: '/api/wallester/cards/{id}/limits', description: 'Задаване на дневни и месечни лимити', status: 'ready' },
+  { method: 'GET', path: '/api/wallester/accounts/{id}/balance', description: 'Баланс и налични средства по сметката', status: 'ready' },
 ];
 
-function WallesterAPI() {
+export function WallesterAPI() {
   const [activeTab, setActiveTab] = useState('cards');
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCardType, setSelectedCardType] = useState('virtual_debit');
@@ -31,7 +50,7 @@ function WallesterAPI() {
   const [creating, setCreating] = useState(false);
 
   const fetchCards = useCallback(async () => {
-    setLoading(true);
+    setIsRefreshing(true);
     try {
       const res = await fetch(`${API_BASE}/api/wallester/cards`);
       const data = await res.json();
@@ -43,6 +62,7 @@ function WallesterAPI() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setTimeout(() => setIsRefreshing(false), 500);
     }
   }, []);
 
@@ -57,7 +77,7 @@ function WallesterAPI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: selectedCardType,
-          cardholderName: cardholderName.trim(),
+          cardholderName: cardholderName.trim().toUpperCase(),
         }),
       });
       const data = await res.json();
@@ -87,274 +107,340 @@ function WallesterAPI() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Wallester API</h1>
-          <p className="text-gray-400 mt-1">
-            Управление на карти и акаунти чрез Wallester API
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm rounded-lg transition-colors"
-          >
-            + Create Card
-          </button>
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-400">
-            Задача 1
-          </span>
+    <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">
+      {/* Liquid Glass Header Banner */}
+      <div className="relative rounded-3xl p-6 sm:p-8 overflow-hidden bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]">
+        {/* Glow Spheres */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] shadow-lg shadow-cyan-500/20 shrink-0">
+              <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-cyan-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                <span>Wallester BaaS &amp; Card Engine</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Директна интеграция за мигновено издаване и управление на Visa/Mastercard корпоративни карти.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-cyan-500/25 active:scale-95 cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Издай Карта</span>
+            </button>
+            <button
+              onClick={fetchCards}
+              disabled={isRefreshing}
+              className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <RefreshCw className={`w-4 h-4 text-cyan-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex space-x-2">
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3 backdrop-blur-md"
+        >
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+          <p className="font-semibold">{error}</p>
+        </motion.div>
+      )}
+
+      {/* Tabs Navigation */}
+      <div className="flex space-x-2 p-1.5 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] backdrop-blur-2xl border border-white/10 w-fit">
         {[
-          { id: 'cards', label: 'Cards' },
-          { id: 'types', label: 'Card Types' },
-          { id: 'api', label: 'API Reference' },
+          { id: 'cards', label: 'Издадени Карти', count: cards.length },
+          { id: 'types', label: 'Типове Карти & Тарифи', count: CARD_TYPES.length },
+          { id: 'api', label: 'REST API Ендпойнти', count: API_ENDPOINTS.length },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === tab.id
-                ? 'bg-primary-600 text-white'
-                : 'bg-dark-700/50 text-gray-400 hover:text-white hover:bg-dark-700'
+                ? 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white shadow-lg shadow-cyan-500/20 border border-cyan-400/40'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            {tab.label}
+            <span>{tab.label}</span>
+            {tab.count > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                activeTab === tab.id
+                  ? 'bg-black/30 text-white'
+                  : 'bg-white/10 text-slate-300'
+              }`}>
+                {tab.count}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-          <p className="text-red-400 text-sm">{error}</p>
-        </div>
-      )}
-
-      {/* Cards Tab */}
-      {activeTab === 'cards' && (
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-48">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-            </div>
-          ) : cards.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-dark-800/50 border border-dark-700 rounded-xl p-12 text-center"
-            >
-              <div className="w-20 h-20 bg-dark-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <h3 className="text-white font-medium text-lg mb-2">No Cards Yet</h3>
-              <p className="text-gray-500 text-sm mb-4">
-                Създайте първата си бизнес карта чрез Wallester API
-              </p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
-              >
-                Create Your First Card
-              </button>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cards.map((card, idx) => (
-                <motion.div
-                  key={card.id || idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-dark-800/50 border border-dark-700 rounded-xl overflow-hidden"
-                >
-                  {/* Card Visual */}
-                  <div className="bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 p-5 relative">
-                    <div className="flex items-start justify-between">
-                      <span className="text-xs text-gray-400 uppercase tracking-wider">Wallester</span>
-                      <span className={`px-2 py-0.5 rounded-full text-xs ${
-                        card.status === 'active' ? 'bg-green-500/20 text-green-400' :
-                        card.status === 'blocked' ? 'bg-red-500/20 text-red-400' :
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}>
-                        {card.status || 'pending'}
-                      </span>
-                    </div>
-                    <div className="mt-6">
-                      <p className="text-gray-300 font-mono text-lg tracking-widest">
-                        •••• •••• •••• {card.last4 || '0000'}
-                      </p>
-                    </div>
-                    <div className="mt-4 flex items-end justify-between">
-                      <div>
-                        <p className="text-gray-500 text-xs">Cardholder</p>
-                        <p className="text-gray-300 text-sm font-medium">{card.cardholderName || 'N/A'}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-500 text-xs">Expires</p>
-                        <p className="text-gray-300 text-sm">{card.expiryDate || 'MM/YY'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Actions */}
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Type</span>
-                      <span className="text-gray-300">{card.type || 'virtual_debit'}</span>
-                    </div>
-                    {card.balance !== undefined && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">Balance</span>
-                        <span className="text-white font-medium">{card.balance} EUR</span>
-                      </div>
-                    )}
-                    <div className="flex space-x-2">
-                      {card.status !== 'active' && (
-                        <button
-                          onClick={() => toggleCardStatus(card.id, 'activate')}
-                          className="flex-1 px-3 py-1.5 bg-green-500/20 text-green-400 text-xs rounded-lg hover:bg-green-500/30 transition-colors"
-                        >
-                          Activate
-                        </button>
-                      )}
-                      {card.status === 'active' && (
-                        <button
-                          onClick={() => toggleCardStatus(card.id, 'block')}
-                          className="flex-1 px-3 py-1.5 bg-red-500/20 text-red-400 text-xs rounded-lg hover:bg-red-500/30 transition-colors"
-                        >
-                          Block
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Card Types Tab */}
-      {activeTab === 'types' && (
-        <div className="grid gap-4">
-          {CARD_TYPES.map((type, idx) => (
-            <motion.div
-              key={type.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="bg-dark-800/50 border border-dark-700 rounded-xl p-5 flex items-center justify-between"
-            >
-              <div>
-                <h3 className="text-white font-medium">{type.name}</h3>
-                <p className="text-gray-400 text-sm mt-1">{type.description}</p>
-                <div className="flex items-center space-x-4 mt-2">
-                  <span className="text-xs text-gray-500">Fee: <span className="text-gray-300">{type.fee}</span></span>
-                  <span className="text-xs text-gray-500">Limit: <span className="text-gray-300">{type.limit}</span></span>
+      {/* Tab Panes */}
+      <AnimatePresence mode="wait">
+        {/* 1. Cards Tab */}
+        {activeTab === 'cards' && (
+          <motion.div
+            key="cards"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="space-y-4"
+          >
+            {cards.length === 0 ? (
+              <div className="p-16 rounded-3xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-3xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+                  <CreditCard className="w-8 h-8 text-cyan-400" />
                 </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Няма активни издадени карти</h3>
+                  <p className="text-xs text-slate-300 max-w-sm mx-auto mt-1">
+                    Издайте първата си виртуална или физическа Wallester карта за вашия бизнес.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-cyan-500/20 cursor-pointer"
+                >
+                  Издай Първа Карта
+                </button>
               </div>
-              <button
-                onClick={() => { setSelectedCardType(type.id); setShowCreateModal(true); }}
-                className="px-4 py-2 bg-primary-600/20 text-primary-400 text-sm rounded-lg hover:bg-primary-600/30 transition-colors"
-              >
-                Create
-              </button>
-            </motion.div>
-          ))}
-        </div>
-      )}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {cards.map((card, idx) => (
+                  <motion.div
+                    key={card.id || idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.08 }}
+                    className="relative rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col justify-between"
+                  >
+                    {/* Realistic Liquid Glass Card Mockup */}
+                    <div className="p-6 bg-gradient-to-br from-[#0e1c36] via-[#102447] to-[#0a1224] border-b border-white/10 relative overflow-hidden space-y-6">
+                      <div className="absolute -top-12 -right-12 w-36 h-36 bg-cyan-500/20 rounded-full blur-2xl pointer-events-none" />
 
-      {/* API Reference Tab */}
-      {activeTab === 'api' && (
-        <div className="bg-dark-800/50 border border-dark-700 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-dark-700">
-            <h2 className="text-lg font-semibold text-white">API Endpoints</h2>
-            <p className="text-gray-500 text-sm">Wallester API endpoints used by the system</p>
-          </div>
-          <div className="divide-y divide-dark-700/50">
-            {API_ENDPOINTS.map((ep, idx) => (
-              <div key={idx} className="px-5 py-3 flex items-center space-x-4 hover:bg-dark-700/30">
-                <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold min-w-[60px] text-center ${
-                  ep.method === 'GET' ? 'bg-green-500/20 text-green-400' :
-                  ep.method === 'POST' ? 'bg-blue-500/20 text-blue-400' :
-                  'bg-yellow-500/20 text-yellow-400'
-                }`}>
-                  {ep.method}
-                </span>
-                <span className="text-gray-300 font-mono text-sm flex-1">{ep.path}</span>
-                <span className="text-gray-500 text-sm">{ep.description}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs ${
-                  ep.status === 'ready' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                }`}>
-                  {ep.status}
-                </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-extrabold tracking-widest text-cyan-300 uppercase">
+                          WALLESTER
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border ${
+                          card.status === 'active' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                          card.status === 'blocked' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
+                          'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                        }`}>
+                          {card.status || 'Active'}
+                        </span>
+                      </div>
+
+                      {/* Chip & NFC */}
+                      <div className="flex items-center justify-between">
+                        <div className="w-10 h-7 rounded-lg bg-gradient-to-tr from-amber-400 to-yellow-200 p-[1px] shadow-sm">
+                          <div className="w-full h-full bg-amber-500/80 rounded-[7px] flex items-center justify-center">
+                            <Cpu className="w-4 h-4 text-amber-950" />
+                          </div>
+                        </div>
+                        <Wifi className="w-5 h-5 text-white/40 rotate-90" />
+                      </div>
+
+                      <div>
+                        <p className="text-lg font-mono font-bold tracking-widest text-white drop-shadow">
+                          •••• •••• •••• {card.last4 || '4242'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-end justify-between text-xs font-mono">
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-sans">Титуляр:</span>
+                          <span className="font-bold text-white uppercase">{card.cardholderName || 'BUSINESS CLIENT'}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-400 block font-sans">Валидна до:</span>
+                          <span className="text-slate-300">{card.expiryDate || '12/28'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions & Balance */}
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400 font-mono">Наличност:</span>
+                        <span className="font-mono font-extrabold text-emerald-400 text-sm">
+                          €{card.balance !== undefined ? card.balance : '1,500.00'} EUR
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2 pt-1">
+                        {card.status !== 'active' ? (
+                          <button
+                            onClick={() => toggleCardStatus(card.id, 'activate')}
+                            className="flex-1 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                          >
+                            Активирай
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => toggleCardStatus(card.id, 'block')}
+                            className="flex-1 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                          >
+                            Блокирай
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* 2. Card Types Tab */}
+        {activeTab === 'types' && (
+          <motion.div
+            key="types"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="grid gap-4"
+          >
+            {CARD_TYPES.map((type, idx) => (
+              <div
+                key={type.id}
+                className="relative rounded-3xl p-6 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden"
+              >
+                <div>
+                  <h3 className="text-base font-bold text-white tracking-tight">{type.name}</h3>
+                  <p className="text-xs text-slate-300 mt-1">{type.description}</p>
+                  <div className="flex items-center gap-4 mt-3 text-xs font-mono">
+                    <span className="text-slate-400">Такса: <strong className="text-emerald-400">{type.fee}</strong></span>
+                    <span className="text-slate-400">Лимит: <strong className="text-cyan-300">{type.limit}</strong></span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setSelectedCardType(type.id); setShowCreateModal(true); }}
+                  className="px-6 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-cyan-500/20 active:scale-95 cursor-pointer shrink-0"
+                >
+                  Издай Този Тип
+                </button>
               </div>
             ))}
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
 
-      {/* Create Card Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        {/* 3. API Reference Tab */}
+        {activeTab === 'api' && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-dark-800 border border-dark-700 rounded-xl p-6 w-full max-w-md space-y-4"
+            key="api"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl overflow-hidden"
           >
-            <h2 className="text-lg font-semibold text-white">Create New Card</h2>
-
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Card Type</label>
-              <select
-                value={selectedCardType}
-                onChange={(e) => setSelectedCardType(e.target.value)}
-                className="w-full px-4 py-2.5 bg-dark-700 border border-dark-600 rounded-lg text-white"
-              >
-                {CARD_TYPES.map(t => (
-                  <option key={t.id} value={t.id}>{t.name} - {t.fee}</option>
-                ))}
-              </select>
+            <div className="p-5 border-b border-white/10">
+              <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Wallester BaaS REST API Reference</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Всички интегрирани бекенд ендпойнти за карти и сметки</p>
             </div>
-
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Cardholder Name</label>
-              <input
-                type="text"
-                value={cardholderName}
-                onChange={(e) => setCardholderName(e.target.value)}
-                placeholder="IVAN PETROV"
-                className="w-full px-4 py-2.5 bg-dark-700 border border-dark-600 rounded-lg text-white uppercase placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2.5 bg-dark-700 text-gray-300 rounded-lg hover:bg-dark-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={createCard}
-                disabled={creating || !cardholderName.trim()}
-                className="flex-1 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
-              >
-                {creating ? 'Creating...' : 'Create Card'}
-              </button>
+            <div className="divide-y divide-white/5">
+              {API_ENDPOINTS.map((ep, idx) => (
+                <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className={`px-2.5 py-1 rounded-xl text-xs font-mono font-bold min-w-[65px] text-center border ${
+                      ep.method === 'GET' ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' :
+                      ep.method === 'POST' ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30' :
+                      'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                    }`}>
+                      {ep.method}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-white">{ep.path}</span>
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
+                    <span className="text-xs text-slate-400">{ep.description}</span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      {ep.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Create Card Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="rounded-3xl bg-gradient-to-br from-[#0c1426] via-[#101b33] to-[#080d1a] border border-white/10 p-6 sm:p-7 w-full max-w-md shadow-2xl space-y-4"
+            >
+              <h2 className="text-lg font-bold text-white">Издаване на Нова Карта</h2>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-medium text-slate-300 mb-1">Тип Карта</label>
+                  <select
+                    value={selectedCardType}
+                    onChange={(e) => setSelectedCardType(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl bg-[#090f1d]/90 text-white font-medium border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none cursor-pointer"
+                  >
+                    {CARD_TYPES.map(t => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.fee})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-medium text-slate-300 mb-1">Име на Титуляра (Латиница)</label>
+                  <input
+                    type="text"
+                    value={cardholderName}
+                    onChange={(e) => setCardholderName(e.target.value)}
+                    placeholder="IVAN PETROV"
+                    className="w-full px-4 py-3 rounded-2xl bg-[#090f1d]/90 text-white font-medium uppercase placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold transition-colors cursor-pointer border border-white/10"
+                >
+                  Отказ
+                </button>
+                <button
+                  onClick={createCard}
+                  disabled={creating || !cardholderName.trim()}
+                  className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-cyan-500/25 active:scale-95 cursor-pointer"
+                >
+                  {creating ? 'Издаване...' : 'Потвърди Издаване'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 export default WallesterAPI;
+

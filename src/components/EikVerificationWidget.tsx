@@ -246,26 +246,29 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
   };
 
   return (
-    <div className="bg-[#131b2e] border border-white/10 rounded-2xl p-6 sm:p-7 shadow-2xl relative overflow-hidden">
+    <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] overflow-hidden">
+      {/* Subtle Liquid Edge Light */}
+      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+
       {/* Background Decorative Glow */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-green-500/10 to-emerald-500/5 blur-3xl -z-10 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-cyan-500/15 to-blue-600/10 blur-3xl -z-10 pointer-events-none" />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 p-[1px] flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
-            <div className="w-full h-full bg-[#0b0f19] rounded-[11px] flex items-center justify-center">
-              <ShieldCheck className="w-5 h-5 text-green-400" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 p-[1px] flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+            <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-cyan-400" />
             </div>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              B2B Verification &amp; Eligibility Engine
-              <span className="text-[10px] font-mono font-semibold uppercase tracking-wider bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-0.5 rounded-full">
+            <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+              <span>B2B Verification &amp; Eligibility Engine</span>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                 Mod 11 Live
               </span>
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-300 mt-0.5">
               Моментална валидация по Търговския регистър на Р. България и одобрение на €150 бонус
             </p>
           </div>
@@ -277,7 +280,7 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
           <button 
             type="button" 
             onClick={() => handleSampleClick('207849182', 'Опън Балансър ЕООД')}
-            className="text-xs font-mono px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors cursor-pointer min-h-[38px]"
+            className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
             aria-label="Зареди примерен ЕИК 207849182"
           >
             207849182
@@ -285,7 +288,7 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
           <button 
             type="button" 
             onClick={() => handleSampleClick('207849190', 'ФИНАНС ПРОТЕКТ ЕООД')}
-            className="text-xs font-mono px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors cursor-pointer min-h-[38px]"
+            className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
             aria-label="Зареди примерен ЕИК 207849190"
           >
             207849190
@@ -293,10 +296,10 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
           <button 
             type="button" 
             onClick={() => handleSampleClick('2078491820011', 'ИНКОНТРОЛ ПЛЮС - КЛОН')}
-            className="text-xs font-mono px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors cursor-pointer min-h-[38px]"
+            className="text-xs font-mono font-bold px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-cyan-300 border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
             aria-label="Зареди примерен 13-цифрен ЕИК"
           >
-            13 цифри
+            13 цифри (Клон)
           </button>
         </div>
       </div>
@@ -306,12 +309,12 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
         
         {/* LEFT COLUMN: Input Form (7 Cols) */}
         <form onSubmit={handleSubmitRegistration} className="lg:col-span-7 space-y-4">
-          <div>
-            <label htmlFor="eik-input" className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center justify-between">
-              <span>ЕИК / БУЛСТАТ (9 или 13 цифри) *</span>
-              <span className="text-[10px] text-slate-500 font-mono">Mod 11 Алгоритъм</span>
+          <div className="space-y-1.5">
+            <label htmlFor="eik-input" className="block text-xs font-semibold text-slate-200 flex items-center justify-between">
+              <span>ЕИК / БУЛСТАТ (9 или 13 цифри) <span className="text-cyan-400">*</span></span>
+              <span className="text-[10px] text-cyan-400 font-mono">Mod 11 Алгоритъм</span>
             </label>
-            <div className="relative">
+            <div className="relative group">
               <input
                 id="eik-input"
                 name="eik"
@@ -320,19 +323,19 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
                 onChange={(e) => setEikInput(e.target.value.replace(/\D/g, '').slice(0, 13))}
                 placeholder="напр. 207849182"
                 aria-label="ЕИК или БУЛСТАТ номер"
-                className={`w-full bg-[#0b0f19] border ${
+                className={`w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm font-mono placeholder-slate-500 border ${
                   verification.isValid 
-                    ? 'border-green-500/60 ring-1 ring-green-500/30' 
-                    : eikInput.length > 0 ? 'border-amber-500/60' : 'border-white/10'
-                } rounded-xl px-4 py-3 text-sm font-mono text-white placeholder-slate-600 focus:outline-none transition-all`}
+                    ? 'border-emerald-500/60 ring-2 ring-emerald-500/20' 
+                    : eikInput.length > 0 ? 'border-amber-500/60 ring-2 ring-amber-500/20' : 'border-white/10'
+                } hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none`}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                 {verification.isValid ? (
-                  <span className="flex items-center gap-1 text-green-400 text-xs font-semibold">
+                  <span className="flex items-center gap-1 text-emerald-400 text-xs font-bold font-mono">
                     <CheckCircle2 className="w-4 h-4" /> Валиден
                   </span>
                 ) : eikInput.length > 0 ? (
-                  <span className="flex items-center gap-1 text-amber-400 text-xs">
+                  <span className="flex items-center gap-1 text-amber-400 text-xs font-mono">
                     <AlertCircle className="w-4 h-4" /> Непълен
                   </span>
                 ) : null}
@@ -340,9 +343,9 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
             </div>
           </div>
 
-          <div>
-            <label htmlFor="company-name-input" className="block text-xs font-medium text-slate-300 mb-1.5">
-              Име на фирмата (български) *
+          <div className="space-y-1.5">
+            <label htmlFor="company-name-input" className="block text-xs font-semibold text-slate-200">
+              Име на фирмата (български) <span className="text-cyan-400">*</span>
             </label>
             <input
               id="company-name-input"
@@ -352,13 +355,13 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="напр. Опън Балансър ЕООД"
               aria-label="Име на фирмата на български език"
-              className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
+              className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="email-input" className="block text-xs font-medium text-slate-300 mb-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="email-input" className="block text-xs font-semibold text-slate-200">
                 Служебен Email
               </label>
               <input
@@ -369,11 +372,11 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
                 onChange={(e) => setEmailInput(e.target.value)}
                 placeholder="finance@company.bg"
                 aria-label="Служебен имейл адрес"
-                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-xs placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
               />
             </div>
-            <div>
-              <label htmlFor="phone-input" className="block text-xs font-medium text-slate-300 mb-1.5">
+            <div className="space-y-1.5">
+              <label htmlFor="phone-input" className="block text-xs font-semibold text-slate-200">
                 Телефон за SMS OTP
               </label>
               <input
@@ -384,33 +387,35 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="+359888123456"
                 aria-label="Телефонен номер за SMS потвърждение"
-                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
+                className="w-full px-4 py-3 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-xs placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={!verification.isValid || isSubmitting}
-            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-lg min-h-[46px] cursor-pointer ${
-              verification.isValid && !isSubmitting
-                ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-slate-950 shadow-green-500/25 active:scale-[0.98]'
-                : 'bg-white/5 text-slate-500 border border-white/10 cursor-not-allowed'
-            }`}
-          >
-            {isSubmitting ? (
-              <>
-                <Zap className="w-4 h-4 animate-spin text-slate-950" />
-                <span>Обработка на заявката през n8n &amp; Wallester API...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" />
-                <span>Стартирай онбординг &amp; Издаване на Карта (€150 Бонус)</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </>
-            )}
-          </button>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={!verification.isValid || isSubmitting}
+              className={`w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-xs tracking-wider uppercase transition-all shadow-lg min-h-[48px] cursor-pointer ${
+                verification.isValid && !isSubmitting
+                  ? 'bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 text-white shadow-cyan-500/25 active:scale-[0.98]'
+                  : 'bg-white/5 text-slate-500 border border-white/10 cursor-not-allowed'
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <Zap className="w-4 h-4 animate-spin text-white" />
+                  <span>Обработка на заявката през n8n &amp; Wallester API...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-cyan-200" />
+                  <span>Стартирай онбординг &amp; Издаване на Карта (€150 Бонус)</span>
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </>
+              )}
+            </button>
+          </div>
 
           {/* Feedback Message */}
           <AnimatePresence>
@@ -419,20 +424,20 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
+                className={`p-4 rounded-2xl border text-xs flex items-start gap-3 backdrop-blur-md ${
                   submitStatus === 'success' 
-                    ? 'bg-green-500/10 border-green-500/30 text-green-300' 
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
                     : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
                 }`}
               >
                 {submitStatus === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                 )}
                 <div>
-                  <div className="font-semibold">{submitStatus === 'success' ? 'Заявката е приета' : 'Възникна проблем'}</div>
-                  <div className="mt-0.5 leading-relaxed">{submitMessage}</div>
+                  <div className="font-bold text-sm">{submitStatus === 'success' ? 'Заявката е приета' : 'Възникна проблем'}</div>
+                  <div className="mt-0.5 leading-relaxed text-slate-300">{submitMessage}</div>
                 </div>
               </motion.div>
             )}
@@ -440,48 +445,48 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
         </form>
 
         {/* RIGHT COLUMN: Real-Time Eligibility Card (5 Cols) */}
-        <div className="lg:col-span-5 bg-[#0b0f19] border border-white/10 rounded-xl p-5 space-y-4">
+        <div className="lg:col-span-5 rounded-3xl bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 border border-white/10 p-6 space-y-4 shadow-xl relative overflow-hidden backdrop-blur-2xl">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
               FREE_CARD_PLUS_150_BONUS
             </span>
             <div className="text-right">
-              <span className="text-[10px] text-slate-500 block">ОДОБРЕН БОНУС</span>
-              <span className="text-lg font-bold font-mono text-green-400">€150.00</span>
+              <span className="text-[10px] text-slate-400 font-mono block">ОДОБРЕН БОНУС</span>
+              <span className="text-xl font-extrabold font-mono text-emerald-400">€150.00</span>
             </div>
           </div>
 
-          <div className="space-y-2.5 text-xs">
-            <div className="flex justify-between py-1.5 border-b border-white/5">
+          <div className="space-y-3 text-xs divide-y divide-white/5">
+            <div className="flex justify-between pt-1">
               <span className="text-slate-400">Правна Форма:</span>
-              <span className="font-semibold text-white">{verification.legalFormBg} ({verification.legalFormEn})</span>
+              <span className="font-bold text-white">{verification.legalFormBg} ({verification.legalFormEn})</span>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-white/5 items-center">
+            <div className="flex justify-between pt-2.5 items-center">
               <span className="text-slate-400">ДДС Номер (VIES / НАП):</span>
-              <div className="flex items-center gap-1.5 font-mono text-white">
+              <div className="flex items-center gap-1.5 font-mono text-cyan-300 font-bold">
                 <span>{verification.vatNumber || '—'}</span>
                 {verification.vatNumber && (
                   <button
                     type="button"
                     onClick={handleCopyVat}
-                    className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
+                    className="p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors cursor-pointer min-h-[28px] min-w-[28px] flex items-center justify-center border border-white/5"
                     title="Копирай ДДС номер"
                     aria-label="Копирай ДДС номер"
                   >
-                    {copiedVat ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedVat ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 )}
               </div>
             </div>
-            <div className="flex justify-between py-1.5 border-b border-white/5">
+            <div className="flex justify-between pt-2.5">
               <span className="text-slate-400">Контролна Сума (Mod 11):</span>
-              <span className={`font-mono font-medium ${verification.isValid ? 'text-green-400' : 'text-amber-400'}`}>
+              <span className={`font-mono font-bold ${verification.isValid ? 'text-emerald-400' : 'text-amber-400'}`}>
                 {verification.isValid ? `✓ Премината (Етап ${verification.stageUsed})` : '✕ Очаква валидация'}
               </span>
             </div>
-            <div className="flex justify-between py-1.5">
+            <div className="flex justify-between pt-2.5">
               <span className="text-slate-400">Издател на картата:</span>
-              <span className="font-medium text-slate-200">Wallester Business (Visa Platinum)</span>
+              <span className="font-semibold text-slate-200">Wallester Business (Visa Platinum)</span>
             </div>
           </div>
 

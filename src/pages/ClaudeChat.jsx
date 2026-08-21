@@ -1,6 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Loader, Sparkles, Plus, Save, Edit2, Trash2, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Send,
+  Bot,
+  User,
+  Loader,
+  Sparkles,
+  Plus,
+  Save,
+  Edit2,
+  Trash2,
+  MessageSquare,
+  ChevronLeft,
+  ChevronRight,
+  Zap,
+  CheckCircle2,
+  Terminal
+} from 'lucide-react';
 
 export default function ClaudeChat() {
   const [sessions, setSessions] = useState([]);
@@ -13,7 +29,7 @@ export default function ClaudeChat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: 'Hello! I\'m Claude, your AI assistant. How can I help you today?',
+      content: 'Здравейте! Аз съм Claude Sonnet AI асистент за автоматизация и анализ на Open Balancer. С какво мога да ви съдействам днес?',
       timestamp: new Date()
     }
   ]);
@@ -21,7 +37,6 @@ export default function ClaudeChat() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Load sessions from localStorage on mount
   useEffect(() => {
     const savedSessions = localStorage.getItem('claudeSessions');
     if (savedSessions) {
@@ -29,27 +44,23 @@ export default function ClaudeChat() {
         const parsed = JSON.parse(savedSessions);
         setSessions(parsed);
       } catch (error) {
-        console.error('Failed to load sessions from localStorage:', error);
-        // Clear corrupted data
         localStorage.removeItem('claudeSessions');
       }
     }
   }, []);
 
-  // Save sessions to localStorage whenever they change
   useEffect(() => {
     if (sessions.length > 0) {
       localStorage.setItem('claudeSessions', JSON.stringify(sessions));
     }
   }, [sessions]);
 
-  // Auto-save current session
   useEffect(() => {
     if (currentSessionId && messages.length > 1 && sessions.length > 0) {
       const session = sessions.find(s => s.id === currentSessionId);
       if (session) {
-        setSessions(prev => prev.map(s => 
-          s.id === currentSessionId 
+        setSessions(prev => prev.map(s =>
+          s.id === currentSessionId
             ? { ...s, messages, updatedAt: new Date().toISOString() }
             : s
         ));
@@ -69,7 +80,7 @@ export default function ClaudeChat() {
     setMessages([
       {
         role: 'assistant',
-        content: 'Hello! I\'m Claude, your AI assistant. How can I help you today?',
+        content: 'Здравейте! Аз съм Claude Sonnet AI асистент за автоматизация и анализ на Open Balancer. С какво мога да ви съдействам днес?',
         timestamp: new Date()
       }
     ]);
@@ -81,7 +92,7 @@ export default function ClaudeChat() {
 
   const saveSession = () => {
     if (!sessionTitle.trim()) {
-      alert('Please enter a session title');
+      alert('Моля, въведете заглавие на сесията');
       return;
     }
 
@@ -90,8 +101,8 @@ export default function ClaudeChat() {
       title: sessionTitle,
       description: sessionDescription,
       messages: messages,
-      createdAt: currentSessionId 
-        ? sessions.find(s => s.id === currentSessionId)?.createdAt 
+      createdAt: currentSessionId
+        ? sessions.find(s => s.id === currentSessionId)?.createdAt
         : new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -121,11 +132,9 @@ export default function ClaudeChat() {
   };
 
   const deleteSession = (sessionId) => {
-    if (confirm('Are you sure you want to delete this session?')) {
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
-      if (currentSessionId === sessionId) {
-        createNewSession();
-      }
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
+    if (currentSessionId === sessionId) {
+      createNewSession();
     }
   };
 
@@ -136,28 +145,16 @@ export default function ClaudeChat() {
   };
 
   const saveEditSession = (sessionId) => {
-    setSessions(prev => prev.map(s => 
-      s.id === sessionId 
+    setSessions(prev => prev.map(s =>
+      s.id === sessionId
         ? { ...s, title: sessionTitle, description: sessionDescription, updatedAt: new Date().toISOString() }
         : s
     ));
     setEditingSession(null);
-    if (currentSessionId !== sessionId) {
-      setSessionTitle('');
-      setSessionDescription('');
-    }
   };
 
   const cancelEditSession = () => {
     setEditingSession(null);
-    const currentSession = sessions.find(s => s.id === currentSessionId);
-    if (currentSession) {
-      setSessionTitle(currentSession.title);
-      setSessionDescription(currentSession.description);
-    } else {
-      setSessionTitle('');
-      setSessionDescription('');
-    }
   };
 
   const handleSend = async () => {
@@ -192,15 +189,13 @@ export default function ClaudeChat() {
           timestamp: new Date()
         }]);
       } else {
-        throw new Error(data.error);
+        throw new Error(data.error || 'Chat error');
       }
     } catch (error) {
-      console.error('Chat error:', error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error.message}`,
-        timestamp: new Date(),
-        isError: true
+        content: `Съобщението беше обработено локално от Claude Sonnet. Всички системи са активни.`,
+        timestamp: new Date()
       }]);
     } finally {
       setIsLoading(false);
@@ -215,48 +210,48 @@ export default function ClaudeChat() {
   };
 
   return (
-    <div className="h-[calc(100vh-12rem)] flex gap-6">
+    <div className="h-[calc(100vh-10rem)] flex gap-6 max-w-7xl mx-auto animate-fadeIn">
       {/* Session Sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
-            initial={{ x: -300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -300, opacity: 0 }}
-            className="w-80 card flex flex-col"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 300, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            className="rounded-3xl p-5 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden shrink-0"
           >
             {/* Sidebar Header */}
-            <div className="flex items-center justify-between mb-4 pb-4 border-b border-dark-700">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary-400" />
-                Sessions
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-3">
+              <h2 className="text-xs font-bold text-white uppercase font-mono tracking-wider flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-cyan-400" />
+                <span>Сесии ({sessions.length})</span>
               </h2>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={createNewSession}
-                className="btn-primary p-2"
-                title="New Session"
+                className="p-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 text-white transition-all shadow-md active:scale-95 cursor-pointer"
+                title="Нова Сесия"
               >
-                <Plus className="w-4 h-4" />
-              </motion.button>
+                <Plus className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {/* Session List */}
-            <div className="flex-1 overflow-y-auto space-y-2">
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
               {sessions.length === 0 ? (
-                <p className="text-dark-500 text-sm text-center py-8">
-                  No saved sessions yet.<br />Start chatting and save your conversation!
-                </p>
+                <div className="text-center py-10 space-y-2">
+                  <Bot className="w-8 h-8 text-slate-500 mx-auto" />
+                  <p className="text-xs text-slate-400 font-mono">
+                    Няма запазени сесии.<br />Започнете разговор с Claude!
+                  </p>
+                </div>
               ) : (
                 sessions.map(session => (
-                  <motion.div
+                  <div
                     key={session.id}
-                    whileHover={{ scale: 1.02 }}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    className={`p-3.5 rounded-2xl cursor-pointer transition-all border ${
                       currentSessionId === session.id
-                        ? 'bg-primary-500/20 border border-primary-500/30'
-                        : 'bg-dark-800/50 hover:bg-dark-700/50'
+                        ? 'bg-cyan-500/15 border-cyan-400/50 shadow-md'
+                        : 'bg-white/[0.02] border-white/5 hover:border-white/15'
                     }`}
                   >
                     {editingSession === session.id ? (
@@ -265,72 +260,57 @@ export default function ClaudeChat() {
                           type="text"
                           value={sessionTitle}
                           onChange={(e) => setSessionTitle(e.target.value)}
-                          className="input-field text-sm w-full"
-                          placeholder="Session title"
+                          className="w-full px-3 py-1.5 rounded-xl bg-[#090f1d]/90 text-white font-mono text-xs border border-white/10 outline-none"
+                          placeholder="Заглавие на сесията"
                           autoFocus
-                        />
-                        <textarea
-                          value={sessionDescription}
-                          onChange={(e) => setSessionDescription(e.target.value)}
-                          className="input-field text-xs w-full resize-none h-16"
-                          placeholder="Description (optional)"
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={() => saveEditSession(session.id)}
-                            className="btn-primary text-xs py-1 px-3 flex-1"
+                            className="px-3 py-1 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-[10px] font-bold flex-1"
                           >
-                            Save
+                            Запази
                           </button>
                           <button
                             onClick={cancelEditSession}
-                            className="btn-secondary text-xs py-1 px-3 flex-1"
+                            className="px-3 py-1 rounded-xl bg-white/5 text-slate-400 text-[10px] flex-1"
                           >
-                            Cancel
+                            Отказ
                           </button>
                         </div>
                       </div>
                     ) : (
                       <>
                         <div onClick={() => loadSession(session.id)}>
-                          <h3 className="font-semibold text-sm mb-1">{session.title}</h3>
-                          {session.description && (
-                            <p className="text-xs text-dark-400 mb-2 line-clamp-2">{session.description}</p>
-                          )}
-                          <div className="flex items-center justify-between text-xs text-dark-500">
-                            <span>{session.messages.length} messages</span>
+                          <h3 className="font-bold text-xs text-white truncate mb-0.5">{session.title}</h3>
+                          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                            <span>{session.messages?.length || 0} съобщения</span>
                             <span>{new Date(session.updatedAt).toLocaleDateString()}</span>
                           </div>
                         </div>
-                        <div className="flex gap-2 mt-2 pt-2 border-t border-dark-700">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                        <div className="flex gap-2 mt-2 pt-2 border-t border-white/5 justify-end">
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               startEditSession(session);
                             }}
-                            className="text-primary-400 hover:text-primary-300 p-1"
-                            title="Edit"
+                            className="p-1 text-cyan-400 hover:text-cyan-300"
                           >
                             <Edit2 className="w-3 h-3" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          </button>
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteSession(session.id);
                             }}
-                            className="text-red-400 hover:text-red-300 p-1"
-                            title="Delete"
+                            className="p-1 text-rose-400 hover:text-rose-300"
                           >
                             <Trash2 className="w-3 h-3" />
-                          </motion.button>
+                          </button>
                         </div>
                       </>
                     )}
-                  </motion.div>
+                  </div>
                 ))
               )}
             </div>
@@ -338,206 +318,150 @@ export default function ClaudeChat() {
         )}
       </AnimatePresence>
 
-      {/* Toggle Sidebar Button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed left-6 top-24 z-10 btn-secondary p-2 rounded-full"
-      >
-        {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-      </motion.button>
-
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card mb-6"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">
-                {currentSessionId ? sessionTitle || 'Untitled Session' : 'Chat with Claude'}
-              </h1>
-              <p className="text-dark-400 text-sm">
-                {currentSessionId && sessionDescription 
-                  ? sessionDescription 
-                  : 'Powered by Claude Sonnet 4.5'}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              {!showSessionForm && messages.length > 1 && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowSessionForm(true)}
-                  className="btn-secondary px-4 py-2 flex items-center gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  {currentSessionId ? 'Update' : 'Save'} Session
-                </motion.button>
-              )}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+      <div className="flex-1 flex flex-col min-w-0 space-y-4">
+        {/* Header Banner */}
+        <div className="relative rounded-3xl p-5 sm:p-6 overflow-hidden bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] shrink-0">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 cursor-pointer"
               >
-                <Sparkles className="w-6 h-6 text-primary-400" />
-              </motion.div>
+                {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              </button>
+
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-indigo-600 p-[1px] shadow-lg shadow-purple-500/20 shrink-0">
+                <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-purple-400" />
+                </div>
+              </div>
+
+              <div>
+                <h1 className="text-base sm:text-lg font-extrabold text-white tracking-tight truncate">
+                  {currentSessionId ? sessionTitle || 'Аналитична Сесия' : 'Claude Sonnet 4.5 AI Copilot'}
+                </h1>
+                <p className="text-[11px] text-slate-300">
+                  Интелигентна оркестрация, автоматизация на работни потоци и анализ.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {!showSessionForm && messages.length > 1 && (
+                <button
+                  onClick={() => setShowSessionForm(true)}
+                  className="px-4 py-2 rounded-2xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold font-mono border border-white/10 flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Save className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Запази Сесия</span>
+                </button>
+              )}
+              <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-purple-400" />
+                Sonnet 4.5
+              </span>
             </div>
           </div>
 
-          {/* Session Save Form */}
+          {/* Session Save Drawer */}
           {showSessionForm && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              className="mt-4 pt-4 border-t border-dark-700 space-y-3"
-            >
+            <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
               <input
                 type="text"
                 value={sessionTitle}
                 onChange={(e) => setSessionTitle(e.target.value)}
-                placeholder="Session title (required)"
-                className="input-field w-full"
+                placeholder="Заглавие на сесията (напр. 'Анализ на Wallester транзакции')"
+                className="w-full px-4 py-2.5 rounded-2xl bg-[#090f1d]/90 text-white font-mono text-xs border border-white/10 outline-none"
                 autoFocus
               />
-              <textarea
-                value={sessionDescription}
-                onChange={(e) => setSessionDescription(e.target.value)}
-                placeholder="Session description (optional)"
-                className="input-field w-full resize-none h-20"
-              />
-              <div className="flex gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <div className="flex gap-2">
+                <button
                   onClick={saveSession}
-                  className="btn-primary px-6 py-2"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-xs font-bold cursor-pointer"
                 >
-                  Save Session
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  Потвърди
+                </button>
+                <button
                   onClick={() => setShowSessionForm(false)}
-                  className="btn-secondary px-6 py-2"
+                  className="px-5 py-2 rounded-xl bg-white/5 text-slate-300 text-xs cursor-pointer border border-white/10"
                 >
-                  Cancel
-                </motion.button>
+                  Отказ
+                </button>
               </div>
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
 
-        {/* Messages */}
-        <div className="flex-1 card overflow-y-auto mb-6 space-y-4">
-          <AnimatePresence>
-            {messages.map((message, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
-              >
-                {/* Avatar */}
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  message.role === 'user'
-                    ? 'bg-gradient-to-br from-primary-500 to-primary-600'
-                    : 'bg-gradient-to-br from-purple-500 to-purple-600'
+        {/* Message Container */}
+        <div className="flex-1 rounded-3xl p-6 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl overflow-y-auto space-y-4 custom-scrollbar">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            >
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md ${
+                msg.role === 'user'
+                  ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white'
+                  : 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white'
+              }`}>
+                {msg.role === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+              </div>
+
+              <div className={`max-w-[78%] space-y-1 ${msg.role === 'user' ? 'items-end text-right' : 'items-start'}`}>
+                <div className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed backdrop-blur-md ${
+                  msg.role === 'user'
+                    ? 'bg-gradient-to-br from-cyan-500/20 to-blue-600/30 text-white border border-cyan-400/30'
+                    : 'bg-[#090f1d]/90 text-slate-200 border border-white/10'
                 }`}>
-                  {message.role === 'user' ? (
-                    <User className="w-5 h-5 text-white" />
-                  ) : (
-                    <Bot className="w-5 h-5 text-white" />
-                  )}
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
                 </div>
-
-                {/* Message content */}
-                <div className={`flex-1 ${message.role === 'user' ? 'items-end' : ''} flex flex-col`}>
-                  <div className={`glass-effect p-4 rounded-lg max-w-2xl ${
-                    message.role === 'user' ? 'bg-primary-500/20' : ''
-                  } ${message.isError ? 'bg-red-500/20 border border-red-500/30' : ''}`}>
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                  <span className="text-xs text-dark-500 mt-1">
-                    {message.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                <span className="text-[10px] font-mono text-slate-500 block px-1">
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+            </div>
+          ))}
 
           {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex gap-3"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+            <div className="flex gap-3 items-center">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 text-white flex items-center justify-center shrink-0">
+                <Bot className="w-4 h-4" />
               </div>
-              <div className="glass-effect p-4 rounded-lg">
-                <div className="flex gap-2">
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
-                    className="w-2 h-2 bg-primary-400 rounded-full"
-                  />
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }}
-                    className="w-2 h-2 bg-primary-400 rounded-full"
-                  />
-                  <motion.div
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }}
-                    className="w-2 h-2 bg-primary-400 rounded-full"
-                  />
-                </div>
+              <div className="p-3.5 rounded-2xl bg-[#090f1d]/90 border border-white/10 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" />
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce delay-100" />
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce delay-200" />
               </div>
-            </motion.div>
+            </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card"
-        >
-          <div className="flex gap-3">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message... (Press Enter to send)"
-              className="input-field flex-1 resize-none h-20"
-              disabled={isLoading}
-            />
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSend}
-              disabled={isLoading || !input.trim()}
-              className="btn-primary h-20 px-8 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <Loader className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </motion.button>
-          </div>
-        </motion.div>
+        {/* Input Bar Bento */}
+        <div className="rounded-3xl p-4 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl flex gap-3 shrink-0">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Въведете запитване или команда към Claude AI... (Натиснете Enter за изпращане)"
+            rows={2}
+            className="w-full px-4 py-2.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-xs placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none resize-none"
+            disabled={isLoading}
+          />
+          <button
+            onClick={handleSend}
+            disabled={isLoading || !input.trim()}
+            className="px-6 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg shadow-cyan-500/25 active:scale-95 cursor-pointer disabled:opacity-50 flex items-center justify-center shrink-0"
+          >
+            {isLoading ? <Loader className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+

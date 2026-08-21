@@ -1,338 +1,314 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Coins,
+  TrendingUp,
+  ArrowRightLeft,
+  ShieldCheck,
+  Zap,
+  Sparkles,
+  PieChart,
+  CheckCircle2,
+  AlertTriangle,
+  Lock,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
 
 const PROVIDERS = [
   {
-    name: 'Wise',
+    name: 'Wise Business',
     slug: 'wise',
     fee: '0.4-0.6%',
-    speed: '1-2 hours',
+    speed: '1-2 часа',
     rating: 5,
-    color: 'from-green-500 to-emerald-600',
-    pros: ['Lowest fees', 'Mid-market rate', 'Fast transfers', 'Multi-currency account'],
-    cons: ['ID verification required', 'Limits for new accounts'],
-    bestFor: 'Large EUR transfers with lowest cost',
+    color: 'from-emerald-600 to-teal-700',
+    pros: ['Най-ниски FX такси', 'Официален реален пазарен курс', 'Бързи SEPA преводи', 'Мултивалутна сметка'],
+    cons: ['Изисква KYC верификация'],
+    bestFor: 'Големи обеми EUR/BGN разплащания с минимална комисионна',
   },
   {
     name: 'Revolut Business',
     slug: 'revolut',
-    fee: '0-1%',
-    speed: 'Instant',
+    fee: '0-0.8%',
+    speed: 'Мигновено',
     rating: 4,
-    color: 'from-blue-500 to-indigo-600',
-    pros: ['Free FX on weekdays (plan)', 'Instant transfers', 'Multi-currency', 'Cards'],
-    cons: ['Weekend markup', 'Monthly fee for best rates', 'Account freezes possible'],
-    bestFor: 'Regular EUR conversions with business account',
+    color: 'from-blue-600 to-indigo-700',
+    pros: ['Безплатна конвертация в делнични дни', 'Моментални преводи', 'Корпоративни карти'],
+    cons: ['Уикенд марк-ъп от 1%'],
+    bestFor: 'Ежедневни бизнес плащания и онлайн абонаменти',
   },
   {
-    name: 'Interactive Brokers',
+    name: 'Interactive Brokers (IBKR)',
     slug: 'ibkr',
-    fee: '$2 flat',
-    speed: '1-2 days',
-    rating: 4,
-    color: 'from-red-500 to-red-700',
-    pros: ['Best rate for large amounts', 'Investment platform', 'Very low forex fees'],
-    cons: ['Complex setup', 'Wire transfer delays', 'Not beginner-friendly'],
-    bestFor: 'Amounts over 10,000 EUR',
+    fee: '$2 Flat',
+    speed: '1-2 работни дни',
+    rating: 5,
+    color: 'from-purple-600 to-indigo-800',
+    pros: ['Институционален Spot курс', 'Без надценка', 'Директна инвестиционна интеграция'],
+    cons: ['По-сложен интерфейс'],
+    bestFor: 'Суми над 10,000 EUR за инвестиции',
   },
   {
-    name: 'Bank Transfer (Direct)',
+    name: 'Традиционна Банка (Direct Wire)',
     slug: 'bank',
-    fee: '1-3%',
-    speed: '1-3 days',
+    fee: '1.5-3.0%',
+    speed: '2-4 работни дни',
     rating: 2,
-    color: 'from-gray-500 to-gray-700',
-    pros: ['Simple', 'No extra accounts', 'Traditional'],
-    cons: ['Worst exchange rate', 'High fees', 'Slow'],
-    bestFor: 'Avoid if possible',
+    color: 'from-slate-700 to-slate-900',
+    pros: ['Без регистрация в нови платформи'],
+    cons: ['Скрити надценки в курса', 'Високи изходящи такси'],
+    bestFor: 'Препоръчва се избягване при големи суми',
   },
 ];
 
 const INVESTMENT_CATEGORIES = [
-  { name: 'Emergency Fund', allocation: 20, description: '3-6 месеца разходи в EUR savings', risk: 'None' },
-  { name: 'ETF Index (VWCE)', allocation: 40, description: 'Vanguard FTSE All-World UCITS ETF', risk: 'Medium' },
-  { name: 'EUR Bonds / T-Bills', allocation: 20, description: 'Government bonds, 2-4% yield', risk: 'Low' },
-  { name: 'Crypto (BTC/ETH)', allocation: 10, description: 'Long-term hold, hardware wallet', risk: 'High' },
-  { name: 'Business Reinvestment', allocation: 10, description: 'Tools, marketing, automation', risk: 'Medium' },
+  { name: 'Авариен Фонд (Emergency Liquidity)', allocation: 20, description: '3-6 месеца оперативни разходи в EUR / BGN спестовна сметка', risk: 'None', color: 'from-blue-500 to-cyan-500' },
+  { name: 'ETF Индексен Фонд (VWCE / CSPX)', allocation: 40, description: 'Vanguard FTSE All-World & S&P 500 UCITS ETF', risk: 'Medium', color: 'from-emerald-500 to-teal-500' },
+  { name: 'Държавни Облигации & T-Bills', allocation: 20, description: 'EUR облигации с фиксирана доходност 3-4% годишно', risk: 'Low', color: 'from-indigo-500 to-purple-500' },
+  { name: 'Крипто Активи (BTC / ETH)', allocation: 10, description: 'Дългосрочно съхранение на хардуерен портфейл (Cold Storage)', risk: 'High', color: 'from-amber-500 to-orange-500' },
+  { name: 'Реинвестиция в Бизнес Автоматизация', allocation: 10, description: 'Инфраструктура, n8n сървъри, AI проксита и маркетинг', risk: 'Medium', color: 'from-pink-500 to-rose-500' },
 ];
 
-function CurrencyConverter() {
-  const [amount, setAmount] = useState(1000);
+export function CurrencyConverter() {
+  const [amount, setAmount] = useState(2500);
   const [fromCurrency, setFromCurrency] = useState('BGN');
   const [toCurrency, setToCurrency] = useState('EUR');
-  const [rates, setRates] = useState({ BGN_EUR: 0.5113, EUR_BGN: 1.9558, USD_EUR: 0.92, EUR_USD: 1.087 });
-  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [rates] = useState({ BGN_EUR: 0.5113, EUR_BGN: 1.9558, USD_EUR: 0.92, EUR_USD: 1.087, BGN_USD: 0.556, USD_BGN: 1.798 });
+  const [selectedProvider, setSelectedProvider] = useState('wise');
   const [investmentAmount, setInvestmentAmount] = useState(5000);
 
-  const converted = amount * (rates[`${fromCurrency}_${toCurrency}`] || 1);
+  const rateKey = `${fromCurrency}_${toCurrency}`;
+  const rate = fromCurrency === toCurrency ? 1 : (rates[rateKey] || 1);
+  const converted = amount * rate;
 
   const providerResults = PROVIDERS.map(p => {
-    const feePercent = parseFloat(p.fee) / 100 || 0.01;
-    const fee = amount * feePercent;
-    const net = converted - (converted * feePercent);
-    return { ...p, fee: fee.toFixed(2), netAmount: net.toFixed(2) };
+    const feePercent = p.slug === 'ibkr' ? 0.001 : (parseFloat(p.fee) / 100 || 0.005);
+    const feeVal = p.slug === 'ibkr' ? 2 : amount * feePercent;
+    const net = converted - (feeVal * rate);
+    return { ...p, calculatedFee: feeVal.toFixed(2), netAmount: net.toFixed(2) };
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Currency & Investment</h1>
-          <p className="text-gray-400 mt-1">
-            EUR конвертиране, сравнение на providers и инвестиционен план
-          </p>
+    <div className="space-y-8 max-w-7xl mx-auto animate-fadeIn">
+      {/* Liquid Glass Header Banner */}
+      <div className="relative rounded-3xl p-6 sm:p-8 overflow-hidden bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)]">
+        {/* Glow Spheres */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none -z-10" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 p-[1px] shadow-lg shadow-emerald-500/20 shrink-0">
+              <div className="w-full h-full bg-[#080d1a] rounded-[15px] flex items-center justify-center">
+                <Coins className="w-6 h-6 text-emerald-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-3">
+                <span>FX Currency &amp; Treasury Intelligence</span>
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                Калкулатор на валутни курсове, сравнение на доставчици и инвестиционно разпределение на капитала.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              Fixed EUR Peg Active
+            </span>
+          </div>
         </div>
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
-          Задачи 33, 34
-        </span>
       </div>
 
-      {/* Converter */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-dark-800/50 backdrop-blur-sm border border-dark-700 rounded-xl p-6"
-      >
-        <h2 className="text-lg font-semibold text-white mb-4">Currency Converter</h2>
+      {/* Converter Bento */}
+      <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-6 overflow-hidden">
+        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+        <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Валутен Конвертор в Реално Време</h2>
+
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="md:col-span-2">
-            <label className="block text-sm text-gray-400 mb-1">Amount</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Сума за Конвертиране</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white text-lg font-mono focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-mono font-extrabold text-lg border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none"
             />
           </div>
+
           <div>
-            <label className="block text-sm text-gray-400 mb-1">From</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">От Валута</label>
             <select
               value={fromCurrency}
               onChange={(e) => setFromCurrency(e.target.value)}
-              className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white"
+              className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-bold text-sm border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none cursor-pointer"
             >
-              <option>BGN</option>
-              <option>EUR</option>
-              <option>USD</option>
+              <option value="BGN">BGN (Български Лев)</option>
+              <option value="EUR">EUR (Евро)</option>
+              <option value="USD">USD (Щатски Долар)</option>
             </select>
           </div>
+
           <div className="flex items-center justify-center">
             <button
-              onClick={() => { setFromCurrency(toCurrency); setToCurrency(fromCurrency); }}
-              className="p-2 rounded-full bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white transition-colors"
+              onClick={() => {
+                const temp = fromCurrency;
+                setFromCurrency(toCurrency);
+                setToCurrency(temp);
+              }}
+              className="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-cyan-400 hover:text-white border border-white/10 transition-all cursor-pointer shadow-md active:scale-95"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
+              <ArrowRightLeft className="w-5 h-5" />
             </button>
           </div>
+
           <div>
-            <label className="block text-sm text-gray-400 mb-1">To</label>
+            <label className="block text-xs font-medium text-slate-300 mb-1">Към Валута</label>
             <select
               value={toCurrency}
               onChange={(e) => setToCurrency(e.target.value)}
-              className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white"
+              className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-bold text-sm border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none cursor-pointer"
             >
-              <option>EUR</option>
-              <option>BGN</option>
-              <option>USD</option>
+              <option value="EUR">EUR (Евро)</option>
+              <option value="BGN">BGN (Български Лев)</option>
+              <option value="USD">USD (Щатски Долар)</option>
             </select>
           </div>
         </div>
 
-        <div className="mt-6 bg-dark-700/50 rounded-lg p-4 text-center">
-          <p className="text-gray-400 text-sm">
+        {/* Result Highlight Banner */}
+        <div className="p-6 rounded-2xl bg-gradient-to-br from-cyan-500/10 via-[#0c1426]/90 to-[#080d1a] border border-cyan-500/30 text-center space-y-1">
+          <p className="text-xs text-slate-400 font-mono">
             {amount.toLocaleString()} {fromCurrency} =
           </p>
-          <p className="text-3xl font-bold text-white mt-1">
+          <p className="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-emerald-300 to-teal-200 font-mono">
             {converted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {toCurrency}
           </p>
-          <p className="text-gray-500 text-xs mt-1">
-            Mid-market rate: 1 {fromCurrency} = {(rates[`${fromCurrency}_${toCurrency}`] || 1).toFixed(4)} {toCurrency}
+          <p className="text-slate-400 text-xs font-mono pt-1">
+            Пазарен курс: 1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
           </p>
-          {fromCurrency === 'BGN' && toCurrency === 'EUR' && (
-            <p className="text-yellow-400/60 text-xs mt-1">
-              BGN е фиксиран към EUR: 1 EUR = 1.95583 BGN
-            </p>
-          )}
         </div>
-      </motion.div>
+      </div>
 
-      {/* Provider Comparison */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="space-y-4"
-      >
-        <h2 className="text-lg font-semibold text-white">Provider Comparison</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {providerResults.map((provider, idx) => (
-            <motion.div
-              key={provider.slug}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              onClick={() => setSelectedProvider(selectedProvider === provider.slug ? null : provider.slug)}
-              className={`bg-dark-800/50 border rounded-xl overflow-hidden cursor-pointer transition-colors ${
-                selectedProvider === provider.slug ? 'border-primary-500/50' : 'border-dark-700 hover:border-dark-600'
-              }`}
-            >
-              <div className={`bg-gradient-to-r ${provider.color} p-4`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="text-white font-bold">{provider.name}</h3>
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <svg key={i} className={`w-4 h-4 ${i < provider.rating ? 'text-yellow-300' : 'text-white/20'}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 space-y-3">
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <p className="text-gray-500 text-xs">Fee</p>
-                    <p className="text-white font-medium">{provider.fee} {toCurrency}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">You get</p>
-                    <p className="text-green-400 font-bold">{provider.netAmount}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">Speed</p>
-                    <p className="text-gray-300 text-sm">{provider.speed}</p>
-                  </div>
+      {/* Provider Comparison Bento */}
+      <div className="space-y-4">
+        <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Сравнение на Доставчици &amp; Разходи</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {providerResults.map((provider) => {
+            const isSelected = selectedProvider === provider.slug;
+            return (
+              <motion.div
+                key={provider.slug}
+                onClick={() => setSelectedProvider(isSelected ? null : provider.slug)}
+                className={`relative rounded-3xl bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border transition-all cursor-pointer overflow-hidden shadow-xl ${
+                  isSelected ? 'border-cyan-400 ring-2 ring-cyan-400/20' : 'border-white/10 hover:border-white/20'
+                }`}
+              >
+                <div className={`p-5 bg-gradient-to-r ${provider.color} flex items-center justify-between`}>
+                  <h3 className="text-base font-bold text-white tracking-tight">{provider.name}</h3>
+                  <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-black/30 text-white border border-white/20">
+                    Рейтинг: {provider.rating}/5
+                  </span>
                 </div>
 
-                {selectedProvider === provider.slug && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="space-y-3 pt-3 border-t border-dark-700"
-                  >
-                    <p className="text-sm text-gray-400">{provider.bestFor}</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-green-400 mb-1">Pros</p>
-                        {provider.pros.map((p, i) => (
-                          <p key={i} className="text-xs text-gray-400">+ {p}</p>
-                        ))}
-                      </div>
-                      <div>
-                        <p className="text-xs text-red-400 mb-1">Cons</p>
-                        {provider.cons.map((c, i) => (
-                          <p key={i} className="text-xs text-gray-400">- {c}</p>
-                        ))}
-                      </div>
+                <div className="p-5 space-y-4">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-[10px] text-slate-400 block font-mono">Такса:</span>
+                      <span className="text-xs font-bold text-white font-mono">{provider.fee}</span>
                     </div>
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                      <span className="text-[10px] text-emerald-400 block font-mono">Получавате:</span>
+                      <span className="text-xs font-bold text-emerald-300 font-mono">{provider.netAmount} {toCurrency}</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-[10px] text-slate-400 block font-mono">Скорост:</span>
+                      <span className="text-xs font-bold text-slate-200 font-mono">{provider.speed}</span>
+                    </div>
+                  </div>
 
-      {/* Investment Plan */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-dark-800/50 border border-dark-700 rounded-xl p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-white">Basic Investment Plan</h2>
-          <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-400">Monthly:</label>
+                  <p className="text-xs text-slate-300 italic">{provider.bestFor}</p>
+
+                  {isSelected && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="pt-3 border-t border-white/10 space-y-3"
+                    >
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase">Предимства:</span>
+                        {provider.pros.map((p, i) => (
+                          <p key={i} className="text-xs text-slate-300 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span>{p}</span>
+                          </p>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Investment Plan Bento */}
+      <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-white/[0.06] to-white/[0.01] backdrop-blur-2xl border border-white/10 shadow-2xl space-y-6 overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-bold text-white uppercase font-mono tracking-wider">Базов Инвестиционен План &amp; Капитал</h2>
+            <p className="text-xs text-slate-400 mt-0.5">Разпределение на свободните корпоративни средства по рискови категории</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-300 font-mono">Месечен Капитал:</span>
             <input
               type="number"
               value={investmentAmount}
               onChange={(e) => setInvestmentAmount(parseFloat(e.target.value) || 0)}
-              className="w-32 px-3 py-1.5 bg-dark-700 border border-dark-600 rounded-lg text-white text-sm font-mono"
+              className="w-28 px-3 py-1.5 rounded-xl bg-[#090f1d]/90 text-white font-mono font-bold text-xs border border-white/10 outline-none text-center"
             />
-            <span className="text-gray-400 text-sm">EUR</span>
+            <span className="text-xs text-slate-300 font-mono">EUR</span>
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {INVESTMENT_CATEGORIES.map((cat) => {
             const catAmount = (investmentAmount * cat.allocation) / 100;
             return (
-              <div key={cat.name} className="flex items-center space-x-4">
-                <div className="w-16 text-right">
-                  <span className="text-primary-400 font-bold">{cat.allocation}%</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-white text-sm font-medium">{cat.name}</span>
-                    <span className="text-gray-400 text-sm font-mono">{catAmount.toFixed(0)} EUR</span>
-                  </div>
-                  <div className="h-2 bg-dark-700 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${cat.allocation}%` }}
-                      transition={{ delay: 0.3, duration: 0.5 }}
-                      className={`h-full rounded-full ${
-                        cat.risk === 'None' ? 'bg-blue-500' :
-                        cat.risk === 'Low' ? 'bg-green-500' :
-                        cat.risk === 'Medium' ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }`}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-0.5">
-                    <span className="text-gray-500 text-xs">{cat.description}</span>
-                    <span className={`text-xs ${
-                      cat.risk === 'None' ? 'text-blue-400' :
-                      cat.risk === 'Low' ? 'text-green-400' :
-                      cat.risk === 'Medium' ? 'text-yellow-400' :
-                      'text-red-400'
+              <div key={cat.name} className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white">{cat.name}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      cat.risk === 'None' ? 'bg-blue-500/20 text-blue-300' :
+                      cat.risk === 'Low' ? 'bg-emerald-500/20 text-emerald-300' :
+                      cat.risk === 'Medium' ? 'bg-amber-500/20 text-amber-300' :
+                      'bg-rose-500/20 text-rose-300'
                     }`}>
-                      {cat.risk} risk
+                      {cat.risk} Risk
                     </span>
                   </div>
+                  <span className="font-mono font-bold text-cyan-300">
+                    {cat.allocation}% ({catAmount.toFixed(0)} EUR/месец)
+                  </span>
                 </div>
+
+                <div className="h-2 rounded-full bg-black/40 overflow-hidden">
+                  <div
+                    className={`h-full bg-gradient-to-r ${cat.color} rounded-full`}
+                    style={{ width: `${cat.allocation}%` }}
+                  />
+                </div>
+
+                <p className="text-[11px] text-slate-400">{cat.description}</p>
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-4 p-3 bg-dark-700/50 rounded-lg">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">Yearly projection:</span>
-            <span className="text-white font-bold">{(investmentAmount * 12).toLocaleString()} EUR</span>
-          </div>
-          <div className="flex items-center justify-between text-sm mt-1">
-            <span className="text-gray-400">5-year (7% avg return):</span>
-            <span className="text-green-400 font-bold">
-              ~{Math.round(investmentAmount * 12 * ((Math.pow(1.07, 5) - 1) / 0.07) * 1.07).toLocaleString()} EUR
-            </span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Security Tips */}
-      <div className="bg-dark-800/30 border border-dark-700/50 rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3">Security Best Practices</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {[
-            'Използвай различни банкови сметки за business и лични средства',
-            'Активирай 2FA на всички финансови платформи',
-            'Не конвертирай големи суми наведнъж - spread over time',
-            'Документирай всяка транзакция за данъчни цели',
-            'Използвай VPN при достъп до финансови акаунти',
-            'Пази private keys на hardware wallet (Ledger/Trezor)',
-          ].map((tip, i) => (
-            <p key={i} className="text-sm text-gray-400 flex items-start space-x-2">
-              <span className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0 mt-1.5"></span>
-              <span>{tip}</span>
-            </p>
-          ))}
         </div>
       </div>
     </div>
@@ -340,3 +316,4 @@ function CurrencyConverter() {
 }
 
 export default CurrencyConverter;
+

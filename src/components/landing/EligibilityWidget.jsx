@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Sparkles, ShieldCheck, CheckCircle2, AlertTriangle, Building2 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
@@ -34,7 +35,7 @@ export default function EligibilityWidget({ onResults }) {
         setResults(data);
         if (onResults) onResults(data);
       } else {
-        setError(data.error || 'Error checking eligibility');
+        setError(data.error || 'Грешка при проверката за допустимост');
       }
     } catch (err) {
       setError(err.message);
@@ -44,15 +45,24 @@ export default function EligibilityWidget({ onResults }) {
   };
 
   return (
-    <section className="py-16 px-6" id="check">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-dark-800/80 backdrop-blur-sm border border-dark-700 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-white text-center mb-2">
-            Проверка за Eligibility
-          </h2>
-          <p className="text-gray-400 text-center mb-6">
-            Въведете 3 имена на собственик за да проверите eligible фирми
-          </p>
+    <section className="py-16 px-6 relative" id="check">
+      <div className="max-w-3xl mx-auto">
+        <div className="relative rounded-3xl p-6 sm:p-8 bg-gradient-to-br from-[#0c1426]/90 via-[#0e1b38]/80 to-[#080d1a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10" />
+          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+
+          <div className="text-center mb-6">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 mb-3">
+              <Sparkles className="w-3.5 h-3.5" />
+              Търговски Регистър AI Engine
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Бърза Проверка за Допустимост (Wallester)
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1">
+              Въведете трите имена на собственика/управителя за автоматична Mod 11 верификация
+            </p>
+          </div>
 
           <form onSubmit={handleCheck} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -62,14 +72,14 @@ export default function EligibilityWidget({ onResults }) {
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Име"
                 required
-                className="px-4 py-3 bg-dark-700 border border-dark-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none"
               />
               <input
                 type="text"
                 value={middleName}
                 onChange={(e) => setMiddleName(e.target.value)}
                 placeholder="Презиме"
-                className="px-4 py-3 bg-dark-700 border border-dark-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none"
               />
               <input
                 type="text"
@@ -77,52 +87,65 @@ export default function EligibilityWidget({ onResults }) {
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Фамилия"
                 required
-                className="px-4 py-3 bg-dark-700 border border-dark-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 outline-none"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-xl transition-all"
+              className="w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:via-blue-500 hover:to-indigo-500 disabled:opacity-50 transition-all shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
             >
-              {loading ? 'Проверка...' : 'Провери'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Проверка в Търговския регистър...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Провери за Допустимост</span>
+                </>
+              )}
             </button>
           </form>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="mt-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
           {results && (
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Намерени: {results.total} фирми</span>
-                <span className="text-green-400 font-bold">Eligible: {results.eligible}</span>
+            <div className="mt-6 space-y-3 pt-6 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Намерени фирми: <strong className="text-white">{results.total}</strong></span>
+                <span className="text-emerald-300 font-bold bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/30">
+                  Допустими (≥50%): {results.eligible}
+                </span>
               </div>
 
               {results?.companies && results.companies.map((company, idx) => (
                 <div
                   key={idx}
-                  className={`p-4 rounded-xl border ${
+                  className={`p-4 rounded-2xl border transition-all ${
                     company.is_eligible
-                      ? 'bg-green-500/5 border-green-500/30'
-                      : 'bg-dark-700/50 border-dark-600'
+                      ? 'bg-emerald-500/10 border-emerald-500/40 shadow-lg shadow-emerald-500/5'
+                      : 'bg-white/[0.02] border-white/10'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="text-white font-medium">{company.company_name}</p>
-                      <p className="text-gray-500 text-xs">
-                        EIK: {company.eik} | {company.business_type} | {company.ownership_share}%
+                      <p className="text-white font-bold text-xs">{company.company_name}</p>
+                      <p className="text-slate-400 text-[11px] font-mono mt-0.5">
+                        ЕИК: {company.eik} | {company.business_type} | Дял: {company.ownership_share}%
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border shrink-0 ${
                       company.is_eligible
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-red-500/20 text-red-400'
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                        : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                     }`}>
                       {company.is_eligible ? 'ELIGIBLE' : 'NOT ELIGIBLE'}
                     </span>
@@ -136,3 +159,4 @@ export default function EligibilityWidget({ onResults }) {
     </section>
   );
 }
+

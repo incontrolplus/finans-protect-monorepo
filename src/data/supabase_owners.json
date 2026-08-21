@@ -2002,5 +2002,67 @@
       "bonus_program": "VISA_PLATINUM_150",
       "reason": "Официално вписано в Търговския регистър: Едноличен собственик (100% дял). Валидирано в Supabase."
     }
+  ],
+  "АЛЕКСАНДЪР РАДОСЛАВОВ АТАНАСОВ": [
+    {
+      "company_name": "Генезис Проджект ЕООД",
+      "company_name_en": "Genesis Project EOOD",
+      "eik": "208907261",
+      "business_type": "ЕООД",
+      "ownership_share": 100,
+      "owner_role": "Едноличен собственик на капитала и управител",
+      "address_city": "гр. Плевен",
+      "address_street": "Централна градска част",
+      "is_active": true,
+      "is_eligible": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Официално вписване в Търговския регистър: Едноличен собственик на капитала и управител (100% дял). Активен статус, отговаря на всички изисквания за Wallester Visa Platinum."
+    },
+    {
+      "company_name": "ВАЛТЕР 2023 ЕООД",
+      "company_name_en": "VALTER 2023 EOOD",
+      "eik": "207184619",
+      "business_type": "ЕООД",
+      "ownership_share": 100,
+      "owner_role": "Едноличен собственик и управител",
+      "address_city": "гр. Плевен",
+      "address_street": "ул. Дойран",
+      "is_active": true,
+      "is_eligible": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Официално вписване в Търговския регистър: Едноличен собственик (100% дял)."
+    },
+    {
+      "company_name": "БИЛД СЕЛЕКТ ЕООД",
+      "company_name_en": "BUILD SELECT LTD",
+      "eik": "208109007",
+      "business_type": "ЕООД",
+      "ownership_share": 100,
+      "owner_role": "Управител и едноличен собственик",
+      "address_city": "гр. София",
+      "address_street": "р-н Младост",
+      "is_active": true,
+      "is_eligible": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Реално вписване в Търговския регистър: 100% дялово участие."
+    },
+    {
+      "company_name": "ОРИНДЖ БИЛДИНГ ЕООД",
+      "company_name_en": "ORANGE BUILDING LTD",
+      "eik": "207623564",
+      "business_type": "ЕООД",
+      "ownership_share": 100,
+      "owner_role": "Едноличен собственик на капитала и управител",
+      "address_city": "гр. София",
+      "address_street": "р-н Триадица",
+      "is_active": true,
+      "is_eligible": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Реално вписване в Търговския регистър: Едноличен собственик (100% дял)."
+    }
   ]
 }

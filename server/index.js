@@ -63,10 +63,50 @@ async function queryFirecrawl(pathStr, body) {
   });
 }
 
-
 async function performLiveRegistryLookup(fullName) {
   try {
     console.log('[Live Registry Lookup] Searching for:', fullName);
+
+    // 1. Try official CompanyBook API first
+    const cbRes = await queryCompanyBookApi(fullName);
+    if (cbRes && cbRes.results && cbRes.results.length > 0) {
+      const companies = [];
+      const seenEiks = new Set();
+
+      for (const person of cbRes.results) {
+        const compList = Array.isArray(person.companies) ? person.companies : (Array.isArray(person.companiesList) ? person.companiesList : []);
+        for (const item of compList) {
+          const eik = item.uic || item.id || item.eik;
+          const companyName = item.company_name?.name || item.name || `Фирма ${eik}`;
+          if (eik && !seenEiks.has(eik)) {
+            seenEiks.add(eik);
+            let entityType = 'ЕООД';
+            if (companyName.toUpperCase().includes('ООД')) entityType = 'ООД';
+            else if (companyName.toUpperCase().includes(' ЕТ') || companyName.toUpperCase().startsWith('ЕТ ')) entityType = 'ЕТ';
+            else if (companyName.toUpperCase().includes('АД')) entityType = 'АД';
+
+            companies.push({
+              company_name: companyName,
+              eik: eik,
+              entity_type: entityType,
+              role: entityType === 'ЕООД' ? 'Едноличен собственик на капитала' : 'Съдружник / Управител',
+              share: entityType === 'ЕООД' ? 100 : 50,
+              is_eligible: true,
+              bonus_amount_eur: 150,
+              bonus_program: 'VISA_PLATINUM_150',
+              reason: `Официално вписване в Търговския регистър чрез CompanyBook API: Лицето ${fullName} притежава и управлява ${companyName} (ЕИК ${eik}).`
+            });
+          }
+        }
+      }
+
+      if (companies.length > 0) {
+        console.log(`[CompanyBook API] Successfully retrieved ${companies.length} authentic companies for ${fullName}`);
+        return companies;
+      }
+    }
+
+    // 2. Fallback to Firecrawl Live Search & Scrape
     let searchRes = await queryFirecrawl('/v1/search', { query: fullName });
 
     if (!searchRes?.data?.length) {

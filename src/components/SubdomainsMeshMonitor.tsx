@@ -262,7 +262,7 @@ export const SubdomainsMeshMonitor: React.FC = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Търси поддомейн..."
+              id="search-mesh-subdomains" name="searchSubdomains" aria-label="Търси поддомейн в клъстера" placeholder="Търси поддомейн..."
               className="w-full bg-[#0b0f19] border border-white/10 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 transition-all"
             />
           </div>

@@ -284,7 +284,7 @@ export const RevenueWarRoomBento: React.FC<Props> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Търси по ЕИК, номер или име..."
+                id="search-warroom-cards" name="searchCards" aria-label="Търси карта по ЕИК, номер или име" placeholder="Търси по ЕИК, номер или име..."
                 className="w-full bg-[#0b0f19] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-green-500/50 transition-all"
               />
             </div>

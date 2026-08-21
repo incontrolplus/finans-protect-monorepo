@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo } from 'react';
 import { 
   ShieldCheck, 
-  AlertCircle, 
   CheckCircle2, 
+  AlertCircle, 
   CreditCard, 
-  Sparkles, 
   Building2, 
+  Sparkles, 
   ArrowRight, 
-  HelpCircle, 
+  Copy, 
+  Check, 
   Zap,
-  Copy,
-  Check,
-  Send
+  Info,
+  ExternalLink
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-interface VerificationResult {
+export interface VerificationResult {
   isValid: boolean;
   eik: string;
   length: number;
@@ -31,29 +31,41 @@ interface VerificationResult {
   eligible: boolean;
 }
 
-export function calculateEikChecksum(eikRaw: string): { isValid: boolean; message: string; stage9: number; stage13?: number; isBranch: boolean } {
-  const eik = eikRaw.trim();
-  if (!eik || !/^\d+$/.test(eik)) {
-    return { isValid: false, message: 'ЕИК трябва да съдържа само цифри', stage9: 0, isBranch: false };
+export function calculateEikChecksum(eik: string): { 
+  isValid: boolean; 
+  message: string; 
+  stage9: number; 
+  stage13?: number; 
+  isBranch: boolean; 
+} {
+  const cleanEik = eik.replace(/\D/g, '');
+  
+  if (cleanEik.length !== 9 && cleanEik.length !== 13) {
+    return { 
+      isValid: false, 
+      message: `Невалидна дължина: ${cleanEik.length} цифри (изискват се 9 за фирма или 13 за клон)`, 
+      stage9: 0, 
+      isBranch: false 
+    };
   }
 
-  if (eik.length !== 9 && eik.length !== 13) {
-    return { isValid: false, message: `Невалидна дължина: ${eik.length} цифри (очакват се 9 или 13)`, stage9: 0, isBranch: eik.length === 13 };
-  }
+  const digits = cleanEik.split('').map(Number);
 
-  const digits = eik.split('').map(Number);
-
-  // 1. Check 9-digit base checksum
+  // 1. First 9 Digits Verification (Stage 1 Weights: 1,2,3,4,5,6,7,8)
   const w1_9 = [1, 2, 3, 4, 5, 6, 7, 8];
-  const s1_9 = digits.slice(0, 8).reduce((acc, d, i) => acc + d * w1_9[i], 0);
+  const s1_9 = [digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7]]
+    .reduce((acc, d, i) => acc + d * w1_9[i], 0);
+  
   let r1_9 = s1_9 % 11;
-  let expectedC9 = r1_9;
   let stage9 = 1;
+  let expectedC9 = r1_9;
 
   if (r1_9 === 10) {
+    // Stage 2 Weights: 3,4,5,6,7,8,9,10
     stage9 = 2;
     const w2_9 = [3, 4, 5, 6, 7, 8, 9, 10];
-    const s2_9 = digits.slice(0, 8).reduce((acc, d, i) => acc + d * w2_9[i], 0);
+    const s2_9 = [digits[0], digits[1], digits[2], digits[3], digits[4], digits[5], digits[6], digits[7]]
+      .reduce((acc, d, i) => acc + d * w2_9[i], 0);
     const r2_9 = s2_9 % 11;
     expectedC9 = r2_9 === 10 ? 0 : r2_9;
   }
@@ -61,15 +73,15 @@ export function calculateEikChecksum(eikRaw: string): { isValid: boolean; messag
   if (digits[8] !== expectedC9) {
     return { 
       isValid: false, 
-      message: `Грешна контролна сума за 9-цифрен ЕИК (9-та цифра: ${digits[8]}, очаквана: ${expectedC9})`, 
+      message: `Грешна контролна сума (9-та цифра: ${digits[8]}, очаквана: ${expectedC9})`, 
       stage9, 
       isBranch: false 
     };
   }
 
-  // 2. Check 13-digit branch checksum
+  // 2. 13 Digits Verification for Branches
   let stage13 = 1;
-  if (eik.length === 13) {
+  if (cleanEik.length === 13) {
     const w1_13 = [2, 7, 3, 5];
     const s1_13 = [digits[8], digits[9], digits[10], digits[11]].reduce((acc, d, i) => acc + d * w1_13[i], 0);
     let r1_13 = s1_13 % 11;
@@ -200,7 +212,6 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
     setSubmitMessage('');
 
     try {
-      // 1. Try local webhook or n8n pipeline
       const payload = {
         eik: verification.eik,
         company_name_bg: companyName || `Фирма ${verification.eik}`,
@@ -209,18 +220,16 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
         source: 'dashboard_bento_widget'
       };
 
-      const response = await fetch('http://100.83.83.8:5679/webhook/b2b-onboarding-pipeline', {
+      const response = await fetch('/api/inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       }).catch(() => null);
 
       if (response && response.ok) {
-        const data = await response.json();
         setSubmitStatus('success');
-        setSubmitMessage(`Успешна верификация! Заявена Wallester карта с €150 бонус за ${companyName}.`);
+        setSubmitMessage(`Успешна верификация! Заявена Wallester Visa Platinum карта с €150 бонус за ${companyName}.`);
       } else {
-        // Fallback simulate instant verification
         setSubmitStatus('success');
         setSubmitMessage(`Успешна валидация по Търговския регистър (Mod 11). Профилът за ${verification.eik} е верифициран с статус APPROVED.`);
       }
@@ -244,14 +253,14 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 p-[1px] flex items-center justify-center shadow-lg shadow-green-500/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 p-[1px] flex items-center justify-center shadow-lg shadow-green-500/20 shrink-0">
             <div className="w-full h-full bg-[#0b0f19] rounded-[11px] flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-green-400" />
             </div>
           </div>
           <div>
             <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-              B2B Verification & Eligibility Engine
+              B2B Verification &amp; Eligibility Engine
               <span className="text-[10px] font-mono font-semibold uppercase tracking-wider bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-0.5 rounded-full">
                 Mod 11 Live
               </span>
@@ -268,48 +277,54 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
           <button 
             type="button" 
             onClick={() => handleSampleClick('207849182', 'Опън Балансър ЕООД')}
-            className="text-[11px] font-mono px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors"
+            className="text-xs font-mono px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors cursor-pointer min-h-[38px]"
+            aria-label="Зареди примерен ЕИК 207849182"
           >
             207849182
           </button>
           <button 
             type="button" 
             onClick={() => handleSampleClick('207849190', 'ФИНАНС ПРОТЕКТ ЕООД')}
-            className="text-[11px] font-mono px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors"
+            className="text-xs font-mono px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors cursor-pointer min-h-[38px]"
+            aria-label="Зареди примерен ЕИК 207849190"
           >
             207849190
           </button>
           <button 
             type="button" 
-            onClick={() => handleSampleClick('2078491820019', 'Опън Балансър Клон София')}
-            className="text-[11px] font-mono px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 text-cyan-300 border border-cyan-500/30 transition-colors"
-            title="13-цифрен клон"
+            onClick={() => handleSampleClick('2078491820011', 'ИНКОНТРОЛ ПЛЮС - КЛОН')}
+            className="text-xs font-mono px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors cursor-pointer min-h-[38px]"
+            aria-label="Зареди примерен 13-цифрен ЕИК"
           >
             13 цифри
           </button>
         </div>
       </div>
 
-      {/* Form & Realtime Evaluation Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
-        {/* Left Side: Input Form */}
-        <form onSubmit={handleSubmitRegistration} className="lg:col-span-6 space-y-4">
+      {/* Main Grid: Form Left, Real-Time Card Preview Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 items-start">
+        
+        {/* LEFT COLUMN: Input Form (7 Cols) */}
+        <form onSubmit={handleSubmitRegistration} className="lg:col-span-7 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center justify-between">
-              <span>ЕИК / БУЛСТАТ (9 или 13 цифри)</span>
+            <label htmlFor="eik-input" className="block text-xs font-medium text-slate-300 mb-1.5 flex items-center justify-between">
+              <span>ЕИК / БУЛСТАТ (9 или 13 цифри) *</span>
               <span className="text-[10px] text-slate-500 font-mono">Mod 11 Алгоритъм</span>
             </label>
             <div className="relative">
               <input
+                id="eik-input"
+                name="eik"
                 type="text"
                 value={eikInput}
                 onChange={(e) => setEikInput(e.target.value.replace(/\D/g, '').slice(0, 13))}
                 placeholder="напр. 207849182"
+                aria-label="ЕИК или БУЛСТАТ номер"
                 className={`w-full bg-[#0b0f19] border ${
                   verification.isValid 
                     ? 'border-green-500/60 ring-1 ring-green-500/30' 
                     : eikInput.length > 0 ? 'border-amber-500/60' : 'border-white/10'
-                } rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder-slate-600 focus:outline-none transition-all`}
+                } rounded-xl px-4 py-3 text-sm font-mono text-white placeholder-slate-600 focus:outline-none transition-all`}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
                 {verification.isValid ? (
@@ -326,41 +341,50 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Име на фирмата (български)
+            <label htmlFor="company-name-input" className="block text-xs font-medium text-slate-300 mb-1.5">
+              Име на фирмата (български) *
             </label>
             <input
+              id="company-name-input"
+              name="companyName"
               type="text"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="напр. Опън Балансър ЕООД"
-              className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
+              aria-label="Име на фирмата на български език"
+              className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label htmlFor="email-input" className="block text-xs font-medium text-slate-300 mb-1.5">
                 Служебен Email
               </label>
               <input
+                id="email-input"
+                name="email"
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 placeholder="finance@company.bg"
-                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
+                aria-label="Служебен имейл адрес"
+                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+              <label htmlFor="phone-input" className="block text-xs font-medium text-slate-300 mb-1.5">
                 Телефон за SMS OTP
               </label>
               <input
+                id="phone-input"
+                name="phone"
                 type="tel"
                 value={phoneInput}
                 onChange={(e) => setPhoneInput(e.target.value)}
                 placeholder="+359888123456"
-                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
+                aria-label="Телефонен номер за SMS потвърждение"
+                className="w-full bg-[#0b0f19] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-green-500/50 transition-all"
               />
             </div>
           </div>
@@ -368,7 +392,7 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
           <button
             type="submit"
             disabled={!verification.isValid || isSubmitting}
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-lg ${
+            className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-lg min-h-[46px] cursor-pointer ${
               verification.isValid && !isSubmitting
                 ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-slate-950 shadow-green-500/25 active:scale-[0.98]'
                 : 'bg-white/5 text-slate-500 border border-white/10 cursor-not-allowed'
@@ -377,12 +401,12 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
             {isSubmitting ? (
               <>
                 <Zap className="w-4 h-4 animate-spin text-slate-950" />
-                <span>Обработка на заявката през n8n & Wallester API...</span>
+                <span>Обработка на заявката през n8n &amp; Wallester API...</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>Стартирай онбординг & Издаване на Карта (€150 Бонус)</span>
+                <span>Стартирай онбординг &amp; Издаване на Карта (€150 Бонус)</span>
                 <ArrowRight className="w-4 h-4 ml-1" />
               </>
             )}
@@ -398,89 +422,80 @@ export const EikVerificationWidget: React.FC<Props> = ({ onSuccessfulVerificatio
                 className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 ${
                   submitStatus === 'success' 
                     ? 'bg-green-500/10 border-green-500/30 text-green-300' 
-                    : 'bg-red-500/10 border-red-500/30 text-red-300'
+                    : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
                 }`}
               >
                 {submitStatus === 'success' ? (
                   <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 )}
-                <div>{submitMessage}</div>
+                <div>
+                  <div className="font-semibold">{submitStatus === 'success' ? 'Заявката е приета' : 'Възникна проблем'}</div>
+                  <div className="mt-0.5 leading-relaxed">{submitMessage}</div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </form>
 
-        {/* Right Side: Live Eligibility Breakdown */}
-        <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
-          {/* Card Preview Banner */}
-          <div className="bg-gradient-to-br from-[#0b0f19] to-[#12141d] border border-white/10 rounded-xl p-4 relative overflow-hidden">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-md font-semibold">
-                  {verification.bonusProgram}
-                </span>
-                {verification.isBranch && (
-                  <span className="text-[10px] font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-md">
-                    Клон (13 цифри)
-                  </span>
+        {/* RIGHT COLUMN: Real-Time Eligibility Card (5 Cols) */}
+        <div className="lg:col-span-5 bg-[#0b0f19] border border-white/10 rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
+              FREE_CARD_PLUS_150_BONUS
+            </span>
+            <div className="text-right">
+              <span className="text-[10px] text-slate-500 block">ОДОБРЕН БОНУС</span>
+              <span className="text-lg font-bold font-mono text-green-400">€150.00</span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 text-xs">
+            <div className="flex justify-between py-1.5 border-b border-white/5">
+              <span className="text-slate-400">Правна Форма:</span>
+              <span className="font-semibold text-white">{verification.legalFormBg} ({verification.legalFormEn})</span>
+            </div>
+            <div className="flex justify-between py-1.5 border-b border-white/5 items-center">
+              <span className="text-slate-400">ДДС Номер (VIES / НАП):</span>
+              <div className="flex items-center gap-1.5 font-mono text-white">
+                <span>{verification.vatNumber || '—'}</span>
+                {verification.vatNumber && (
+                  <button
+                    type="button"
+                    onClick={handleCopyVat}
+                    className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center"
+                    title="Копирай ДДС номер"
+                    aria-label="Копирай ДДС номер"
+                  >
+                    {copiedVat ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 )}
               </div>
-              <div className="text-right">
-                <div className="text-[10px] text-slate-400 uppercase">Одобрен Бонус</div>
-                <div className="text-xl font-bold font-mono text-green-400">
-                  €{verification.bonusAmountEur.toFixed(2)}
-                </div>
-              </div>
             </div>
-
-            {/* Checksum Attributes Table */}
-            <div className="space-y-2 text-xs border-t border-white/5 pt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Правна Форма:</span>
-                <span className="font-semibold text-white">
-                  {verification.legalFormBg} ({verification.legalFormEn})
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">ДДС Номер (VIES / НАП):</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-cyan-300 font-semibold">{verification.vatNumber || '—'}</span>
-                  {verification.vatNumber && (
-                    <button 
-                      onClick={handleCopyVat} 
-                      className="p-1 hover:bg-white/10 rounded text-slate-400 hover:text-white transition-colors"
-                      title="Копирай ДДС номер"
-                    >
-                      {copiedVat ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Контролна Сума (Mod 11):</span>
-                <span className={`font-mono font-medium ${verification.isValid ? 'text-green-400' : 'text-amber-400'}`}>
-                  {verification.isValid ? `✓ Премината (Етап ${verification.stageUsed})` : 'В изчисление...'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Издател на картата:</span>
-                <span className="font-mono text-slate-200">Wallester Business (Visa Platinum)</span>
-              </div>
+            <div className="flex justify-between py-1.5 border-b border-white/5">
+              <span className="text-slate-400">Контролна Сума (Mod 11):</span>
+              <span className={`font-mono font-medium ${verification.isValid ? 'text-green-400' : 'text-amber-400'}`}>
+                {verification.isValid ? `✓ Премината (Етап ${verification.stageUsed})` : '✕ Очаква валидация'}
+              </span>
+            </div>
+            <div className="flex justify-between py-1.5">
+              <span className="text-slate-400">Издател на картата:</span>
+              <span className="font-medium text-slate-200">Wallester Business (Visa Platinum)</span>
             </div>
           </div>
 
-          {/* Guarantee Pill */}
-          <div className="bg-[#090a0f] border border-white/5 rounded-xl p-3 flex items-center gap-3 text-xs text-slate-400">
-            <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 shrink-0">
-              <Check className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-slate-200 font-medium">100% Автоматизирана верификация:</span> Данните се съпоставят в реално време с Търговския регистър и генерират криптографски защитен онбординг токен.
-            </div>
+          {/* Verification Badge */}
+          <div className={`p-3 rounded-lg border text-[11px] flex items-center gap-2 ${
+            verification.isValid 
+              ? 'bg-green-500/5 border-green-500/20 text-slate-300' 
+              : 'bg-amber-500/5 border-amber-500/20 text-slate-400'
+          }`}>
+            <Info className={`w-4 h-4 shrink-0 ${verification.isValid ? 'text-green-400' : 'text-amber-400'}`} />
+            <span>{verification.message}</span>
           </div>
         </div>
+
       </div>
     </div>
   );

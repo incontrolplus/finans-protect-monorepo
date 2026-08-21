@@ -1,277 +1,314 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  CreditCard, 
-  Zap, 
-  Activity, 
-  ExternalLink, 
-  Layers, 
-  Globe, 
-  Server, 
-  Sparkles, 
-  CheckCircle2,
-  Lock,
-  ArrowRight,
-  ChevronRight,
-  RefreshCw
-} from 'lucide-react';
-import { useSupabaseRealtimeScorecard } from './hooks/useSupabaseRealtimeScorecard';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sidebar } from './components/Sidebar';
+import Header from './components/Header';
 import { RevenueWarRoomBento } from './components/RevenueWarRoomBento';
 import { EikVerificationWidget } from './components/EikVerificationWidget';
 import { SubdomainsMeshMonitor } from './components/SubdomainsMeshMonitor';
+import { useSupabaseRealtimeScorecard } from './hooks/useSupabaseRealtimeScorecard';
+
+// Extended Platform Pages
+import WallesterDashboard from './pages/WallesterDashboard';
+import EligibilityChecker from './pages/EligibilityChecker';
+import SignupFlow from './pages/SignupFlow';
+import VerificationPipeline from './pages/VerificationPipeline';
+import AdminPayouts from './pages/AdminPayouts';
+import CredentialVault from './pages/CredentialVault';
+import PartnerManagement from './pages/PartnerManagement';
+import AlternativeOffers from './pages/AlternativeOffers';
+import ActionLog from './pages/ActionLog';
+import WallesterAPI from './pages/WallesterAPI';
+import SystemConfig from './pages/SystemConfig';
+import AICreatives from './pages/AICreatives';
+import SocialAutomation from './pages/SocialAutomation';
+import CurrencyConverter from './pages/CurrencyConverter';
+import LandingPage from './pages/LandingPage';
+import ClaudeChat from './pages/ClaudeChat';
+import ComputerControl from './pages/ComputerControl';
+import AndroidControl from './pages/AndroidControl';
+import MultiAgentDesign from './pages/MultiAgentDesign';
+import AgentRegistry from './pages/AgentRegistry';
+import SmartScan from './pages/SmartScan';
+import QRScanner from './pages/QRScanner';
+import PromptGenerator from './pages/PromptGenerator';
+import Settings from './pages/Settings';
+import OwnerDetail from './pages/OwnerDetail';
+import { 
+  Shield, 
+  Activity, 
+  CreditCard, 
+  Server, 
+  CheckCircle2, 
+  Sparkles, 
+  Zap, 
+  Lock, 
+  Globe, 
+  ArrowUpRight,
+  Menu,
+  X
+} from 'lucide-react';
 
 export function App() {
-  const {
-    scorecard,
-    cards,
-    businesses,
-    isConnected,
-    wsStatus,
-    lastLatencyMs,
-    lastEvent,
-    loading,
-    error,
-    refresh
-  } = useSupabaseRealtimeScorecard();
+  const [activePage, setActivePage] = useState<string>('finansprotecthub');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState<boolean>(false);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'warroom' | 'verify' | 'mesh'>('warroom');
+  const { scorecard, cards, businesses, loading, error, isLive, refresh } = useSupabaseRealtimeScorecard();
+
+  const handlePageSelect = (pageId: string) => {
+    setActivePage(pageId);
+    setMobileDrawerOpen(false);
+  };
+
+  const renderContent = () => {
+    switch (activePage) {
+      case 'finansprotecthub':
+        return (
+          <div className="space-y-8 animate-fadeIn">
+            {/* Top Hub Welcome & Status Banner */}
+            <div className="bg-gradient-to-r from-[#0d1527] via-[#111e38] to-[#091124] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-3xl pointer-events-none -z-10" />
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      Open Balancer Cluster SSOT
+                    </span>
+                    <span className="px-3 py-1 rounded-full text-[10px] font-mono font-semibold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      100.83.83.8 Live Mesh
+                    </span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                    Финансов Контролен Център &amp; B2B Автоматизация
+                  </h1>
+                  <p className="text-sm text-slate-400 max-w-2xl mt-1">
+                    Цялостна система за валидация по Търговския регистър (Mod 11), издаване на Visa Platinum карти и мулти-нод клъстерно управление.
+                  </p>
+                </div>
+
+                {/* Subdomain Quick Links Bar */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href="https://dashboard.openbalancer.com"
+                    className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-white/10 hover:border-cyan-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  >
+                    <span>📊 SSOT Dashboard</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href="https://n8n.openbalancer.com"
+                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 text-xs font-medium flex items-center gap-1.5 transition-all"
+                  >
+                    <span>n8n Engine</span>
+                  </a>
+                  <a
+                    href="https://infisical.openbalancer.com"
+                    className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white border border-white/10 text-xs font-medium flex items-center gap-1.5 transition-all"
+                  >
+                    <span>Infisical KMS</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* 1. B2B Verification Engine */}
+            <section id="sec-verify" className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+                  1. B2B ПРОВЕРКА &amp; ОНБОРДИНГ ПОРТАЛ
+                </span>
+              </div>
+              <EikVerificationWidget />
+            </section>
+
+            {/* 2. Real-Time Revenue War Room */}
+            <section id="sec-warroom" className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+                  2. REVENUE WAR ROOM &amp; LIVE ISSUED CARDS
+                </span>
+              </div>
+              <RevenueWarRoomBento
+                scorecard={scorecard}
+                cards={cards}
+                businesses={businesses}
+                loading={loading}
+                error={error}
+                isLive={isLive}
+                onRefresh={refresh}
+              />
+            </section>
+
+            {/* 3. Subdomains Mesh Monitor */}
+            <section id="sec-mesh" className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+                  3. OPEN BALANCER MESH INFRASTRUCTURE &amp; EDGE HEALTH
+                </span>
+              </div>
+              <SubdomainsMeshMonitor />
+            </section>
+          </div>
+        );
+      case 'wallesterdash':
+        return <WallesterDashboard />;
+      case 'eligibility':
+        return <EligibilityChecker />;
+      case 'signupflow':
+        return <SignupFlow />;
+      case 'verification':
+        return <VerificationPipeline />;
+      case 'adminpayouts':
+        return <AdminPayouts />;
+      case 'credentialvault':
+        return <CredentialVault />;
+      case 'partners':
+        return <PartnerManagement />;
+      case 'alternatives':
+        return <AlternativeOffers />;
+      case 'actionlog':
+        return <ActionLog />;
+      case 'wallesterapi':
+        return <WallesterAPI />;
+      case 'systemconfig':
+        return <SystemConfig />;
+      case 'aicreatives':
+        return <AICreatives />;
+      case 'socialautomation':
+        return <SocialAutomation />;
+      case 'currency':
+        return <CurrencyConverter />;
+      case 'landing':
+        return <LandingPage />;
+      case 'chat':
+        return <ClaudeChat />;
+      case 'computer':
+        return <ComputerControl />;
+      case 'android':
+        return <AndroidControl />;
+      case 'multiagent':
+        return <MultiAgentDesign />;
+      case 'agentregistry':
+        return <AgentRegistry />;
+      case 'smartscan':
+        return <SmartScan />;
+      case 'qrscanner':
+        return <QRScanner />;
+      case 'promptgen':
+        return <PromptGenerator />;
+      case 'settings':
+        return <Settings />;
+      case 'ownerdetail':
+        return (
+          <OwnerDetail
+            ownerId={selectedOwnerId}
+            onBack={() => setActivePage('wallesterdash')}
+          />
+        );
+      default:
+        return (
+          <div className="p-8 text-center bg-[#0e1626] rounded-2xl border border-white/10">
+            <h2 className="text-lg font-bold text-white mb-2">Избраната страница се зарежда...</h2>
+            <button
+              onClick={() => setActivePage('finansprotecthub')}
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-semibold"
+            >
+              Върни се към Finans Protect Hub
+            </button>
+          </div>
+        );
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[#090a0f] text-slate-100 flex flex-col font-sans selection:bg-green-500/30 selection:text-green-300">
-      
-      {/* ─── TOP NOTIFICATION BANNER ───────────────────────────────────── */}
-      <div className="bg-gradient-to-r from-emerald-950 via-[#0e1726] to-green-950 border-b border-green-500/20 py-2 px-4 text-center text-xs text-slate-300 flex items-center justify-center gap-2">
-        <span className="flex h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-        <span className="font-semibold text-green-300">Стъпка 4 Live:</span>
-        <span>Единен Real-Time Dashboard & Bento-Box UI за Open Balancer (14 Активни Visa Platinum Карти, €150 Бонус)</span>
+    <div className="min-h-screen bg-[#080c14] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
+      {/* Critical Dark Background Mesh */}
+      <div className="fixed inset-0 pointer-events-none -z-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0d1c38]/40 via-[#080c14] to-[#04060a]" />
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar
+          activePage={activePage}
+          setActivePage={handlePageSelect}
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+        />
       </div>
 
-      {/* ─── NAVIGATION BAR ────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-[#0c0e14]/85 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-green-500 to-emerald-400 p-[1px] flex items-center justify-center shadow-lg shadow-green-500/20">
-                <div className="w-full h-full bg-[#0c0e14] rounded-[11px] flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-green-400" />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
-                  Open Balancer
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-green-500/20 text-green-300 border border-green-500/30 px-1.5 py-0.2 rounded">
-                    Core V4.5
-                  </span>
-                </span>
-                <span className="text-[10px] text-slate-400 -mt-0.5">
-                  Revenue War Room & B2B Portal
-                </span>
-              </div>
-            </a>
-          </div>
-
-          {/* Center Tabs Navigation */}
-          <nav className="hidden md:flex items-center gap-1 bg-[#131b2e] p-1 rounded-xl border border-white/10">
-            <button
-              onClick={() => setActiveTab('warroom')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === 'warroom'
-                  ? 'bg-green-500 text-slate-950 font-bold shadow-md shadow-green-500/20'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {mobileDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileDrawerOpen(false)}
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 lg:hidden"
+            />
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-72 z-50 lg:hidden"
             >
-              <CreditCard className="w-3.5 h-3.5" />
-              <span>Revenue War Room ({cards.length})</span>
-            </button>
+              <Sidebar
+                activePage={activePage}
+                setActivePage={handlePageSelect}
+                isOpen={true}
+                setIsOpen={() => setMobileDrawerOpen(false)}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-            <button
-              onClick={() => setActiveTab('verify')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === 'verify'
-                  ? 'bg-green-500 text-slate-950 font-bold shadow-md shadow-green-500/20'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>B2B Проверка на ЕИК</span>
-            </button>
+      {/* Main Layout Area */}
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
+        }`}
+      >
+        {/* Top Header */}
+        <Header
+          toggleSidebar={() => {
+            if (window.innerWidth < 1024) {
+              setMobileDrawerOpen(!mobileDrawerOpen);
+            } else {
+              setSidebarOpen(!sidebarOpen);
+            }
+          }}
+          sidebarOpen={sidebarOpen}
+        />
 
-            <button
-              onClick={() => setActiveTab('mesh')}
-              className={`px-3.5 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
-                activeTab === 'mesh'
-                  ? 'bg-green-500 text-slate-950 font-bold shadow-md shadow-green-500/20'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>Mesh Subdomains (10)</span>
-            </button>
-          </nav>
+        {/* Dynamic Main Body Content */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+          {renderContent()}
+        </main>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-3">
-            {/* WS Live Status Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-[#131b2e] border border-white/10 px-3 py-1.5 rounded-xl text-xs">
-              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-amber-400'}`} />
-              <span className="font-mono text-[11px] text-slate-300">
-                {wsStatus === 'LIVE' ? 'Realtime WS' : wsStatus}
-              </span>
-              <span className="font-mono text-[10px] text-green-400 font-bold">
-                {lastLatencyMs}ms
-              </span>
-            </div>
-
-            <a
-              href="/ports"
-              className="text-xs bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 px-3 py-1.5 rounded-xl transition-colors hidden lg:inline-flex items-center gap-1.5"
-            >
-              <Server className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Port Registry</span>
-            </a>
-
-            <button
-              onClick={refresh}
-              className="p-2 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 rounded-xl transition-all active:scale-95"
-              title="Презареди данни"
-            >
-              <RefreshCw className={`w-4 h-4 text-green-400 ${loading ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ─── MAIN CONTENT ──────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 w-full space-y-10">
-        
-        {/* Hero Section */}
-        <section className="relative">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                Жив финтех поток • Supabase Realtime • Wallester API V4.5
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                Финансов Контролен Център & <br className="hidden sm:inline" />
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-green-200 to-emerald-400">
-                  B2B Издаване на Карти в Реално Време
-                </span>
-              </h1>
-              <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-                Интегрирана платформа за автоматичен онбординг на български дружества (ООД/ЕООД), незабавна валидация по Търговския регистър чрез Mod 11 алгоритъм и управление на флот от активни карти Wallester Visa Platinum.
-              </p>
-            </div>
-
-            {/* Quick Stats Block */}
-            <div className="bg-[#131b2e] border border-white/10 rounded-2xl p-4 sm:p-5 flex items-center gap-4 sm:gap-6 shadow-xl shrink-0">
-              <div>
-                <div className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Флот от Карти</div>
-                <div className="text-2xl font-bold font-mono text-white flex items-center gap-1.5 mt-0.5">
-                  {scorecard.payment_cards || 14} <span className="text-xs text-green-400 font-sans font-normal">Active</span>
-                </div>
-              </div>
-              <div className="w-px h-10 bg-white/10" />
-              <div>
-                <div className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">Одобрен Бонус</div>
-                <div className="text-2xl font-bold font-mono text-green-400 mt-0.5">
-                  €150.00
-                </div>
-              </div>
-              <div className="w-px h-10 bg-white/10" />
-              <div>
-                <div className="text-[11px] text-slate-400 uppercase tracking-wider font-medium">SLA Гаранция</div>
-                <div className="text-2xl font-bold font-mono text-cyan-400 mt-0.5">
-                  99.9%
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── SECTION 1: B2B VERIFICATION & INSTANT ELIGIBILITY WIDGET ── */}
-        <section id="verify-section" className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              1. B2B Проверка & Онбординг Портал
-            </h2>
-            <span className="text-xs text-slate-500 font-mono">Mod 11 Checksum Calculator</span>
-          </div>
-          <EikVerificationWidget onSuccessfulVerification={refresh} />
-        </section>
-
-        {/* ─── SECTION 2: REVENUE WAR ROOM BENTO & LIVE CARDS FLEET ────── */}
-        <section id="warroom-section" className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              2. Revenue War Room & Live Issued Cards
-            </h2>
-            <span className="text-xs text-slate-500 font-mono">Real-Time Telemetry</span>
-          </div>
-          <RevenueWarRoomBento
-            scorecard={scorecard}
-            cards={cards}
-            businesses={businesses}
-            isConnected={isConnected}
-            wsStatus={wsStatus}
-            lastLatencyMs={lastLatencyMs}
-            lastEvent={lastEvent}
-            loading={loading}
-            onRefresh={refresh}
-          />
-        </section>
-
-        {/* ─── SECTION 3: MESH SUBDOMAINS & SSL INFRASTRUCTURE MONITOR ─── */}
-        <section id="mesh-section" className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              3. Open Balancer Mesh Infrastructure & Edge Health
-            </h2>
-            <span className="text-xs text-slate-500 font-mono">Cloudflare Anycast CDN</span>
-          </div>
-          <SubdomainsMeshMonitor />
-        </section>
-
-      </main>
-
-      {/* ─── FOOTER ────────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/10 bg-[#090a0f] py-8 text-xs text-slate-500 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="space-y-1 text-center md:text-left">
-            <div className="text-slate-300 font-semibold flex items-center justify-center md:justify-start gap-2">
-              <span>🦁 Open Balancer Core Infrastructure</span>
+        {/* Global Footer */}
+        <footer className="border-t border-white/10 bg-[#060a12] py-6 px-6 sm:px-8 mt-12 text-center sm:text-left">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-300">Open Balancer</span>
               <span>•</span>
-              <span>ИНКОНТРОЛ ПЛЮС ЕООД</span>
+              <span>Finans Protect Suite v2.5 (Canonical SSOT)</span>
             </div>
-            <div className="text-[11px] text-slate-500">
-              ЕИК 207849182 • ДДС № BG207849182 • Wallester Business Authorized B2B Partner
+            <div className="flex items-center gap-6">
+              <a href="https://dashboard.openbalancer.com" className="hover:text-cyan-400 transition-colors">
+                SSOT Monitor
+              </a>
+              <a href="https://openbalancer.com" className="hover:text-cyan-400 transition-colors">
+                Официален Сайт
+              </a>
+              <span>Поверителност &amp; Сигурност</span>
             </div>
           </div>
-
-          <div className="flex items-center gap-5 text-slate-400">
-            <span className="flex items-center gap-1.5 text-green-400">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              PostgreSQL Realtime WebSocket Live
-            </span>
-            <a href="https://openbalancer.com/docs.html" className="hover:text-white transition-colors">
-              Документация
-            </a>
-            <a href="/ports" className="hover:text-white transition-colors">
-              Портове
-            </a>
-            <a href="https://openbalancer.com/terms.html" className="hover:text-white transition-colors">
-              Общи условия
-            </a>
-          </div>
-        </div>
-      </footer>
-
+        </footer>
+      </div>
     </div>
   );
 }

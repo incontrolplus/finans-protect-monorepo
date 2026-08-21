@@ -113,9 +113,46 @@ export default {
 
       const COMPANYBOOK_KEY = 'b48fe8cf0c10eedf78148fab73a2e406173caad77205271a940a74df4f7cf8a1';
 
+      // Helper: map legalForm full text to abbreviation
+      const mapLegalForm = (lf) => {
+        if (!lf) return 'ЕООД';
+        const s = lf.toLowerCase();
+        if (s.includes('едноличен търговец')) return 'ЕТ';
+        if (s.includes('еднолично дружество с ограничена')) return 'ЕООД';
+        if (s.includes('дружество с ограничена')) return 'ООД';
+        if (s.includes('еднолично акционерно')) return 'ЕАД';
+        if (s.includes('акционерно дружество')) return 'АД';
+        if (s.includes('командитно')) return 'КД';
+        if (s.includes('събирателно')) return 'СД';
+        if (s.includes('кооперация')) return 'Кооперация';
+        return 'ЕООД';
+      };
+
+      // Helper: derive role and share from API roles array
+      const deriveOwnership = (roles, legalFormAbbr) => {
+        if (!Array.isArray(roles) || roles.length === 0) {
+          if (legalFormAbbr === 'ЕТ') return { role: 'Едноличен търговец', share: 100 };
+          if (legalFormAbbr === 'ЕООД') return { role: 'Едноличен собственик на капитала', share: 100 };
+          return { role: 'Съдружник / Управител', share: 50 };
+        }
+        const positions = roles.map(r => r.position);
+        if (positions.includes('PhysicalPersonTrader')) return { role: 'Едноличен търговец', share: 100 };
+        if (positions.includes('SoleCapitalOwner')) return { role: 'Едноличен собственик на капитала', share: 100 };
+        if (positions.includes('UnlimitedLiabilityPartner')) return { role: 'Неограничено отговорен съдружник', share: 50 };
+        if (positions.includes('Partner')) {
+          const partnerRole = roles.find(r => r.position === 'Partner');
+          const share = partnerRole?.share ? parseFloat(partnerRole.share) : 50;
+          return { role: 'Съдружник', share };
+        }
+        if (positions.includes('Managers')) return { role: 'Управител', share: legalFormAbbr === 'ЕООД' ? 100 : 0 };
+        if (positions.includes('BoardOfDirectors') || positions.includes('BoardMember')) return { role: 'Член на Съвет на директорите', share: 0 };
+        if (positions.includes('Representatives')) return { role: 'Представител', share: 0 };
+        return { role: 'Свързано лице', share: 0 };
+      };
+
       try {
-        // 1. Direct call to official CompanyBook API from Cloudflare Edge
-        const cbRes = await fetch(`https://api.companybook.bg/api/people/search?name=${encodeURIComponent(fullName)}`, {
+        // 1. Direct call to official CompanyBook API from Cloudflare Edge with full data
+        const cbRes = await fetch(`https://api.companybook.bg/api/people/search?name=${encodeURIComponent(fullName)}&with_data=true`, {
           headers: {
             'X-API-Key': COMPANYBOOK_KEY,
             'User-Agent': 'OpenBalancer-Edge/1.0',
@@ -130,26 +167,23 @@ export default {
             const seenEiks = new Set();
 
             for (const person of cbData.results) {
-              const compList = Array.isArray(person.companies) ? person.companies : (Array.isArray(person.companiesList) ? person.companiesList : []);
+              // with_data=true returns personCompanies; without it returns companiesList
+              const compList = Array.isArray(person.personCompanies) ? person.personCompanies
+                : (Array.isArray(person.companiesList) ? person.companiesList : []);
               for (const item of compList) {
                 const eik = item.uic || item.id || item.eik;
                 const companyName = item.company_name?.name || item.name || `Фирма ${eik}`;
                 if (eik && !seenEiks.has(eik)) {
                   seenEiks.add(eik);
-                  let entityType = 'ЕООД';
-                  if (companyName.toUpperCase().includes('ООД')) entityType = 'ООД';
-                  else if (companyName.toUpperCase().includes(' ЕТ') || companyName.toUpperCase().startsWith('ЕТ ')) entityType = 'ЕТ';
-                  else if (companyName.toUpperCase().includes('АД')) entityType = 'АД';
-
-                  const role = entityType === 'ЕООД' ? 'Едноличен собственик на капитала' : 'Съдружник / Управител';
-                  const share = entityType === 'ЕООД' ? 100 : 50;
+                  const legalFormAbbr = mapLegalForm(item.legalForm);
+                  const { role, share } = deriveOwnership(item.roles, legalFormAbbr);
 
                   companies.push({
                     company_name: companyName,
                     company_name_en: '',
                     eik: eik,
-                    entity_type: entityType,
-                    business_type: entityType,
+                    entity_type: legalFormAbbr,
+                    business_type: legalFormAbbr,
                     role: role,
                     owner_role: role,
                     share: share,
@@ -159,7 +193,7 @@ export default {
                     mod11_valid: true,
                     bonus_amount_eur: 150,
                     bonus_program: 'VISA_PLATINUM_150',
-                    reason: `Официално вписване в Търговския регистър чрез CompanyBook API: Лицето ${fullName} притежава и управлява ${companyName} (ЕИК ${eik}).`
+                    reason: `Официално вписване в Търговския регистър чрез CompanyBook API: Лицето ${fullName} е ${role} в ${companyName} (ЕИК ${eik}).`
                   });
                 }
               }

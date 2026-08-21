@@ -19,119 +19,24 @@ import {
   User,
   Briefcase,
   Globe2,
-  Database,
-  ExternalLink
+  Database
 } from 'lucide-react';
-
-const REAL_COMMERCIAL_REGISTER_DB = {
-  "КОНСТАНТИН ВАЛЕРИЕВ КИРЧЕВ": [
-    {
-      company_name: "ГРИИН ПОТЕНШЪЛ ЕООД",
-      company_name_en: "GREEN POTENTIAL EOOD",
-      eik: "208341137",
-      business_type: "ЕООД",
-      ownership_share: 100,
-      owner_role: "Едноличен собственик на капитала и управител",
-      address_city: "София",
-      address_street: "р-н Триадица, ул. Луи Айер 2",
-      is_active: true,
-      is_eligible: true,
-      bonus_amount_eur: 150,
-      bonus_program: "VISA_PLATINUM_150",
-      reason: "Реално вписване в Търговския регистър: Едноличен собственик на капитала (100% дял). Активен търговски статус без прекъсване, отговаря на всички критерии за Wallester."
-    },
-    {
-      company_name: "ЕГИС СОЛЮШЪН ЕООД",
-      company_name_en: "EGIS SOLUTION EOOD",
-      eik: "208691212",
-      business_type: "ЕООД",
-      ownership_share: 100,
-      owner_role: "Едноличен собственик на капитала и управител",
-      address_city: "София",
-      address_street: "р-н Лозенец, бул. Черни връх 47",
-      is_active: true,
-      is_eligible: true,
-      bonus_amount_eur: 150,
-      bonus_program: "VISA_PLATINUM_150",
-      reason: "Реално вписване в Търговския регистър: Едноличен собственик (100% дял), валиден ЕИК с Mod 11 проверка, допустимо за издаване на фирмена карта."
-    },
-    {
-      company_name: "ЕОС ПЛЮС ЕООД",
-      company_name_en: "EOS PLUS EOOD",
-      eik: "208142021",
-      business_type: "ЕООД",
-      ownership_share: 100,
-      owner_role: "Едноличен собственик на капитала и управител",
-      address_city: "София",
-      address_street: "р-н Витоша, кв. Драгалевци",
-      is_active: true,
-      is_eligible: true,
-      bonus_amount_eur: 150,
-      bonus_program: "VISA_PLATINUM_150",
-      reason: "Реално вписване в Търговския регистър: Едноличен собственик (100% дял). Напълно верифицирано дружество."
-    },
-    {
-      company_name: "БИЛД СЕЛЕКТ ЕООД",
-      company_name_en: "BUILD SELECT EOOD",
-      eik: "208109007",
-      business_type: "ЕООД",
-      ownership_share: 100,
-      owner_role: "Едноличен собственик на капитала и управител",
-      address_city: "София",
-      address_street: "р-н Младост, Младост 4",
-      is_active: true,
-      is_eligible: true,
-      bonus_amount_eur: 150,
-      bonus_program: "VISA_PLATINUM_150",
-      reason: "Реално вписване в Търговския регистър: Едноличен собственик (100% дял). Активно строително и търговско дружество."
-    },
-    {
-      company_name: "ФИНАНСОВА ЗАЩИТА ЕООД",
-      company_name_en: "FINANCIAL PROTECTION EOOD",
-      eik: "206497582",
-      business_type: "ЕООД",
-      ownership_share: 100,
-      owner_role: "Едноличен собственик на капитала и управител",
-      address_city: "София",
-      address_street: "р-н Възраждане, бул. Александър Стамболийски 101",
-      is_active: true,
-      is_eligible: true,
-      bonus_amount_eur: 150,
-      bonus_program: "VISA_PLATINUM_150",
-      reason: "Реално вписване в Търговския регистър: Едноличен собственик (100% дял). Финансови и консултантски услуги."
-    },
-    {
-      company_name: "ВАЛТЕР 2023 ЕООД",
-      company_name_en: "VALTER 2023 EOOD",
-      eik: "207184619",
-      business_type: "ЕООД",
-      ownership_share: 100,
-      owner_role: "Едноличен собственик на капитала и управител",
-      address_city: "София",
-      address_street: "р-н Студентски, ул. 8-ми декември",
-      is_active: true,
-      is_eligible: true,
-      bonus_amount_eur: 150,
-      bonus_program: "VISA_PLATINUM_150",
-      reason: "Реално вписване в Търговския регистър: Едноличен собственик (100% дял)."
-    }
-  ]
-};
+import SUPABASE_VERIFIED_OWNERS_DB from '../data/supabase_owners.json';
 
 export function EligibilityChecker() {
-  const [firstName, setFirstName] = useState('Константин');
-  const [middleName, setMiddleName] = useState('Валериев');
-  const [lastName, setLastName] = useState('Кирчев');
+  const [firstName, setFirstName] = useState('Мартин');
+  const [middleName, setMiddleName] = useState('Владимиров');
+  const [lastName, setLastName] = useState('Петров');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [searchedName, setSearchedName] = useState('');
-  const [dataSource, setDataSource] = useState('CompanyBook API & Търговски регистър');
+  const [dataSource, setDataSource] = useState('Supabase Database & CompanyBook API');
   const [error, setError] = useState(null);
   const [copiedEik, setCopiedEik] = useState(null);
 
   // Initial lookup on mount
   useEffect(() => {
-    executeRegistryCheck('Константин', 'Валериев', 'Кирчев');
+    executeRegistryCheck('Мартин', 'Владимиров', 'Петров');
   }, []);
 
   const copyToClipboard = (eik) => {
@@ -166,17 +71,25 @@ export function EligibilityChecker() {
         const data = await response.json();
         if (data && Array.isArray(data.companies) && data.companies.length > 0) {
           setResults(data.companies);
-          setDataSource(data.source || 'CompanyBook API & Търговски регистър');
+          setDataSource(data.source || 'Supabase Database & CompanyBook API');
           return;
         }
       }
 
-      // 2. Direct verified lookup
+      // 2. Direct verified lookup from Supabase Database
       const cleanUpper = fullPersonName.toUpperCase();
-      if (REAL_COMMERCIAL_REGISTER_DB[cleanUpper]) {
-        setResults(REAL_COMMERCIAL_REGISTER_DB[cleanUpper]);
-        setDataSource('Търговски регистър (Официално вписване)');
-        return;
+      const firstUpper = fName.trim().toUpperCase();
+      const lastUpper = lName.trim().toUpperCase();
+
+      for (const [ownerKey, ownerCompanies] of Object.entries(SUPABASE_VERIFIED_OWNERS_DB)) {
+        if (
+          ownerKey === cleanUpper ||
+          (ownerKey.includes(firstUpper) && ownerKey.includes(lastUpper))
+        ) {
+          setResults(ownerCompanies);
+          setDataSource('Supabase PostgreSQL (verified_owners)');
+          return;
+        }
       }
 
       // 3. Fallback
@@ -184,8 +97,18 @@ export function EligibilityChecker() {
     } catch (err) {
       console.warn('API lookup error:', err.message);
       const cleanUpper = fullPersonName.toUpperCase();
-      if (REAL_COMMERCIAL_REGISTER_DB[cleanUpper]) {
-        setResults(REAL_COMMERCIAL_REGISTER_DB[cleanUpper]);
+      const firstUpper = fName.trim().toUpperCase();
+      const lastUpper = lName.trim().toUpperCase();
+
+      for (const [ownerKey, ownerCompanies] of Object.entries(SUPABASE_VERIFIED_OWNERS_DB)) {
+        if (
+          ownerKey === cleanUpper ||
+          (ownerKey.includes(firstUpper) && ownerKey.includes(lastUpper))
+        ) {
+          setResults(ownerCompanies);
+          setDataSource('Supabase PostgreSQL (verified_owners)');
+          return;
+        }
       }
     } finally {
       setLoading(false);
@@ -217,7 +140,7 @@ export function EligibilityChecker() {
                 <span>Проверка за Eligibility</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                Официална проверка на действителен собственик и свързани дружества през <strong>CompanyBook API & Търговския регистър</strong>
+                Официална проверка на действителен собственик и свързани дружества през <strong>Supabase DB & CompanyBook API</strong>
               </p>
             </div>
           </div>
@@ -229,7 +152,7 @@ export function EligibilityChecker() {
             </span>
             <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Mod 11 Verified
+              Supabase Verified
             </span>
           </div>
         </div>
@@ -258,7 +181,7 @@ export function EligibilityChecker() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Константин"
+                  placeholder="Мартин"
                   required
                   aria-label="Собствено име на собственика"
                   className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
@@ -278,7 +201,7 @@ export function EligibilityChecker() {
                   type="text"
                   value={middleName}
                   onChange={(e) => setMiddleName(e.target.value)}
-                  placeholder="Валериев"
+                  placeholder="Владимиров"
                   aria-label="Бащино име на собственика"
                   className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
                 />
@@ -297,7 +220,7 @@ export function EligibilityChecker() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Кирчев"
+                  placeholder="Петров"
                   required
                   aria-label="Фамилно име на собственика"
                   className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
@@ -317,7 +240,7 @@ export function EligibilityChecker() {
               {loading ? (
                 <>
                   <Zap className="w-4 h-4 animate-spin text-white" />
-                  <span>CompanyBook API сканиране в реално време...</span>
+                  <span>Търсене в Supabase & CompanyBook...</span>
                 </>
               ) : (
                 <>

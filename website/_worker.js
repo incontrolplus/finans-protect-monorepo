@@ -166,7 +166,14 @@ export default {
             const companies = [];
             const seenEiks = new Set();
 
+            // Normalize search name for strict comparison (uppercase, single-space, trimmed)
+            const normalizedSearch = fullName.toUpperCase().replace(/\s+/g, ' ').trim();
+
             for (const person of cbData.results) {
+              // STRICT FILTER: only include persons whose name EXACTLY matches the search
+              const personName = (person.name || '').toUpperCase().replace(/\s+/g, ' ').trim();
+              if (personName !== normalizedSearch) continue;
+
               // with_data=true returns personCompanies; without it returns companiesList
               const compList = Array.isArray(person.personCompanies) ? person.personCompanies
                 : (Array.isArray(person.companiesList) ? person.companiesList : []);

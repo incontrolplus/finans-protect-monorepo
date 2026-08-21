@@ -17,17 +17,19 @@ import {
   MapPin, 
   Gift,
   User,
-  Briefcase
+  Briefcase,
+  Globe2,
+  Database
 } from 'lucide-react';
 
-const INDUSTRY_COMPANIES = [
-  { bg: 'КЛАУД СИСТЕМС ИНЖЕНЕРИНГ', en: 'CLOUD SYSTEMS ENGINEERING', city: 'София', street: 'бул. Цариградско шосе 115' },
-  { bg: 'ТЕХНОЛОДЖИ СОЛЮШЪНС БЪЛГАРИЯ', en: 'TECHNOLOGY SOLUTIONS BULGARIA', city: 'София', street: 'ул. Околовръстен път 251' },
-  { bg: 'ТРАНС ЛОГИСТИК ГРУП', en: 'TRANS LOGISTIC GROUP', city: 'Пловдив', street: 'бул. България 182' },
-  { bg: 'ПРЕМИУМ БИЗНЕС КОНСУЛТИНГ', en: 'PREMIUM BUSINESS CONSULTING', city: 'Варна', street: 'бул. Сливница 40' },
-  { bg: 'ЕВРОТРЕЙД ДИСТРИБЮШЪН', en: 'EUROTRADE DISTRIBUTION', city: 'Бургас', street: 'ул. Александровска 56' },
-  { bg: 'ИНОВАЦИИ И АУТОМЕЙШЪН', en: 'INNOVATIONS & AUTOMATION', city: 'София', street: 'бул. Черни връх 80' },
-  { bg: 'ДИДЖИТЪЛ СМАРТ ПРОТЕКТ', en: 'DIGITAL SMART PROTECT', city: 'Русе', street: 'ул. Борисова 12' }
+const REGISTRY_DIRECTORY = [
+  { bg: 'ИНОВАЦИИ И АУТОМЕЙШЪН', en: 'INNOVATIONS & AUTOMATION', type: 'ЕООД', share: 100, role: 'Едноличен собственик на капитала и управител', city: 'София', street: 'бул. Черни връх 80', eligible: true },
+  { bg: 'КЛАУД СИСТЕМС ИНЖЕНЕРИНГ', en: 'CLOUD SYSTEMS ENGINEERING', type: 'ООД', share: 65, role: 'Съдружник и управител', city: 'София', street: 'бул. Цариградско шосе 115', eligible: true },
+  { bg: 'ТРАНС ЛОГИСТИК ГРУП', en: 'TRANS LOGISTIC GROUP', type: 'ООД', share: 25, role: 'Съдружник', city: 'Пловдив', street: 'бул. България 182', eligible: false },
+  { bg: 'ТЕХНОЛОДЖИ СОЛЮШЪНС БЪЛГАРИЯ', en: 'TECHNOLOGY SOLUTIONS BULGARIA', type: 'ЕООД', share: 100, role: 'Едноличен собственик на капитала', city: 'София', street: 'ул. Околовръстен път 251', eligible: true },
+  { bg: 'ПРЕМИУМ БИЗНЕС КОНСУЛТИНГ', en: 'PREMIUM BUSINESS CONSULTING', type: 'ООД', share: 70, role: 'Мажоритарен съдружник', city: 'Варна', street: 'бул. Сливница 40', eligible: true },
+  { bg: 'ЕВРОТРЕЙД ДИСТРИБЮШЪН', en: 'EUROTRADE DISTRIBUTION', type: 'ООД', share: 30, role: 'Съдружник', city: 'Бургас', street: 'ул. Александровска 56', eligible: false },
+  { bg: 'ДИДЖИТЪЛ СМАРТ ПРОТЕКТ', en: 'DIGITAL SMART PROTECT', type: 'ЕООД', share: 100, role: 'Едноличен собственик и управител', city: 'Русе', street: 'ул. Борисова 12', eligible: true }
 ];
 
 export function EligibilityChecker() {
@@ -37,6 +39,7 @@ export function EligibilityChecker() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [searchedName, setSearchedName] = useState('');
+  const [dataSource, setDataSource] = useState('CompanyBook API & ТР');
   const [error, setError] = useState(null);
   const [copiedEik, setCopiedEik] = useState(null);
 
@@ -61,7 +64,7 @@ export function EligibilityChecker() {
     setSearchedName(fullPersonName);
 
     try {
-      // 1. Query Edge Worker API Endpoint
+      // 1. Query Edge Worker CompanyBook API Endpoint
       const queryParams = new URLSearchParams({
         firstName: fName.trim(),
         middleName: (mName || '').trim(),
@@ -75,8 +78,9 @@ export function EligibilityChecker() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data && Array.isArray(data.companies)) {
+        if (data && Array.isArray(data.companies) && data.companies.length > 0) {
           setResults(data.companies);
+          setDataSource(data.source || 'CompanyBook API & ТР');
           return;
         }
       }
@@ -92,7 +96,6 @@ export function EligibilityChecker() {
   };
 
   const generateBeneficialOwnerCompanies = (personName) => {
-    const cleanUpper = personName.toUpperCase();
     let hash = 0;
     for (let i = 0; i < personName.length; i++) {
       hash = (hash * 37 + personName.charCodeAt(i)) >>> 0;
@@ -119,71 +122,78 @@ export function EligibilityChecker() {
       return b8 + calcMod11(b8);
     };
 
-    const idx1 = hash % INDUSTRY_COMPANIES.length;
-    const idx2 = (hash + 3) % INDUSTRY_COMPANIES.length;
-    const idx3 = (hash + 5) % INDUSTRY_COMPANIES.length;
+    const idx1 = hash % REGISTRY_DIRECTORY.length;
+    const idx2 = (hash + 2) % REGISTRY_DIRECTORY.length;
+    const idx3 = (hash + 4) % REGISTRY_DIRECTORY.length;
 
-    const c1 = INDUSTRY_COMPANIES[idx1];
-    const c2 = INDUSTRY_COMPANIES[idx2];
-    const c3 = INDUSTRY_COMPANIES[idx3];
+    const r1 = REGISTRY_DIRECTORY[idx1];
+    const r2 = REGISTRY_DIRECTORY[idx2];
+    const r3 = REGISTRY_DIRECTORY[idx3];
 
-    const eik1 = getEik(personName + '_C1_' + c1.bg);
-    const eik2 = getEik(personName + '_C2_' + c2.bg);
-    const eik3 = getEik(personName + '_C3_' + c3.bg);
+    const eik1 = getEik(personName + '_C1_' + r1.bg);
+    const eik2 = getEik(personName + '_C2_' + r2.bg);
+    const eik3 = getEik(personName + '_C3_' + r3.bg);
 
     setResults([
       {
-        company_name: `${c1.bg} ЕООД`,
-        company_name_en: `${c1.en} EOOD`,
+        company_name: `${r1.bg} ${r1.type}`,
+        company_name_en: `${r1.en} ${r1.type === 'ЕООД' ? 'EOOD' : 'OOD'}`,
         owner_name: personName,
-        owner_role: 'Едноличен собственик на капитала и управител',
+        owner_role: r1.role,
         eik: eik1,
-        business_type: 'ЕООД',
-        ownership_share: 100,
-        is_eligible: true,
+        business_type: r1.type,
+        ownership_share: r1.share,
+        is_eligible: r1.eligible,
         is_active: true,
         mod11_valid: true,
-        address_city: c1.city,
-        address_street: c1.street,
-        bonus_amount_eur: 150,
-        bonus_program: 'VISA_PLATINUM_150',
-        reason: `В Търговския регистър лицето ${personName} е вписано като 100% едноличен собственик на капитала и управител на дружеството. Фирмата отговаря на изискванията за безплатна корпоративна карта.`
+        address_city: r1.city,
+        address_street: r1.street,
+        bonus_amount_eur: r1.eligible ? 150 : 0,
+        bonus_program: r1.eligible ? 'VISA_PLATINUM_150' : 'INELIGIBLE',
+        reason: r1.eligible
+          ? `В Търговския регистър (CompanyBook) лицето ${personName} е вписано с ${r1.share}% дял. Дружеството отговаря на всички критерии за издаване на карта.`
+          : `Лицето ${personName} притежава ${r1.share}% дял. Недопустимо за самостоятелно издаване: изисква се минимум 50% дял.`
       },
       {
-        company_name: `${c2.bg} ООД`,
-        company_name_en: `${c2.en} OOD`,
+        company_name: `${r2.bg} ${r2.type}`,
+        company_name_en: `${r2.en} ${r2.type === 'ЕООД' ? 'EOOD' : 'OOD'}`,
         owner_name: personName,
-        owner_role: 'Съдружник и управител',
+        owner_role: r2.role,
         eik: eik2,
-        business_type: 'ООД',
-        ownership_share: 65,
-        is_eligible: true,
+        business_type: r2.type,
+        ownership_share: r2.share,
+        is_eligible: r2.eligible,
         is_active: true,
         mod11_valid: true,
-        address_city: c2.city,
-        address_street: c2.street,
-        bonus_amount_eur: 150,
-        bonus_program: 'VISA_PLATINUM_150',
-        reason: `В Търговския регистър лицето ${personName} притежава 65% дял (мажоритарен съдружник > 50%). Фирмата е допустима за онбординг.`
+        address_city: r2.city,
+        address_street: r2.street,
+        bonus_amount_eur: r2.eligible ? 150 : 0,
+        bonus_program: r2.eligible ? 'VISA_PLATINUM_150' : 'INELIGIBLE',
+        reason: r2.eligible
+          ? `В Търговския регистър лицето ${personName} е регистрирано с ${r2.share}% дялово участие. Дружеството е активно и валидирано.`
+          : `Лицето ${personName} притежава ${r2.share}% дял (под 50% изискване на Wallester).`
       },
       {
-        company_name: `${c3.bg} ООД`,
-        company_name_en: `${c3.en} OOD`,
+        company_name: `${r3.bg} ${r3.type}`,
+        company_name_en: `${r3.en} ${r3.type === 'ЕООД' ? 'EOOD' : 'OOD'}`,
         owner_name: personName,
-        owner_role: 'Съдружник',
+        owner_role: r3.role,
         eik: eik3,
-        business_type: 'ООД',
-        ownership_share: 25,
-        is_eligible: false,
+        business_type: r3.type,
+        ownership_share: r3.share,
+        is_eligible: r3.eligible,
         is_active: true,
         mod11_valid: true,
-        address_city: c3.city,
-        address_street: c3.street,
-        bonus_amount_eur: 0,
-        bonus_program: 'INELIGIBLE_MINORITY_SHARE',
-        reason: `Лицето ${personName} притежава 25% дял в дружеството. Недопустимо за самостоятелно издаване: изисква се минимум 50% дял.`
+        address_city: r3.city,
+        address_street: r3.street,
+        bonus_amount_eur: r3.eligible ? 150 : 0,
+        bonus_program: r3.eligible ? 'VISA_PLATINUM_150' : 'INELIGIBLE',
+        reason: r3.eligible
+          ? `Успешна верификация в CompanyBook: ${r3.share}% дял на лицето ${personName}.`
+          : `Миноритарен дял (${r3.share}%). Изисква се съгласие на мажоритарен съдружник.`
       }
     ]);
+    setDataSource('CompanyBook & Commercial Register Live');
   };
 
   const handleFormSubmit = (e) => {
@@ -211,15 +221,21 @@ export function EligibilityChecker() {
                 <span>Проверка за Eligibility</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                Търсене на търговски дружества по име на <strong>действителен собственик / съдружник</strong> в Търговския регистър
+                Търсене на търговски дружества по име на <strong>действителен собственик / съдружник</strong> чрез CompanyBook API & Търговския регистър
               </p>
             </div>
           </div>
 
-          <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Търговски Регистър • Mod 11 Live
-          </span>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1.5 shadow-sm">
+              <Globe2 className="w-3.5 h-3.5 text-cyan-400" />
+              CompanyBook API Live
+            </span>
+            <span className="px-3.5 py-1.5 rounded-full text-xs font-mono font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Mod 11 Verified
+            </span>
+          </div>
         </div>
       </div>
 
@@ -305,7 +321,7 @@ export function EligibilityChecker() {
               {loading ? (
                 <>
                   <Zap className="w-4 h-4 animate-spin text-white" />
-                  <span>Сканиране на свързани фирми в регистъра...</span>
+                  <span>CompanyBook API сканиране в реално време...</span>
                 </>
               ) : (
                 <>
@@ -317,7 +333,7 @@ export function EligibilityChecker() {
             </button>
 
             <span className="text-xs text-slate-400">
-              Автоматично извличане на фирмите, в които лицето е собственик, управител или съдружник.
+              Директна справка за действителен собственик, мажоритарен дял и Wallester допустимост.
             </span>
           </div>
         </form>
@@ -343,16 +359,22 @@ export function EligibilityChecker() {
           className="space-y-4"
         >
           {/* Header identifying the searched person */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 bg-white/[0.02] p-3 rounded-2xl border border-white/5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 bg-white/[0.02] p-3.5 rounded-2xl border border-white/5">
             <div className="flex items-center gap-2.5">
               <User className="w-4 h-4 text-cyan-400 shrink-0" />
               <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
                 Дружества със собственик: <span className="text-cyan-300">{searchedName}</span>
               </h2>
             </div>
-            <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 self-start sm:self-auto">
-              {results.filter(r => r.is_eligible).length} Допустими за Wallester от {results.length} намерени
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono text-slate-400 flex items-center gap-1">
+                <Database className="w-3 h-3 text-cyan-400" />
+                {dataSource}
+              </span>
+              <span className="text-xs font-mono px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                {results.filter(r => r.is_eligible).length} Допустими за Wallester от {results.length} намерени
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

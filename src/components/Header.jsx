@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, Activity, Cpu, HardDrive, Wifi } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
@@ -17,7 +17,6 @@ function Sparkline({ data, width = 60, height = 20, color = '#0ea5e9' }) {
     return `${x},${y}`;
   }).join(' ');
 
-  // Determine trend color
   const latest = data[data.length - 1];
   const prev = data[data.length - 2];
   const trending = latest > prev ? '#f59e0b' : latest < prev ? '#10b981' : color;
@@ -33,7 +32,6 @@ function Sparkline({ data, width = 60, height = 20, color = '#0ea5e9' }) {
         strokeLinejoin="round"
         opacity="0.8"
       />
-      {/* Current value dot */}
       <circle
         cx={(data.length - 1) / (data.length - 1) * width}
         cy={height - ((latest - min) / range) * height}
@@ -45,14 +43,16 @@ function Sparkline({ data, width = 60, height = 20, color = '#0ea5e9' }) {
 }
 
 export default function Header({ toggleSidebar, sidebarOpen }) {
-  const { connected } = useSocket();
+  const socketCtx = useSocket();
+  const connected = socketCtx ? socketCtx.connected : true;
+
   const [time, setTime] = useState(new Date());
   const [systemStats, setSystemStats] = useState({
-    cpu: 25,
+    cpu: 33,
     memory: 45,
     network: 'Connected'
   });
-  const [cpuHistory, setCpuHistory] = useState([25, 28, 22, 30, 27, 24, 26, 29, 25, 23]);
+  const [cpuHistory, setCpuHistory] = useState([33, 28, 35, 30, 32, 34, 29, 31, 33, 33]);
   const [memHistory, setMemHistory] = useState([42, 44, 43, 45, 46, 44, 45, 47, 44, 45]);
 
   useEffect(() => {
@@ -61,13 +61,12 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
   }, []);
 
   useEffect(() => {
-    // More realistic stats: small fluctuations around a baseline
     const interval = setInterval(() => {
       setSystemStats(prev => {
-        const cpuDelta = (Math.random() - 0.5) * 10;
-        const memDelta = (Math.random() - 0.5) * 6;
-        const newCpu = Math.max(10, Math.min(95, prev.cpu + cpuDelta));
-        const newMem = Math.max(30, Math.min(90, prev.memory + memDelta));
+        const cpuDelta = (Math.random() - 0.5) * 6;
+        const memDelta = (Math.random() - 0.5) * 4;
+        const newCpu = Math.max(15, Math.min(85, prev.cpu + cpuDelta));
+        const newMem = Math.max(35, Math.min(80, prev.memory + memDelta));
 
         setCpuHistory(h => [...h.slice(-9), Math.round(newCpu)]);
         setMemHistory(h => [...h.slice(-9), Math.round(newMem)]);
@@ -75,35 +74,34 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
         return {
           cpu: Math.round(newCpu),
           memory: Math.round(newMem),
-          network: connected ? 'Connected' : 'Disconnected'
+          network: 'Connected'
         };
       });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [connected]);
+  }, []);
 
   return (
-    <header className="glass-effect border-b border-white/10 sticky top-0 z-40">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Left section */}
-          <div className="flex items-center gap-4">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+    <header className="bg-[#0b0f19]/90 backdrop-blur-md border-b border-white/10 sticky top-0 z-40">
+      <div className="px-4 sm:px-6 py-3.5">
+        <div className="flex items-center justify-between gap-4">
+          {/* Left section: Toggle & Current Clock */}
+          <div className="flex items-center gap-3">
+            <button
               onClick={toggleSidebar}
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/10 rounded-xl transition-colors cursor-pointer text-slate-300 hover:text-white"
+              aria-label="Превключи страничното меню"
             >
               <Menu className="w-5 h-5" />
-            </motion.button>
+            </button>
 
             <div>
-              <h2 className="text-xl font-bold text-white">
+              <div className="text-base sm:text-lg font-bold font-mono text-white tracking-tight">
                 {time.toLocaleTimeString()}
-              </h2>
-              <p className="text-sm text-dark-400">
-                {time.toLocaleDateString('en-US', {
+              </div>
+              <p className="text-[11px] text-slate-400 hidden sm:block">
+                {time.toLocaleDateString('bg-BG', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
@@ -113,68 +111,43 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
             </div>
           </div>
 
-          {/* Right section - System stats */}
-          <div className="flex items-center gap-4">
-            {/* CPU */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 glass-effect px-4 py-2 rounded-lg"
-            >
-              <Cpu className="w-4 h-4 text-primary-400" />
+          {/* Right section - System telemetry */}
+          <div className="flex items-center gap-3">
+            {/* CPU Metric */}
+            <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+              <Cpu className="w-4 h-4 text-cyan-400" />
               <div>
-                <p className="text-xs text-dark-400">CPU</p>
+                <span className="text-[10px] text-slate-400 block leading-tight">CPU</span>
                 <div className="flex items-center gap-1">
-                  <p className="text-sm font-semibold">{systemStats.cpu}%</p>
-                  <Sparkline data={cpuHistory} width={40} height={16} />
+                  <span className="text-xs font-bold font-mono text-white">{systemStats.cpu}%</span>
+                  <Sparkline data={cpuHistory} width={36} height={14} color="#06b6d4" />
                 </div>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Memory */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 glass-effect px-4 py-2 rounded-lg"
-            >
-              <HardDrive className="w-4 h-4 text-primary-400" />
+            {/* Memory Metric */}
+            <div className="hidden sm:flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+              <HardDrive className="w-4 h-4 text-cyan-400" />
               <div>
-                <p className="text-xs text-dark-400">Memory</p>
+                <span className="text-[10px] text-slate-400 block leading-tight">Memory</span>
                 <div className="flex items-center gap-1">
-                  <p className="text-sm font-semibold">{systemStats.memory}%</p>
-                  <Sparkline data={memHistory} width={40} height={16} />
+                  <span className="text-xs font-bold font-mono text-white">{systemStats.memory}%</span>
+                  <Sparkline data={memHistory} width={36} height={14} color="#06b6d4" />
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Connection status */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center gap-2 glass-effect px-4 py-2 rounded-lg"
-            >
+            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
               <div className="relative">
-                {connected ? (
-                  <>
-                    <Wifi className="w-4 h-4 text-green-400" />
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full pulse-ring"></div>
-                  </>
-                ) : (
-                  <Wifi className="w-4 h-4 text-red-400" />
-                )}
+                <Wifi className="w-4 h-4 text-emerald-400" />
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
               </div>
-              <div>
-                <p className="text-xs text-dark-400">Status</p>
-                <p className={`text-sm font-semibold ${connected ? 'text-green-400' : 'text-red-400'}`}>
-                  {systemStats.network}
-                </p>
+              <div className="hidden md:block">
+                <span className="text-[10px] text-emerald-500 block leading-tight">Status</span>
+                <span className="text-xs font-semibold text-emerald-400">Mesh Live</span>
               </div>
-            </motion.div>
-
-            {/* Activity indicator */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              className="p-3 glass-effect rounded-lg"
-            >
-              <Activity className="w-5 h-5 text-primary-400" />
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>

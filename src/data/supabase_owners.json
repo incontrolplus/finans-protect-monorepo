@@ -2064,5 +2064,55 @@
       "bonus_program": "VISA_PLATINUM_150",
       "reason": "Реално вписване в Търговския регистър: Едноличен собственик (100% дял)."
     }
+  ],
+  "ВАЛЕНТИН РАДОСЛАВОВ АТАНАСОВ": [
+    {
+      "company_name": "ИНКОНТРОЛ ПЛЮС ЕООД",
+      "company_name_en": "INCONTROL PLUS EOOD",
+      "eik": "208355927",
+      "business_type": "ЕООД",
+      "ownership_share": 100,
+      "owner_role": "Едноличен собственик на капитала и управител",
+      "address_city": "гр. София",
+      "address_street": "р-н Триадица",
+      "is_active": true,
+      "is_eligible": true,
+      "mod11_valid": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Официално вписване в Търговския регистър: Едноличен собственик на капитала и управител (100% дял). Активен статус, отговаря на всички изисквания за Wallester Visa Platinum."
+    },
+    {
+      "company_name": "ФОТ ИНВЕСТ ЕООД",
+      "company_name_en": "FOT INVEST LTD",
+      "eik": "207337919",
+      "business_type": "ЕООД",
+      "ownership_share": 100,
+      "owner_role": "Едноличен собственик на капитала и управител",
+      "address_city": "гр. София",
+      "address_street": "р-н Лозенец",
+      "is_active": true,
+      "is_eligible": true,
+      "mod11_valid": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Официално вписване в Търговския регистър: Едноличен собственик на капитала (100% дял)."
+    },
+    {
+      "company_name": "АЛБАБИЛД ЕООД",
+      "company_name_en": "ALBABILD LTD",
+      "eik": "208108987",
+      "business_type": "ЕООД",
+      "ownership_share": 0,
+      "owner_role": "Управител",
+      "address_city": "гр. София",
+      "address_street": "р-н Младост",
+      "is_active": true,
+      "is_eligible": false,
+      "mod11_valid": true,
+      "bonus_amount_eur": 150,
+      "bonus_program": "VISA_PLATINUM_150",
+      "reason": "Официално вписване в Търговския регистър: Лицето е вписано като управител (капиталът се притежава от юридическо лице). Не отговаря на изискването за >=50% пряка физическа собственост."
+    }
   ]
 }

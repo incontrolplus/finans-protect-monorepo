@@ -63,28 +63,39 @@ async function queryFirecrawl(pathStr, body) {
   });
 }
 
+
 async function performLiveRegistryLookup(fullName) {
   try {
-    const searchRes = await queryFirecrawl('/v1/search', {
-      query: `"${fullName}" site:papagal.bg`
-    });
+    console.log('[Live Registry Lookup] Searching for:', fullName);
+    let searchRes = await queryFirecrawl('/v1/search', { query: fullName });
+
+    if (!searchRes?.data?.length) {
+      const parts = fullName.split(/\s+/);
+      if (parts.length >= 3) {
+        searchRes = await queryFirecrawl('/v1/search', { query: `${parts[0]} ${parts[parts.length - 1]}` });
+      }
+    }
 
     if (!searchRes?.data?.length) return [];
 
-    const profileItem = searchRes.data.find(d => d.url && d.url.includes('/p/'));
+    const profileItem = searchRes.data.find(d => 
+      d.url && (d.url.includes('/p/') || d.url.includes('/people/') || d.url.includes('papagal.bg') || d.url.includes('registri.bg'))
+    );
+
     if (!profileItem) return [];
 
-    const scrapeRes = await queryFirecrawl('/v1/scrape', {
-      url: profileItem.url
-    });
+    console.log('[Live Registry Lookup] Found profile URL:', profileItem.url);
 
+    const scrapeRes = await queryFirecrawl('/v1/scrape', { url: profileItem.url });
     const markdown = scrapeRes?.data?.markdown || '';
     if (!markdown) return [];
 
     const companies = [];
     const lines = markdown.split('\n');
     const seenEiks = new Set();
-    const linkRegex = /\[([^\]]+)\]\(https:\/\/papagal\.bg\/eik\/(\d{9})\/[^)]+\)/g;
+    
+    // Exact Papagal / Registri link pattern
+    const linkRegex = /\[([^\]]+)\]\(https?:\/\/[^)]*?\/(\d{9})(?:\/[^)]*)?\)/g;
 
     for (const line of lines) {
       let match;
@@ -133,12 +144,14 @@ async function performLiveRegistryLookup(fullName) {
       }
     }
 
+    console.log(`[Live Registry Lookup] Successfully parsed ${companies.length} companies for ${fullName}`);
     return companies;
   } catch (err) {
     console.error('Live registry check error:', err.message);
     return [];
   }
 }
+
 
 // ─── MASTER SERVICE & PORT REGISTRY (SSOT) ───────────────────────────
 const SERVICE_REGISTRY = [

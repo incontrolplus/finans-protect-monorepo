@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hermes Multi-Agent Swarm Orchestrator — Open Balancer</title>
+  <style>
+  :root {
+    color-scheme: dark;
+    --bg: #080c14;
+    --card: #0f172a;
+    --card-border: rgba(255, 255, 255, 0.1);
+    --card-hover: rgba(34, 197, 94, 0.35);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #22c55e;
+    --primary: #3b82f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  svg { display: inline-block; vertical-align: middle; }
+  .brand-logo-img, img[src*="logo.svg"], svg.brand-logo-img {
+    width: 32px !important;
+    height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+  }
+  .icon-sm {
+    width: 16px !important;
+    height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+    flex-shrink: 0;
+  }
+  .top-banner {
+    background: linear-gradient(90deg, #022c22, #0e1726, #064e3b);
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 12px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+    display: inline-block;
+  }
+  header.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: rgba(12, 14, 20, 0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+  }
+  .nav-container {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 8px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #fff;
+  }
+  .brand-icon-box {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #22c55e, #10b981);
+    padding: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brand-icon-inner {
+    width: 100%;
+    height: 100%;
+    background: #0c0e14;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .brand-title {
+    font-size: 15px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge-tag {
+    font-size: 10px;
+    font-family: monospace;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #111827;
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    overflow-x: auto;
+  }
+  .nav-link {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .nav-link.active {
+    color: #ffffff !important;
+    background: rgba(34, 197, 94, 0.22) !important;
+    border: 1px solid rgba(34, 197, 94, 0.45) !important;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+  }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 6px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #4ade80;
+    white-space: nowrap;
+  }
+  main.main-content {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px 16px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .hero-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(13, 21, 39, 0.9), rgba(6, 78, 59, 0.25));
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  .hero-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .hero-header {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #4ade80;
+    margin-bottom: 8px;
+  }
+  .hero-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.25;
+  }
+  .hero-desc {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.6;
+    max-width: 800px;
+    margin-top: 8px;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #22c55e;
+    color: #052e16;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.3);
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn-primary:hover {
+    background: #4ade80;
+    transform: translateY(-1px);
+  }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  @media (min-width: 640px) {
+    .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  .metric-box {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .metric-label { font-size: 11px; color: #94a3b8; }
+  .metric-value { font-size: 18px; font-weight: 700; color: #fff; margin-top: 4px; font-family: monospace; }
+  .bento-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 768px) {
+    .bento-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .bento-card {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s ease;
+  }
+  .bento-card:hover {
+    border-color: rgba(34, 197, 94, 0.4);
+  }
+  .bento-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .bento-title { font-size: 15px; font-weight: 700; color: #fff; }
+  .bento-subtitle { font-size: 11px; color: #94a3b8; }
+  .bento-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+  .endpoint-pill {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+  }
+  footer.footer-bar {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #08090d;
+    padding: 24px 16px;
+    font-size: 12px;
+    color: #64748b;
+  }
+  .footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  @media (min-width: 768px) {
+    .footer-container { flex-direction: row; }
+  }
+  .footer-links {
+    display: flex;
+    gap: 16px;
+  }
+  .footer-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .footer-links a:hover { color: #4ade80; }
+</style>
+</head>
+<body>
+  <div class="top-banner">
+    <span class="pulse-dot"></span>
+    <strong style="color: #4ade80;">Open Balancer Mesh v4.5:</strong>
+    <span>Hermes Multi-Agent Swarm Orchestrator — Активен възел на клъстера (Zero-Downtime Anycast Edge)</span>
+  </div>
+
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="https://dashboard.openbalancer.com" class="brand-link" title="Open Balancer Master Dashboard">
+        <div class="brand-icon-box">
+          <div class="brand-icon-inner">
+            <svg class="brand-logo-img" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+        </div>
+        <div>
+          <div class="brand-title">
+            Open Balancer
+            <span class="badge-tag">AI SWARM</span>
+          </div>
+          <div style="font-size: 10px; color: #94a3b8;">Hermes Multi-Agent Swarm Orchestrator</div>
+        </div>
+      </a>
+
+      <nav class="nav-menu" aria-label="Навигация между възлите на клъстера">
+        <a href="https://dashboard.openbalancer.com" class="nav-link" title="Отвори Dashboard">Dashboard</a>
+        <a href="https://n8n.openbalancer.com" class="nav-link" title="Отвори n8n">n8n</a>
+        <a href="https://infisical.openbalancer.com" class="nav-link" title="Отвори Infisical">Infisical</a>
+        <a href="https://hermes.openbalancer.com" class="nav-link active" aria-current="page" title="Отвори Hermes">Hermes</a>
+        <a href="https://admin.openbalancer.com" class="nav-link" title="Отвори Admin">Admin</a>
+        <a href="https://win.openbalancer.com" class="nav-link" title="Отвори Win VM">Win VM</a>
+        <a href="https://mcp.openbalancer.com" class="nav-link" title="Отвори MCP Hub">MCP Hub</a>
+        <a href="https://tailscale.openbalancer.com" class="nav-link" title="Отвори Tailscale">Tailscale</a>
+      </nav>
+
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span>ONLINE (200 OK)</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="hero-card">
+      <div class="hero-header">
+        <div>
+          <div class="hero-badge">
+            <span class="pulse-dot"></span>
+            CLUSTER NODE: macmini-primary (100.83.83.8)
+          </div>
+          <h1 class="hero-title">Hermes Autonomous AI Swarm Platform</h1>
+          <p class="hero-desc">Автономна координационна мрежа от софтуерни агенти, изпълняващи непрекъснат мониторинг, автоматично кодиране, деплоймънт и реакция при инциденти.</p>
+        </div>
+        <div>
+          <a href="https://t.me/LeonDevOpsBot" target="_blank" rel="noopener noreferrer" class="btn-primary">
+            <span>🤖 Отвори Leon | DevOps Telegram Bot</span>
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        
+        <div class="metric-box">
+          <div class="metric-label">Главен Агент</div>
+          <div class="metric-value" style="color: #fff;">Leon | DevOps 🦁</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Telegram Контрол</div>
+          <div class="metric-value" style="color: #c084fc;">@LeonDevOpsBot</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Свързани Tools</div>
+          <div class="metric-value" style="color: #4ade80;">16 MCP Tools</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Автономност</div>
+          <div class="metric-value" style="color: #38bdf8;">100% Zero-Touch</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bento-grid">
+      
+      <div class="bento-card">
+        <div class="bento-top">
+          <div>
+            <div class="bento-title">Leon | DevOps Sentinel</div>
+            <div class="bento-subtitle">Инфраструктурен мениджър</div>
+          </div>
+          <span class="badge-tag">ACTIVE</span>
+        </div>
+        <p class="bento-desc">Управлява Colima Docker контейнерите, следи системните ресурси и изпраща форматирани отчети.</p>
+        <div class="endpoint-pill">
+          <span>Agent ID: leon-primary-sentinel</span>
+          <span style="color: #4ade80; font-weight: bold;">HEALTHY</span>
+        </div>
+      </div>
+      <div class="bento-card">
+        <div class="bento-top">
+          <div>
+            <div class="bento-title">Wallester Agent</div>
+            <div class="bento-subtitle">Платежен оркестратор</div>
+          </div>
+          <span class="badge-tag">ACTIVE</span>
+        </div>
+        <p class="bento-desc">Следи за нови верифицирани профили и автоматично издава корпоративни карти с наличност 150 EUR.</p>
+        <div class="endpoint-pill">
+          <span>Agent ID: wallester-payment-bot</span>
+          <span style="color: #4ade80; font-weight: bold;">HEALTHY</span>
+        </div>
+      </div>
+      <div class="bento-card">
+        <div class="bento-top">
+          <div>
+            <div class="bento-title">Mesh Watchdog</div>
+            <div class="bento-subtitle">Мрежов пазител</div>
+          </div>
+          <span class="badge-tag">ACTIVE</span>
+        </div>
+        <p class="bento-desc">Тества Tailscale WireGuard криптираните тунели на всеки 60 секунди и предотвратява прекъсвания.</p>
+        <div class="endpoint-pill">
+          <span>Agent ID: tailscale-mesh-watchdog</span>
+          <span style="color: #4ade80; font-weight: bold;">HEALTHY</span>
+        </div>
+      </div>
+      <div class="bento-card">
+        <div class="bento-top">
+          <div>
+            <div class="bento-title">Incident Response Engine</div>
+            <div class="bento-subtitle">Автоматичен фиксер</div>
+          </div>
+          <span class="badge-tag">STANDBY</span>
+        </div>
+        <p class="bento-desc">Анализира логове за грешки и автоматично прилага предпазни мерки.</p>
+        <div class="endpoint-pill">
+          <span>Agent ID: auto-incident-resolver</span>
+          <span style="color: #4ade80; font-weight: bold;">ONLINE</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer-bar">
+    <div class="footer-container">
+      <div>
+        <strong style="color: #cbd5e1;">Open Balancer Ecosystem</strong>
+        <span> — INCONTROL PLUS ЕООД (ЕИК 207593284)</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://openbalancer.com">Главна</a>
+        <a href="https://dashboard.openbalancer.com">Dashboard SSOT</a>
+        <a href="https://docs.openbalancer.com">Документация</a>
+        <a href="https://cashflow.openbalancer.com">Кешфлоу</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

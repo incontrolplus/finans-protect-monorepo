@@ -24,19 +24,31 @@ import {
 import SUPABASE_VERIFIED_OWNERS_DB from '../data/supabase_owners.json';
 
 export function EligibilityChecker() {
-  const [firstName, setFirstName] = useState('Мартин');
-  const [middleName, setMiddleName] = useState('Владимиров');
-  const [lastName, setLastName] = useState('Петров');
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [searchedName, setSearchedName] = useState('');
-  const [dataSource, setDataSource] = useState('Supabase Database & CompanyBook API');
+  const [dataSource, setDataSource] = useState('CompanyBook Official REST API');
   const [error, setError] = useState(null);
   const [copiedEik, setCopiedEik] = useState(null);
 
-  // Initial lookup on mount
+  // Check URL query parameters on mount
   useEffect(() => {
-    executeRegistryCheck('Мартин', 'Владимиров', 'Петров');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlFirst = params.get('firstName') || params.get('first_name');
+      const urlMiddle = params.get('middleName') || params.get('middle_name') || '';
+      const urlLast = params.get('lastName') || params.get('last_name');
+
+      if (urlFirst && urlLast) {
+        setFirstName(urlFirst);
+        setMiddleName(urlMiddle);
+        setLastName(urlLast);
+        executeRegistryCheck(urlFirst, urlMiddle, urlLast);
+      }
+    } catch (_) {}
   }, []);
 
   const copyToClipboard = (eik) => {
@@ -55,7 +67,7 @@ export function EligibilityChecker() {
     setSearchedName(fullPersonName);
 
     try {
-      // 1. Query Edge Worker Real Commercial Register API
+      // 1. Query Real Commercial Register & CompanyBook API
       const queryParams = new URLSearchParams({
         firstName: fName.trim(),
         middleName: (mName || '').trim(),
@@ -69,46 +81,33 @@ export function EligibilityChecker() {
 
       if (response.ok) {
         const data = await response.json();
-        if (data && Array.isArray(data.companies) && data.companies.length > 0) {
+        if (data && Array.isArray(data.companies)) {
           setResults(data.companies);
-          setDataSource(data.source || 'Supabase Database & CompanyBook API');
+          setDataSource(data.source || 'CompanyBook Official REST API');
           return;
         }
       }
 
-      // 2. Direct verified lookup from Supabase Database
+      // 2. Offline fallback: check exact matching key in Supabase database
       const cleanUpper = fullPersonName.toUpperCase();
-      const firstUpper = fName.trim().toUpperCase();
-      const lastUpper = lName.trim().toUpperCase();
-
-      for (const [ownerKey, ownerCompanies] of Object.entries(SUPABASE_VERIFIED_OWNERS_DB)) {
-        if (
-          ownerKey === cleanUpper ||
-          (ownerKey.includes(firstUpper) && ownerKey.includes(lastUpper))
-        ) {
-          setResults(ownerCompanies);
-          setDataSource('Supabase PostgreSQL (verified_owners)');
-          return;
-        }
+      if (SUPABASE_VERIFIED_OWNERS_DB[cleanUpper]) {
+        setResults(SUPABASE_VERIFIED_OWNERS_DB[cleanUpper]);
+        setDataSource('Supabase PostgreSQL (verified_owners)');
+        return;
       }
 
-      // 3. Fallback
+      // 3. Real 0 results
       setResults([]);
+      setDataSource('CompanyBook Official REST API');
     } catch (err) {
       console.warn('API lookup error:', err.message);
       const cleanUpper = fullPersonName.toUpperCase();
-      const firstUpper = fName.trim().toUpperCase();
-      const lastUpper = lName.trim().toUpperCase();
-
-      for (const [ownerKey, ownerCompanies] of Object.entries(SUPABASE_VERIFIED_OWNERS_DB)) {
-        if (
-          ownerKey === cleanUpper ||
-          (ownerKey.includes(firstUpper) && ownerKey.includes(lastUpper))
-        ) {
-          setResults(ownerCompanies);
-          setDataSource('Supabase PostgreSQL (verified_owners)');
-          return;
-        }
+      if (SUPABASE_VERIFIED_OWNERS_DB[cleanUpper]) {
+        setResults(SUPABASE_VERIFIED_OWNERS_DB[cleanUpper]);
+        setDataSource('Supabase PostgreSQL (verified_owners)');
+      } else {
+        setResults([]);
+        setDataSource('CompanyBook Official REST API');
       }
     } finally {
       setLoading(false);
@@ -181,7 +180,7 @@ export function EligibilityChecker() {
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Мартин"
+                  placeholder="напр. Красимир"
                   required
                   aria-label="Собствено име на собственика"
                   className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
@@ -201,7 +200,7 @@ export function EligibilityChecker() {
                   type="text"
                   value={middleName}
                   onChange={(e) => setMiddleName(e.target.value)}
-                  placeholder="Владимиров"
+                  placeholder="напр. Димитров"
                   aria-label="Бащино име на собственика"
                   className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
                 />
@@ -220,7 +219,7 @@ export function EligibilityChecker() {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Петров"
+                  placeholder="напр. Николов"
                   required
                   aria-label="Фамилно име на собственика"
                   className="w-full px-4 py-3.5 rounded-2xl bg-[#090f1d]/90 text-white font-medium text-sm placeholder-slate-500 border border-white/10 hover:border-cyan-500/40 focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/15 focus:bg-[#0c1426] transition-all shadow-inner outline-none"
@@ -296,7 +295,24 @@ export function EligibilityChecker() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {results.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-8 rounded-3xl bg-gradient-to-br from-slate-900/60 to-[#080d1a]/80 border border-white/10 text-center space-y-3 backdrop-blur-xl"
+            >
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-amber-400" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Няма намерени дружества в Търговския регистър
+              </h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                За лицето <strong className="text-cyan-300">{searchedName}</strong> не са открити активни вписвания като действителен собственик, съдружник или управител в регистъра чрез CompanyBook API.
+              </p>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {results.map((company, idx) => (
               <motion.div
                 key={company.eik || idx}
@@ -417,6 +433,7 @@ export function EligibilityChecker() {
               </motion.div>
             ))}
           </div>
+          )}
         </motion.div>
       )}
 

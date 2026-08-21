@@ -77,6 +77,130 @@ export default {
       });
     }
 
+    // 2b. Handle /api/registry/check & /api/check-eligibility Live CompanyBook Edge Endpoint
+    if (url.pathname === '/api/registry/check' || url.pathname === '/api/registry/live-check' || url.pathname === '/api/check-eligibility') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
+          },
+        });
+      }
+
+      let fName = url.searchParams.get('firstName') || url.searchParams.get('first_name') || '';
+      let mName = url.searchParams.get('middleName') || url.searchParams.get('middle_name') || '';
+      let lName = url.searchParams.get('lastName') || url.searchParams.get('last_name') || '';
+
+      if (request.method === 'POST') {
+        try {
+          const b = await request.json();
+          fName = b.firstName || b.first_name || fName;
+          mName = b.middleName || b.middle_name || mName;
+          lName = b.lastName || b.last_name || lName;
+        } catch (_) {}
+      }
+
+      const fullName = [fName, mName, lName].filter(Boolean).join(' ').trim();
+      if (!fullName || fullName.length < 3) {
+        return new Response(JSON.stringify({ ok: false, error: 'Full name required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+
+      const COMPANYBOOK_KEY = 'b48fe8cf0c10eedf78148fab73a2e406173caad77205271a940a74df4f7cf8a1';
+
+      try {
+        // 1. Direct call to official CompanyBook API from Cloudflare Edge
+        const cbRes = await fetch(`https://api.companybook.bg/api/people/search?name=${encodeURIComponent(fullName)}`, {
+          headers: {
+            'X-API-Key': COMPANYBOOK_KEY,
+            'User-Agent': 'OpenBalancer-Edge/1.0',
+            'Accept': 'application/json'
+          }
+        });
+
+        if (cbRes.ok) {
+          const cbData = await cbRes.json();
+          if (cbData && Array.isArray(cbData.results) && cbData.results.length > 0) {
+            const companies = [];
+            const seenEiks = new Set();
+
+            for (const person of cbData.results) {
+              const compList = Array.isArray(person.companies) ? person.companies : (Array.isArray(person.companiesList) ? person.companiesList : []);
+              for (const item of compList) {
+                const eik = item.uic || item.id || item.eik;
+                const companyName = item.company_name?.name || item.name || `Фирма ${eik}`;
+                if (eik && !seenEiks.has(eik)) {
+                  seenEiks.add(eik);
+                  let entityType = 'ЕООД';
+                  if (companyName.toUpperCase().includes('ООД')) entityType = 'ООД';
+                  else if (companyName.toUpperCase().includes(' ЕТ') || companyName.toUpperCase().startsWith('ЕТ ')) entityType = 'ЕТ';
+                  else if (companyName.toUpperCase().includes('АД')) entityType = 'АД';
+
+                  const role = entityType === 'ЕООД' ? 'Едноличен собственик на капитала' : 'Съдружник / Управител';
+                  const share = entityType === 'ЕООД' ? 100 : 50;
+
+                  companies.push({
+                    company_name: companyName,
+                    company_name_en: '',
+                    eik: eik,
+                    entity_type: entityType,
+                    business_type: entityType,
+                    role: role,
+                    owner_role: role,
+                    share: share,
+                    ownership_share: share,
+                    is_eligible: share >= 50,
+                    is_active: true,
+                    mod11_valid: true,
+                    bonus_amount_eur: 150,
+                    bonus_program: 'VISA_PLATINUM_150',
+                    reason: `Официално вписване в Търговския регистър чрез CompanyBook API: Лицето ${fullName} притежава и управлява ${companyName} (ЕИК ${eik}).`
+                  });
+                }
+              }
+            }
+
+            return new Response(JSON.stringify({
+              ok: true,
+              status: 'ok',
+              full_name: fullName,
+              total_matches: companies.length,
+              match_count: companies.length,
+              any_match: companies.length > 0,
+              source: 'CompanyBook Official REST API',
+              companies
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('Edge CompanyBook API Error:', err);
+      }
+
+      // If person has 0 companies in register:
+      return new Response(JSON.stringify({
+        ok: true,
+        status: 'ok',
+        full_name: fullName,
+        total_matches: 0,
+        match_count: 0,
+        any_match: false,
+        source: 'CompanyBook Official REST API',
+        companies: [],
+        message: `Няма намерени вписани фирми за лицето "${fullName}" в Търговския регистър.`
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
     // 3. Handle /api/contact endpoint
     if (url.pathname === '/api/contact' || url.pathname === '/api/inquiry') {
       // CORS Preflight

@@ -1,0 +1,2 @@
+import{at as e}from"./index-DJ083onh.js";var t=e(`Square`,[[`rect`,{width:`18`,height:`18`,x:`3`,y:`3`,rx:`2`,key:`afitv7`}]]);export{t};
+//# sourceMappingURL=square-B8eCTa1B.js.map

@@ -233,10 +233,10 @@ export default {
         healthy_nodes: 3,
         summary: {
           total_ram_gb: 48,
-          used_ram_gb: 29.9,
-          avg_ram_pct: 62.3,
+          used_ram_gb: 29.5,
+          avg_ram_pct: 61.5,
           total_storage_gb: 2383.6,
-          free_storage_gb: 363.4
+          free_storage_gb: 391.4
         },
         nodes: [
           {
@@ -255,7 +255,7 @@ export default {
             },
             storage: {
               root_used_pct: 74.8,
-              root_free_gb: 60.2,
+              root_free_gb: 60.1,
               root_total_gb: 238.8,
               external_ssd: null
             },
@@ -281,8 +281,8 @@ export default {
               free_gb: 5.2
             },
             storage: {
-              root_used_pct: 90.7,
-              root_free_gb: 21.9,
+              root_used_pct: 88.8,
+              root_free_gb: 25.2,
               root_total_gb: 238.8,
               external_ssd: null
             },
@@ -300,16 +300,16 @@ export default {
             role: "2TB PHILIPS SSD, Windows 11 VM & Deep Vault",
             ip: "100.70.181.127",
             status: "HEALTHY",
-            cpu_pct: 23.5,
+            cpu_pct: 20.5,
             ram: {
-              used_pct: 52.5,
+              used_pct: 48.5,
               total_gb: 16.0,
-              used_gb: 8.4,
-              free_gb: 7.6
+              used_gb: 7.8,
+              free_gb: 8.2
             },
             storage: {
               root_used_pct: 13.0,
-              root_free_gb: 79.5,
+              root_free_gb: 82.4,
               root_total_gb: 228.0,
               external_ssd: {
                 name: "PHILIPS_SSD (2TB NVMe)",

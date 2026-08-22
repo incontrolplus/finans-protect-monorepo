@@ -30,6 +30,7 @@ import {
   Zap,
   Globe,
   Lock,
+  Server,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';

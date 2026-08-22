@@ -236,7 +236,7 @@ export default {
           used_ram_gb: 29.5,
           avg_ram_pct: 61.5,
           total_storage_gb: 2383.6,
-          free_storage_gb: 391.4
+          free_storage_gb: 421.6
         },
         nodes: [
           {
@@ -281,8 +281,8 @@ export default {
               free_gb: 5.2
             },
             storage: {
-              root_used_pct: 88.8,
-              root_free_gb: 25.2,
+              root_used_pct: 76.8,
+              root_free_gb: 55.4,
               root_total_gb: 238.8,
               external_ssd: null
             },

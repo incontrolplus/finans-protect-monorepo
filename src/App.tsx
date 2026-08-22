@@ -6,6 +6,7 @@ import { RevenueWarRoomBento } from './components/RevenueWarRoomBento';
 import { EikVerificationWidget } from './components/EikVerificationWidget';
 import { SubdomainsMeshMonitor } from './components/SubdomainsMeshMonitor';
 import { AccountingTelemetryBento } from './components/AccountingTelemetryBento';
+import { ClusterHardwareRadarBento } from './components/ClusterHardwareRadarBento';
 import { useSupabaseRealtimeScorecard } from './hooks/useSupabaseRealtimeScorecard';
 
 // Extended Platform Pages
@@ -152,17 +153,30 @@ export function App() {
               <AccountingTelemetryBento />
             </section>
 
-            {/* 4. Subdomains Mesh Monitor */}
+            {/* 4. Cluster Hardware & Storage Fleet Radar */}
+            <section id="sec-hardware" className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+                  4. КЛЪСТЕРЕН СТОРИДЖ &amp; ХАРДУЕРЕН РАДАР (RAM &amp; DISK FLEET SSOT)
+                </span>
+              </div>
+              <ClusterHardwareRadarBento />
+            </section>
+
+            {/* 5. Subdomains Mesh Monitor */}
             <section id="sec-mesh" className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
-                  4. OPEN BALANCER MESH INFRASTRUCTURE &amp; EDGE HEALTH
+                  5. OPEN BALANCER MESH INFRASTRUCTURE &amp; EDGE HEALTH
                 </span>
               </div>
               <SubdomainsMeshMonitor />
             </section>
           </div>
         );
+      case 'hardware_radar':
+      case 'cluster_hardware':
+        return <ClusterHardwareRadarBento />;
       case 'accounting':
       case 'accounting_telemetry':
         return <AccountingTelemetryBento />;

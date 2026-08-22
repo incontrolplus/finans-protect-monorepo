@@ -40,6 +40,7 @@ const menuGroups = [
     items: [
       { id: 'finansprotecthub', name: 'Finans Protect Hub', icon: Shield },
       { id: 'accounting', name: 'Счетоводство (Delta Pro)', icon: BarChart3 },
+      { id: 'hardware_radar', name: 'RAM & Сторидж Радар', icon: Server },
       { id: 'wallesterdash', name: 'Dashboard', icon: BarChart3 },
       { id: 'eligibility', name: 'Eligibility Check', icon: CheckCircle },
       { id: 'signupflow', name: 'Signup Flow', icon: Play },

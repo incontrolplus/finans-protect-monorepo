@@ -236,7 +236,8 @@ export default {
           used_ram_gb: 29.5,
           avg_ram_pct: 61.5,
           total_storage_gb: 2383.6,
-          free_storage_gb: 421.6
+          free_storage_gb: 421.6,
+          avg_cpu_temp_c: 38.8
         },
         nodes: [
           {
@@ -247,6 +248,8 @@ export default {
             ip: "100.120.246.89",
             status: "HEALTHY",
             cpu_pct: 28.5,
+            cpu_temp_c: 38.5,
+            thermal_status: "NOMINAL",
             ram: {
               used_pct: 66.8,
               total_gb: 16.0,
@@ -274,6 +277,8 @@ export default {
             ip: "100.83.83.8",
             status: "HEALTHY",
             cpu_pct: 22.0,
+            cpu_temp_c: 41.2,
+            thermal_status: "NOMINAL",
             ram: {
               used_pct: 67.3,
               total_gb: 16.0,
@@ -301,6 +306,8 @@ export default {
             ip: "100.70.181.127",
             status: "HEALTHY",
             cpu_pct: 20.5,
+            cpu_temp_c: 36.8,
+            thermal_status: "NOMINAL",
             ram: {
               used_pct: 48.5,
               total_gb: 16.0,

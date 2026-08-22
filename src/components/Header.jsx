@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Menu, Activity, Cpu, HardDrive, Wifi } from 'lucide-react';
+import { Menu, Activity, Cpu, HardDrive, Wifi, LogOut } from 'lucide-react';
 import { useSocket } from '../context/SocketContext';
+import { useAuth } from '../context/AuthContext';
 
 // Mini sparkline component
 function Sparkline({ data, width = 60, height = 20, color = '#0ea5e9' }) {
@@ -43,6 +44,7 @@ function Sparkline({ data, width = 60, height = 20, color = '#0ea5e9' }) {
 }
 
 export default function Header({ toggleSidebar, sidebarOpen }) {
+  const { logout } = useAuth();
   const socketCtx = useSocket();
   const connected = socketCtx ? socketCtx.connected : true;
 
@@ -137,7 +139,7 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
               </div>
             </div>
 
-            {/* Operator Profile Badge */}
+            {/* Operator Profile Badge & Quick Logout */}
             <div className="flex items-center gap-2 pl-2 border-l border-white/10">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white shadow-md shadow-cyan-500/20 shrink-0">
                 MP
@@ -146,6 +148,14 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
                 <span className="text-[11px] font-bold text-white block leading-tight">Miroslav P.</span>
                 <span className="text-[9px] font-mono text-cyan-400 block leading-tight font-semibold">SUPER_ADMIN</span>
               </div>
+              <button
+                data-testid="header-logout-btn"
+                onClick={() => logout()}
+                className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors ml-1 cursor-pointer"
+                title="Изход от системата"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

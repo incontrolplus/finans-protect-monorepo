@@ -39,6 +39,7 @@ const menuGroups = [
     label: 'FINANS PROTECT & AUTOMATION',
     items: [
       { id: 'finansprotecthub', name: 'Finans Protect Hub', icon: Shield },
+      { id: 'accounting', name: 'Счетоводство (Delta Pro)', icon: BarChart3 },
       { id: 'wallesterdash', name: 'Dashboard', icon: BarChart3 },
       { id: 'eligibility', name: 'Eligibility Check', icon: CheckCircle },
       { id: 'signupflow', name: 'Signup Flow', icon: Play },

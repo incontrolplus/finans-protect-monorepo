@@ -24,6 +24,8 @@ import {
   Layers
 } from 'lucide-react';
 
+import { AccountingTelemetryBento } from '../components/AccountingTelemetryBento';
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
@@ -296,9 +298,10 @@ export function WallesterDashboard() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex space-x-2 p-1.5 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] backdrop-blur-2xl border border-white/10 w-fit">
+      <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.01] backdrop-blur-2xl border border-white/10 w-fit">
         {[
           { id: 'overview', label: 'Всички Собственици (Owners)', count: owners.length },
+          { id: 'accounting', label: '📊 Microinvest Телеметрия', count: null },
           { id: 'queue', label: 'Активна Опашка (Queue)', count: queue.length },
           { id: 'lifecycle', label: 'Lifecycle Диаграма', count: null },
           { id: 'attention', label: 'Needs Attention', count: metrics?.needs_attention || queue.filter(q => q.status === 'needs_attention' || q.status === 'failed').length },
@@ -607,6 +610,18 @@ export function WallesterDashboard() {
                 </p>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {/* 5. Microinvest Accounting Telemetry Tab */}
+        {activeTab === 'accounting' && (
+          <motion.div
+            key="accounting"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+          >
+            <AccountingTelemetryBento />
           </motion.div>
         )}
       </AnimatePresence>

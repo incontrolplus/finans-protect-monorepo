@@ -5,6 +5,7 @@ import Header from './components/Header';
 import { RevenueWarRoomBento } from './components/RevenueWarRoomBento';
 import { EikVerificationWidget } from './components/EikVerificationWidget';
 import { SubdomainsMeshMonitor } from './components/SubdomainsMeshMonitor';
+import { AccountingTelemetryBento } from './components/AccountingTelemetryBento';
 import { useSupabaseRealtimeScorecard } from './hooks/useSupabaseRealtimeScorecard';
 
 // Extended Platform Pages
@@ -141,17 +142,30 @@ export function App() {
               />
             </section>
 
-            {/* 3. Subdomains Mesh Monitor */}
+            {/* 3. Microinvest Delta Pro Accounting Telemetry & VAT Radar */}
+            <section id="sec-accounting" className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+                  3. СЧЕТОВОДНА ТЕЛЕМЕТРИЯ • MICROINVEST DELTA PRO SSOT (278K ОБОРОТ &amp; НАП ДДС)
+                </span>
+              </div>
+              <AccountingTelemetryBento />
+            </section>
+
+            {/* 4. Subdomains Mesh Monitor */}
             <section id="sec-mesh" className="space-y-3">
               <div className="flex items-center gap-2 px-1">
                 <span className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
-                  3. OPEN BALANCER MESH INFRASTRUCTURE &amp; EDGE HEALTH
+                  4. OPEN BALANCER MESH INFRASTRUCTURE &amp; EDGE HEALTH
                 </span>
               </div>
               <SubdomainsMeshMonitor />
             </section>
           </div>
         );
+      case 'accounting':
+      case 'accounting_telemetry':
+        return <AccountingTelemetryBento />;
       case 'wallesterdash':
         return <WallesterDashboard />;
       case 'eligibility':

@@ -47,10 +47,14 @@ import {
   Globe, 
   ArrowUpRight,
   Menu,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Login } from './components/Login';
 
-export function App() {
+function DashboardContent() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [activePage, setActivePage] = useState<string>('finansprotecthub');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState<boolean>(false);
@@ -62,6 +66,21 @@ export function App() {
     setActivePage(pageId);
     setMobileDrawerOpen(false);
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#080c14] flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+          <span className="text-xs font-mono text-cyan-400">Проверка на операторска сесия...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Login />;
+  }
 
   const renderContent = () => {
     switch (activePage) {
@@ -338,6 +357,14 @@ export function App() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <DashboardContent />
+    </AuthProvider>
   );
 }
 

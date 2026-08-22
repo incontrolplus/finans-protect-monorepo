@@ -34,6 +34,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const menuGroups = [
   {
@@ -81,6 +82,8 @@ const menuGroups = [
 ];
 
 export const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
+  const { logout } = useAuth();
+
   return (
     <aside
       className={`fixed top-0 left-0 h-full z-50 bg-[#080d1a] border-r border-white/10 flex flex-col transition-all duration-300 ${
@@ -172,20 +175,20 @@ export const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }) => {
             </div>
 
             <button
-              onClick={() => setActivePage('finansprotecthub')}
+              onClick={() => logout()}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span>Reset View</span>
+              <span>Изход (Logout)</span>
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 py-1">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" title="ENCRYPTED LINK" />
             <button
-              onClick={() => setActivePage('finansprotecthub')}
-              className="p-2 rounded-lg hover:bg-white/5 text-slate-400"
-              title="Reset View"
+              onClick={() => logout()}
+              className="p-2 rounded-lg hover:bg-rose-500/10 text-rose-400"
+              title="Изход (Logout)"
             >
               <LogOut className="w-4 h-4" />
             </button>

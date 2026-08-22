@@ -137,15 +137,14 @@ export default function Header({ toggleSidebar, sidebarOpen }) {
               </div>
             </div>
 
-            {/* Connection status */}
-            <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl">
-              <div className="relative">
-                <Wifi className="w-4 h-4 text-emerald-400" />
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+            {/* Operator Profile Badge */}
+            <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white shadow-md shadow-cyan-500/20 shrink-0">
+                MP
               </div>
-              <div className="hidden md:block">
-                <span className="text-[10px] text-emerald-500 block leading-tight">Status</span>
-                <span className="text-xs font-semibold text-emerald-400">Mesh Live</span>
+              <div className="hidden lg:block text-left">
+                <span className="text-[11px] font-bold text-white block leading-tight">Miroslav P.</span>
+                <span className="text-[9px] font-mono text-cyan-400 block leading-tight font-semibold">SUPER_ADMIN</span>
               </div>
             </div>
           </div>

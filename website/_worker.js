@@ -31,6 +31,223 @@ export default {
       return Response.redirect('https://cashflow.openbalancer.com/cashflow', 302);
     }
 
+    // ==========================================
+    // 1c. AUTHENTICATION API (Cloudflare Edge Gateway)
+    // ==========================================
+    const AUTH_SECRET = "openbalancer_edge_jwt_secret_m4_cluster_2026_finansprotect";
+    const OPERATOR_USERS = [
+      {
+        id: "usr_ob_operator_01",
+        email: "miropetrovski12@gmail.com",
+        password: "MagicBoyy24#",
+        name: "Miroslav Petrovski",
+        role: "SUPER_ADMIN",
+        avatar_initials: "MP",
+        created_at: "2026-08-22T12:00:00Z"
+      }
+    ];
+
+    const signJwt = async (payload) => {
+      const enc = new TextEncoder();
+      const header = { alg: "HS256", typ: "JWT" };
+      const h64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const p64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const msg = `${h64}.${p64}`;
+      const key = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(AUTH_SECRET),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const sig = await crypto.subtle.sign("HMAC", key, enc.encode(msg));
+      const sig64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+      return `${msg}.${sig64}`;
+    };
+
+    const verifyJwt = async (token) => {
+      if (!token || typeof token !== 'string') return null;
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const [h64, p64, sig64] = parts;
+      const msg = `${h64}.${p64}`;
+      const enc = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(AUTH_SECRET),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["verify"]
+      );
+      try {
+        const sigB64 = sig64.replace(/-/g, '+').replace(/_/g, '/');
+        const pad = sigB64.length % 4;
+        const fullB64 = pad ? sigB64 + '='.repeat(4 - pad) : sigB64;
+        const sigBytes = Uint8Array.from(atob(fullB64), c => c.charCodeAt(0));
+        const valid = await crypto.subtle.verify("HMAC", key, sigBytes, enc.encode(msg));
+        if (!valid) return null;
+        const payloadJson = atob(p64.replace(/-/g, '+').replace(/_/g, '/'));
+        const payload = JSON.parse(payloadJson);
+        if (payload.exp && payload.exp < Date.now()) return null;
+        return payload;
+      } catch (e) {
+        return null;
+      }
+    };
+
+    // POST /api/auth/login
+    if (url.pathname === '/api/auth/login') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Max-Age': '86400',
+          },
+        });
+      }
+
+      if (request.method !== 'POST') {
+        return new Response(JSON.stringify({ ok: false, error: 'Method not allowed' }), {
+          status: 405,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+
+      try {
+        const body = await request.json();
+        const email = (body.email || '').trim().toLowerCase();
+        const password = body.password || '';
+
+        const foundUser = OPERATOR_USERS.find(
+          u => u.email.toLowerCase() === email && u.password === password
+        );
+
+        if (!foundUser) {
+          return new Response(JSON.stringify({
+            ok: false,
+            error: 'INVALID_CREDENTIALS',
+            message: 'Невалиден имейл или парола за операторски достъп.'
+          }), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        }
+
+        const exp = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+        const token = await signJwt({
+          id: foundUser.id,
+          email: foundUser.email,
+          name: foundUser.name,
+          role: foundUser.role,
+          exp
+        });
+
+        const safeUser = {
+          id: foundUser.id,
+          email: foundUser.email,
+          name: foundUser.name,
+          role: foundUser.role,
+          avatar_initials: foundUser.avatar_initials,
+          created_at: foundUser.created_at
+        };
+
+        return new Response(JSON.stringify({
+          ok: true,
+          status: 'AUTHENTICATED',
+          user: safeUser,
+          token,
+          expires_at: new Date(exp).toISOString(),
+          message: 'Успешна автентикация в Open Balancer Control Center.'
+        }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Set-Cookie': `ob_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`
+          }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: 'Malformed login request' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+    }
+
+    // GET /api/auth/session
+    if (url.pathname === '/api/auth/session') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Max-Age': '86400',
+          },
+        });
+      }
+
+      const authHeader = request.headers.get('Authorization') || '';
+      let token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+      if (!token) {
+        const cookieHeader = request.headers.get('Cookie') || '';
+        const match = cookieHeader.match(/ob_session=([^;]+)/);
+        if (match) token = match[1];
+      }
+
+      const payload = await verifyJwt(token);
+      if (!payload) {
+        return new Response(JSON.stringify({
+          ok: false,
+          authenticated: false,
+          user: null,
+          message: 'Няма валидна активна сесия.'
+        }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+
+      return new Response(JSON.stringify({
+        ok: true,
+        authenticated: true,
+        user: {
+          id: payload.id,
+          email: payload.email,
+          name: payload.name,
+          role: payload.role,
+          avatar_initials: payload.name ? payload.name.split(' ').map(n => n[0]).join('') : 'OP'
+        }
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
+
+    // POST /api/auth/logout
+    if (url.pathname === '/api/auth/logout') {
+      return new Response(JSON.stringify({
+        ok: true,
+        authenticated: false,
+        message: 'Успешен изход от системата.'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Set-Cookie': 'ob_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'
+        }
+      });
+    }
+
     // 2. Handle /api/accounting/telemetry & /api/revenue Live Edge Endpoint
     if (url.pathname === '/api/accounting/telemetry' || url.pathname === '/api/revenue' || url.pathname === '/api/telemetry/accounting') {
       if (request.method === 'OPTIONS') {

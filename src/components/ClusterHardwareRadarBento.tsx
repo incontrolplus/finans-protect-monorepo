@@ -136,10 +136,16 @@ export const ClusterHardwareRadarBento: React.FC = () => {
                     </div>
                   </div>
 
-                  <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    {node.status}
-                  </span>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                      {node.status}
+                    </span>
+                    <span className="text-[9px] font-mono text-slate-500 mt-1 flex items-center gap-1">
+                      <Clock className="w-2.5 h-2.5 text-cyan-400" />
+                      {node.seconds_ago !== undefined ? `${node.seconds_ago}s ago` : 'Live'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* 1. RAM Utilization Section */}
